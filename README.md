@@ -1,4 +1,5 @@
-# BSDF Viewer
+
+# <img src="resource/BSDFViewer.png" width="64"/> BSDF Viewer
 ## Overview
 BSDF Viewer is an application for interactive visualization of BSDF (bidirectional scattering distribution function).
 The target users of BSDF Viewer are engineers and researchers investigating the measured reflection and transmission data.
@@ -21,9 +22,19 @@ Format | Extension
 -------|---------------------------------
 Integra Diffuse Distribution | .ddr, .ddt
 
+### Screenshots
+<p align="center">
+<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot1.png" width="300"/>
+<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot2.png" width="300"/>
+</p>
+
 ### License
 BSDF Viewer is licensed under the terms of the Mozilla Public License, version 2.0.
 See LICENSE file.
+
+### Download
+Windows (32bit):  
+[BSDFViewer-1.0.0-windows-x86.zip][8]
 
 ## Building BSDF Viewer
 BSDF Viewer uses the following open source libraries:
@@ -49,3 +60,6 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 [3]: http://www.openscenegraph.org "OpenSceneGraph"
 [4]: http://www.qt.io "Qt"
 [5]: http://www.integra.jp/en "Integra"
+[6]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot1.png
+[7]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot2.png
+[8]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/binaries/BSDFViewer-1.0.0-windows-x86.zip
