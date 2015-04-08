@@ -42,10 +42,11 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 * Adds spline or rational interpolation
 
 ## Sponsor
-[<img src="https://raw.githubusercontent.com/KimuraRyo/BSDFViewer/master/resource/IntegraLogo.png" alt="Drawing" style="width: 200px;"/>][5]
+[[[6]|width=200px]]
 
 [1]: https://github.com/KimuraRyo/libbsdf "libbsdf"
 [2]: http://eigen.tuxfamily.org/index.php?title=Main_Page "Eigen"
 [3]: http://www.openscenegraph.org "OpenSceneGraph"
 [4]: http://www.qt.io "Qt"
 [5]: http://www.integra.jp/en "Integra"
+[6]: https://raw.githubusercontent.com/KimuraRyo/BSDFViewer/master/resource/IntegraLogo.png "IntegraLogo"
