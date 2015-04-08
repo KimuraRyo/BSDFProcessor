@@ -69,7 +69,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>192</height>
+      <height>150</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -400,7 +400,7 @@
     <property name="minimumSize">
      <size>
       <width>140</width>
-      <height>94</height>
+      <height>60</height>
      </size>
     </property>
     <property name="windowTitle">
