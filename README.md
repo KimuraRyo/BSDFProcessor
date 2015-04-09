@@ -1,9 +1,8 @@
-
-# <img src="resource/BSDFViewer.png" width="64"/> BSDF Viewer
+# <img src="resource/BSDFViewer.png" align="top" width="64"/> BSDF Viewer
 ## Overview
 BSDF Viewer is an application for interactive visualization of BSDF (bidirectional scattering distribution function).
 The target users of BSDF Viewer are engineers and researchers investigating the measured reflection and transmission data.
-BSDF Viewer can load data files and provides 3D plots, table view and so on.
+BSDF Viewer can load data files and provides 3D plots, real-time rendering of 3D models, table view and so on.
 Basic functions are implemented using [libbsdf][1].
 
 **BSDF Viewer can load the following formats:**
@@ -24,17 +23,17 @@ Integra Diffuse Distribution | .ddr, .ddt
 
 ### Screenshots
 <p align="center">
-<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot1.png" width="300"/>
-<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot2.png" width="300"/>
+<img src="wiki/images/screenshot1.png" width="320"/>&nbsp;
+<img src="wiki/images/screenshot2.png" width="320"/>
 </p>
 
 ### License
 BSDF Viewer is licensed under the terms of the Mozilla Public License, version 2.0.
-See LICENSE file.
+See the LICENSE file.
 
 ### Download
 Windows (32bit):  
-[BSDFViewer-1.0.0-windows-x86.zip][8]
+[BSDFViewer-1.0.0-windows-x86.zip](wiki/binaries/BSDFViewer-1.0.0-windows-x86.zip)
 
 ## Building BSDF Viewer
 BSDF Viewer uses the following open source libraries:
@@ -49,17 +48,14 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 
 ## Future Plans
 * Loads other file formats
-* Displays anisotropic BSDFs
-* Adds spline or rational interpolation
+* Displays more information of BSDFs
+* Supports anisotropic BSDFs
 
 ## Sponsor
-[<img src="https://raw.githubusercontent.com/KimuraRyo/BSDFViewer/master/resource/IntegraLogo.png" width="200"/>][5]
+[<img src="resource/IntegraLogo.png" width="200"/>][5]
 
 [1]: https://github.com/KimuraRyo/libbsdf "libbsdf"
 [2]: http://eigen.tuxfamily.org/index.php?title=Main_Page "Eigen"
 [3]: http://www.openscenegraph.org "OpenSceneGraph"
 [4]: http://www.qt.io "Qt"
 [5]: http://www.integra.jp/en "Integra"
-[6]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot1.png
-[7]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot2.png
-[8]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/binaries/BSDFViewer-1.0.0-windows-x86.zip
