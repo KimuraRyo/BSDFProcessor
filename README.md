@@ -1,4 +1,4 @@
-# <img src="resource/BSDFViewer.png" align="middle" width="64"/> BSDF Viewer
+# <img src="resource/BSDFViewer.png" width="48"/> BSDF Viewer
 ## Overview
 BSDF Viewer is an application for interactive visualization of BSDF (bidirectional scattering distribution function).
 The target users of BSDF Viewer are engineers and researchers investigating the measured reflection and transmission data.
@@ -23,9 +23,9 @@ Integra Diffuse Distribution | .ddr, .ddt
 
 ### Screenshots
 <p align="center">
-<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot1.png" width="230"/>&nbsp;
-<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot2.png" width="230"/>&nbsp;
-<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot3.png" width="230"/>
+<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot1.png" height="190"/>&nbsp;
+<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot2.png" height="190"/>&nbsp;
+<img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/images/screenshot3.png" height="190"/>
 </p>
 
 ### License
