@@ -85,7 +85,10 @@ void RenderingWidget::showCylinder()
     renderingScene_->getScene()->removeChildren(0, renderingScene_->getScene()->getNumChildren());
     
     osg::Geode* geode = new osg::Geode;
-    geode->addDrawable(new osg::ShapeDrawable(new osg::Cylinder(osg::Vec3(), 0.75f, 2.0f)));
+    osg::Cylinder* cylinder = new osg::Cylinder(osg::Vec3(), 1.0f, 2.0f);
+    osg::Quat rotQuat(M_PI / 2.0, osg::Vec3(0.0, 1.0, 0.0));
+    cylinder->setRotation(rotQuat);
+    geode->addDrawable(new osg::ShapeDrawable(cylinder));
     renderingScene_->getScene()->addChild(geode);
 }
 
