@@ -32,6 +32,7 @@
 #include <libbsdf/Reader/MerlBinaryReader.h>
 #include <libbsdf/Reader/ReaderUtility.h>
 #include <libbsdf/Reader/SdrReader.h>
+#include <libbsdf/Reader/ZemaxBsdfReader.h>
 
 #include <libbsdf/Writer/DdrWriter.h>
 
@@ -113,7 +114,7 @@ void MainWindow::openBxdfUsingDialog()
                                                        "Integra DDT Files (*.ddt);;"
                                                        "Integra SDR Files (*.sdr);;"
                                                        "Integra SDR Files (*.sdt);;"
-                                                       "LightTools BSDF Files (*.bsdf);;"
+                                                       "LightTools/Zemax BSDF Files (*.bsdf);;"
                                                        "ASTM Files (*.astm);;"
                                                        "MERL binary Files (*.binary)"));
     
@@ -155,6 +156,10 @@ void MainWindow::openFile(const QString& fileName)
         }
         case lb::LIGHTTOOLS_FILE: {
             loaded = openLightToolsBsdf(fileName);
+            break;
+        }
+        case lb::ZEMAX_FILE: {
+            loaded = openZemaxBsdf(fileName);
             break;
         }
         case lb::MERL_BINARY_FILE: {
@@ -700,6 +705,17 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
     return true;
 }
 
+bool MainWindow::openZemaxBsdf(const QString& fileName)
+{
+    lb::DataType dataType;
+    lb::SpecularCoordinatesBrdf* brdf = lb::ZemaxBsdfReader::read(fileName.toLocal8Bit().data(), &dataType);
+    if (!brdf) return false;
+
+    setupBrdf(brdf, dataType);
+
+    return true;
+}
+
 bool MainWindow::openAstm(const QString& fileName)
 {
     OpenAstmDialog dialog(this);
@@ -781,6 +797,10 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
         exportedBrdf = new lb::SpecularCoordinatesBrdf(*brdf, inThetaAngles, inPhiAngles, outThetaAngles, outPhiAngles);
     }
 
+    lb::SampleSet* exportedSs = exportedBrdf->getSampleSet();
+    if (exportedSs->getColorModel() == lb::XYZ_MODEL) {
+        exportedSs->convertFromXyzToSrgb();
+    }
     exportedBrdf->expand();
     exportedBrdf->fixEnergyConservation();
 

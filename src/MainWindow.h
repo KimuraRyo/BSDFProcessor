@@ -71,6 +71,7 @@ private:
     bool openDdrDdt(const QString& fileName, lb::DataType dataType);
     bool openSdrSdt(const QString& fileName, lb::DataType dataType);
     bool openLightToolsBsdf(const QString& fileName);
+    bool openZemaxBsdf(const QString& fileName);
     bool openAstm(const QString& fileName);
     bool openMerlBinary(const QString& fileName);
 
