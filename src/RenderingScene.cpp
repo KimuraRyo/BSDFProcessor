@@ -23,7 +23,7 @@ RenderingScene::RenderingScene() : numMultiSamples_(0),
                                    cameraManipulator_(0),
                                    brdf_(0),
                                    reflectances_(0),
-                                   isTransmittance_(false),
+                                   dataType_(lb::BRDF_DATA),
                                    lightIntensity_(1.0f),
                                    environmentIntensity_(0.0f)
 {
@@ -276,7 +276,7 @@ osg::Group* RenderingScene::createRenderingGroup(osg::Group*    subgraph,
 
         if (brdf_ || reflectances_) {
             fboCamera->setPostDrawCallback(new RenderingDrawCallback(image0, image1,
-                                                                     brdf_, reflectances_, isTransmittance_,
+                                                                     brdf_, reflectances_, dataType_,
                                                                      lightIntensity_, environmentIntensity_));
             texture->setImage(image0);
         }
@@ -290,7 +290,7 @@ osg::Group* RenderingScene::createRenderingGroup(osg::Group*    subgraph,
         osg::Geode* hudGeode = new osg::Geode;
         hudGeode->setName("hudGeode");
 
-        hudGeode->setNodeMask(NodeMask::HUD);
+        hudGeode->setNodeMask(HUD_MASK);
 
         const double hudDepth = 0.0;
         osg::Geometry* hudGeom = osg::createTexturedQuadGeometry(osg::Vec3(0.0,     0.0,    hudDepth),

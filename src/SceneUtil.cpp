@@ -31,6 +31,11 @@
 #include <osgText/FadeText>
 #include <osgText/Font>
 
+#include <libbsdf/Common/SpecularCoordinateSystem.h>
+#include <libbsdf/Common/SphericalCoordinateSystem.h>
+
+#include "SpecularCenteredCoordinateSystem.h"
+
 void scene_util::fitCameraPosition(osg::Camera*     camera,
                                    const osg::Vec3& cameraDirection,
                                    const osg::Vec3& upDirection,
@@ -181,7 +186,7 @@ osg::Group* scene_util::createPostProcessingGroup(osg::Node*    subgraph,
         int hudHeight = height;
         osg::Geode* hudGeode = new osg::Geode;
         hudGeode->setName("hudGeode");
-        hudGeode->setNodeMask(NodeMask::HUD);
+        hudGeode->setNodeMask(HUD_MASK);
 
         const double hudDepth = 0.0;
         osg::Geometry* hudGeom = osg::createTexturedQuadGeometry(osg::Vec3(0.0,         0.0,        hudDepth),
@@ -316,7 +321,7 @@ osg::Group* scene_util::createOitGroup(osg::Group*  subgraph,
         {
             osg::Geode* hudGeode = new osg::Geode;
             hudGeode->setName("hudGeode");
-            hudGeode->setNodeMask(NodeMask::HUD);
+            hudGeode->setNodeMask(HUD_MASK);
             hudCamera->addChild(hudGeode);
 
             float depth = -i;
@@ -339,7 +344,7 @@ osg::Camera* scene_util::createHudText(const std::string& textString, int width,
 
     osg::Geode* geode = new osg::Geode;
     geode->setName("hudTextGeode");
-    geode->setNodeMask(NodeMask::HUD);
+    geode->setNodeMask(HUD_MASK);
 
     osgText::Font* font = new osgText::Font(new osgQt::QFontImplementation(QFont("Arial")));
 
@@ -519,7 +524,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                                   int               spectrumIndex,
                                                   bool              useLogPlot,
                                                   float             baseOfLogarithm,
-                                                  bool              isBtdf,
+                                                  lb::DataType      dataType,
                                                   int               numTheta,
                                                   int               numPhi)
 {
@@ -574,7 +579,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
             maxBrdfValue = brdfValue;
         }
 
-        if (isBtdf) {
+        if (dataType == lb::BTDF_DATA) {
             outDir[2] = -outDir[2];
         }
 
@@ -606,12 +611,12 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         lb::Vec3 pos2 = positions.at(i2);
         lb::Vec3 pos3 = positions.at(i3);
 
-        if (!isBtdf) {
+        if (dataType == lb::BRDF_DATA) {
             if (pos0[2] <= 0.0 && pos1[2] <= 0.0 && pos2[2] <= 0.0 && pos3[2] <= 0.0) {
                 continue;
             }
         }
-        else {
+        else if (dataType == lb::BTDF_DATA) {
             if (pos0[2] >= 0.0 && pos1[2] >= 0.0 && pos2[2] >= 0.0 && pos3[2] >= 0.0) {
                 continue;
             }
@@ -659,15 +664,15 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int spectrumIndex,
-    bool useLogPlot, float baseOfLogarithm, bool isBtdf, int numTheta, int numPhi);
+    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int spectrumIndex,
-    bool useLogPlot, float baseOfLogarithm, bool isBtdf, int numTheta, int numPhi);
+    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int spectrumIndex,
-    bool useLogPlot, float baseOfLogarithm, bool isBtdf, int numTheta, int numPhi);
+    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
 
 osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
                                                    int              inThetaIndex,
@@ -675,7 +680,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
                                                    int              spectrumIndex,
                                                    bool             useLogPlot,
                                                    float            baseOfLogarithm,
-                                                   bool             isBtdf)
+                                                   lb::DataType     dataType)
 {
     const lb::SampleSet* ss = brdf.getSampleSet();
 
@@ -691,7 +696,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
 
         if (outDir[2] < -lb::EPSILON_F) continue;
 
-        if (isBtdf) {
+        if (dataType == lb::BTDF_DATA) {
             outDir[2] = -outDir[2];
         }
 
@@ -738,7 +743,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                                       int               spectrumIndex,
                                       bool              useLogPlot,
                                       float             baseOfLogarithm,
-                                      bool              isBtdf)
+                                      lb::DataType      dataType)
 {
     const lb::SampleSet* ss = brdf.getSampleSet();
 
@@ -771,7 +776,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 continue;
             }
 
-            if (isBtdf) {
+            if (dataType == lb::BTDF_DATA) {
                 outDir[2] = -outDir[2];
             }
 
@@ -789,7 +794,13 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
             osg::Vec3 pos = toOsg(outDir * distance);
             pointVertices->push_back(pos);
 
-            osgText::Text::AlignmentType alignment = isBtdf ? osgText::Text::LEFT_TOP : osgText::Text::BASE_LINE;
+            osgText::Text::AlignmentType alignment;
+            if (dataType == lb::BTDF_DATA) {
+                alignment = osgText::Text::LEFT_TOP;
+            }
+            else {
+                alignment = osgText::Text::BASE_LINE;
+            }
             std::string textString = QString::number(brdfValue).toLocal8Bit().data();
             osgText::Text* text = createTextLabel(textString + "   ", pos, font, alignment);
             text->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
@@ -820,7 +831,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
     }
 
     osg::ClipPlane* clipPlane = new osg::ClipPlane;
-    if (isBtdf) {
+    if (dataType == lb::BTDF_DATA) {
         clipPlane->setClipPlane(0.0, 0.0, -1.0, 0.00001);
     }
     else {
@@ -852,7 +863,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 }
             }
 
-            if (isBtdf) {
+            if (dataType == lb::BTDF_DATA) {
                 outDir[2] = -outDir[2];
             }
 

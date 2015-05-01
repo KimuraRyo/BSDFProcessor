@@ -283,6 +283,501 @@
      </layout>
     </widget>
    </widget>
+   <widget class="QDockWidget" name="reflectanceModelDockWidget">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>10</y>
+      <width>311</width>
+      <height>361</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>250</width>
+      <height>300</height>
+     </size>
+    </property>
+    <property name="windowTitle">
+     <string>Reflectance model</string>
+    </property>
+    <widget class="QWidget" name="dockWidgetContents_3">
+     <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,1">
+      <item>
+       <widget class="QComboBox" name="reflectanceModelComboBox">
+        <item>
+         <property name="text">
+          <string>Lambertian</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Phong</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Ward isotropic</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Cook Torrance</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QStackedWidget" name="stackedWidget">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="page">
+         <layout class="QFormLayout" name="formLayout_3">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Color:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="lambertianColorPushButton">
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page_2">
+         <layout class="QFormLayout" name="formLayout">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Color:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Shininess:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="phongShininessDoubleSpinBox">
+            <property name="minimum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>999.990000000000009</double>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="phongColorPushButton">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page_3">
+         <layout class="QFormLayout" name="formLayout_4">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+          </property>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Roughness:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Color:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="wardIsotropicColorPushButton">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="wardIsotropicRoughnessDoubleSpinBox">
+            <property name="decimals">
+             <number>2</number>
+            </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>9.990000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page_4">
+         <layout class="QFormLayout" name="formLayout_5">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Color:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="cookTorranceColorPushButton">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>Roughness:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Refractive index:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="cookTorranceRoughnessDoubleSpinBox">
+            <property name="minimum">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.200000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="cookTorranceRefractiveIndexDoubleSpinBox">
+            <property name="minimum">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>5.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Coordinate system</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QComboBox" name="coordinateSystemComboBox">
+           <item>
+            <property name="text">
+             <string>Half difference</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Specular</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Spherical</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QStackedWidget" name="stackedWidget_2">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="halfDiffCoordSysPage">
+            <layout class="QFormLayout" name="formLayout_10">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Half polar angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="halfDiffCsNumAngle0SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>91</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Difference polar angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="halfDiffCsNumAngle2SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>19</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Difference azimuthal angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="halfDiffCsNumAngle3SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>36</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="specularCoordSysPage">
+            <layout class="QFormLayout" name="formLayout_11">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_19">
+               <property name="text">
+                <string>Incoming polar angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="specularCsNumAngle0SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>19</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_21">
+               <property name="text">
+                <string>Specular polar angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="specularCsNumAngle2SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>91</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>Specular azimuthal angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="specularCsNumAngle3SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>36</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="sphericalCoordSysPage">
+            <layout class="QFormLayout" name="formLayout_9">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Incoming polar angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="sphericalCsNumAngle0SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>19</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_18">
+               <property name="text">
+                <string>Outgoing polar angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="sphericalCsNumAngle2SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>91</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Outgoing azimuthal angles:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="sphericalCsNumAngle3SpinBox">
+               <property name="minimum">
+                <number>2</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>36</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignHCenter">
+       <widget class="QPushButton" name="createBrdfPushButton">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Create BRDF</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </widget>
    <widget class="QDockWidget" name="tableDockWidget">
     <property name="geometry">
      <rect>
@@ -400,7 +895,7 @@
     <property name="minimumSize">
      <size>
       <width>140</width>
-      <height>60</height>
+      <height>70</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -737,6 +1232,102 @@
    </hints>
   </connection>
   <connection>
+   <sender>reflectanceModelComboBox</sender>
+   <signal>activated(int)</signal>
+   <receiver>stackedWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>662</x>
+     <y>79</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>761</x>
+     <y>157</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>createBrdfPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>createBrdfFromReflectanceModel()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>793</x>
+     <y>363</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>859</x>
+     <y>338</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lambertianColorPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>changeLambertianButtonColor()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>708</x>
+     <y>108</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>604</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>phongColorPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>changePhongButtonColor()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>708</x>
+     <y>99</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>559</x>
+     <y>332</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>wardIsotropicColorPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>changeWardIsotropicButtonColor()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>708</x>
+     <y>99</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>591</x>
+     <y>374</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cookTorranceColorPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>changeCookTorranceButtonColor()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>708</x>
+     <y>96</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>956</x>
+     <y>169</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>wavelengthSlider</sender>
    <signal>valueChanged(int)</signal>
    <receiver>MainWindowBase</receiver>
@@ -781,6 +1372,22 @@
     <hint type="destinationlabel">
      <x>435</x>
      <y>454</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>coordinateSystemComboBox</sender>
+   <signal>activated(int)</signal>
+   <receiver>stackedWidget_2</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>847</x>
+     <y>223</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>850</x>
+     <y>242</y>
     </hint>
    </hints>
   </connection>

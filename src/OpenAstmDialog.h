@@ -11,6 +11,8 @@
 
 #include "ui_OpenAstmDialog.h"
 
+#include <libbsdf/Common/Global.h>
+
 /*!
  * \class   OpenAstmDialog
  * \brief   The OpenAstmDialog class provides the dialog window of an ASTM file reader.
@@ -23,7 +25,7 @@ public:
     explicit OpenAstmDialog(QWidget* parent);
     ~OpenAstmDialog();
 
-    bool isBtdf() { return ui_->typeComboBox->currentText() == "BTDF"; }
+    lb::DataType getDataType();
 
 private:
     Q_DISABLE_COPY(OpenAstmDialog)

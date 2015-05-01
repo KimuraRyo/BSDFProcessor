@@ -28,10 +28,10 @@ public:
     void addBackBrdfItem()  { ui_->typeComboBox->addItem("Back side BRDF"); }
     void addBackBtdfItem()  { ui_->typeComboBox->addItem("Back side BTDF"); }
 
-    bool isFrontBrdf() { return ui_->typeComboBox->currentText() == "Front side BRDF"; }
-    bool isFrontBtdf() { return ui_->typeComboBox->currentText() == "Front side BTDF"; }
-    bool isBackBrdf()  { return ui_->typeComboBox->currentText() == "Back side BRDF"; }
-    bool isBackBtdf()  { return ui_->typeComboBox->currentText() == "Back side BTDF"; }
+    bool isFrontBrdf() { return (ui_->typeComboBox->currentText() == "Front side BRDF"); }
+    bool isFrontBtdf() { return (ui_->typeComboBox->currentText() == "Front side BTDF"); }
+    bool isBackBrdf()  { return (ui_->typeComboBox->currentText() == "Back side BRDF"); }
+    bool isBackBtdf()  { return (ui_->typeComboBox->currentText() == "Back side BTDF"); }
 
     bool hasMultipleItems() { return ui_->typeComboBox->count() != 1; }
 

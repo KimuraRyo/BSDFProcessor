@@ -23,22 +23,15 @@
 #include <QtGui/QColor>
 
 #include <libbsdf/Brdf/Brdf.h>
-#include <libbsdf/Common/SpecularCoordinateSystem.h>
-#include <libbsdf/Common/SphericalCoordinateSystem.h>
-
-#include "SpecularCenteredCoordinateSystem.h"
+#include <libbsdf/Common/Utility.h>
 
 /*! Node mask types. */
-namespace NodeMask {
-
-enum Type {
-    HUD = 1 << 0,
-    BRDF = 1 << 1,
-    SPECULAR_REFLECTANCE = 1 << 2,
-    UNDEFINED = 1 << 3
+enum NodeMask {
+    HUD_MASK = 1 << 0,
+    BRDF_MASK = 1 << 1,
+    SPECULAR_REFLECTANCE_MASK = 1 << 2,
+    UNDEFINED_MASK = 1 << 3
 };
-
-} // namespace NodeMask
 
 namespace scene_util {
 
@@ -168,7 +161,7 @@ osg::Geometry* createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                       int               spectrumIndex,
                                       bool              useLogPlot,
                                       float             baseOfLogarithm,
-                                      bool              isBtdf,
+                                      lb::DataType      dataType,
                                       int               numTheta = 361,
                                       int               numPhi = 361);
 
@@ -179,7 +172,7 @@ osg::Geometry* createBrdfPointGeometry(const lb::Brdf&  brdf,
                                        int              spectrumIndex,
                                        bool             useLogPlot,
                                        float            baseOfLogarithm,
-                                       bool             isBtdf);
+                                       lb::DataType     dataType);
 
 /*! Creates the text labes of sample points. */
 void attachBrdfTextLabels(osg::Geode*       geode,
@@ -189,7 +182,7 @@ void attachBrdfTextLabels(osg::Geode*       geode,
                           int               spectrumIndex,
                           bool              useLogPlot,
                           float             baseOfLogarithm,
-                          bool              isBtdf);
+                          lb::DataType      dataType);
 
 /*! Creates the lines of XYZ axis. */
 osg::Geode* createAxis(double length = 1.0, bool useRgb = false);

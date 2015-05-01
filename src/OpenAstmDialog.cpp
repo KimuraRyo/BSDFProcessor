@@ -17,3 +17,15 @@ OpenAstmDialog::~OpenAstmDialog()
 {
     delete ui_;
 }
+
+lb::DataType OpenAstmDialog::getDataType()
+{
+    if (ui_->typeComboBox->currentText() == "BRDF") {
+        return lb::BRDF_DATA;
+    }
+    else if (ui_->typeComboBox->currentText() == "BTDF") {
+        return lb::BTDF_DATA;
+    }
+
+    return lb::UNKNOWN_DATA;
+}

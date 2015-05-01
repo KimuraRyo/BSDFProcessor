@@ -27,7 +27,10 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 #include <libbsdf/Common/SpectrumUtility.h>
+#include <libbsdf/Common/SpecularCoordinateSystem.h>
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
+
+#include "SpecularCenteredCoordinateSystem.h"
 
 GraphScene::GraphScene() : brdf_(0),
                            btdf_(0),
@@ -42,7 +45,7 @@ GraphScene::GraphScene() : brdf_(0),
                            numOitPasses_(8),
                            useLogPlot_(false),
                            baseOfLogarithm_(10.0),
-                           displayMode_(NORMAL),
+                           displayMode_(NORMAL_DISPLAY),
                            camera_(0),
                            cameraManipulator_(0)
 {
@@ -71,7 +74,7 @@ GraphScene::GraphScene() : brdf_(0),
 
     accessoryGroup_ = new osg::Group;
     accessoryGroup_->setName("accessoryGroup_");
-    accessoryGroup_->setNodeMask(NodeMask::UNDEFINED);
+    accessoryGroup_->setNodeMask(UNDEFINED_MASK);
 
     root_->addChild(postProcessingGroup_.get());
     postProcessingChild_->addChild(oitGroup_.get());
@@ -223,7 +226,7 @@ void GraphScene::createBrdfGeode()
     {
         bxdfMeshGeode_ = new osg::Geode;
         bxdfMeshGeode_->setName("bxdfMeshGeode_");
-        bxdfMeshGeode_->setNodeMask(NodeMask::BRDF);
+        bxdfMeshGeode_->setNodeMask(BRDF_MASK);
         bsdfGroup_->addChild(bxdfMeshGeode_.get());
 
         osg::ClipPlane* clipPlane = new osg::ClipPlane;
@@ -246,7 +249,6 @@ void GraphScene::createBrdfGeode()
 
         bxdfPointGeode_ = new osg::Geode;
         bxdfPointGeode_->setName("bxdfPointGeode_");
-        //bxdfPointGeode_->setNodeMask(NodeMask::BRDF);
         bsdfGroup_->addChild(bxdfPointGeode_.get());
     }
 
@@ -258,7 +260,6 @@ void GraphScene::createBrdfGeode()
 
         bxdfTextGeode_ = new osg::Geode;
         bxdfTextGeode_->setName("bxdfTextGeode_");
-        //bxdfTextGeode_->setNodeMask(NodeMask::BRDF);
         bsdfGroup_->addChild(bxdfTextGeode_.get());
     }
 }
@@ -293,7 +294,7 @@ void GraphScene::clearData()
     specularReflectances_ = 0;
     specularTransmittances_ = 0;
 
-    displayMode_ = NORMAL;
+    displayMode_ = NORMAL_DISPLAY;
 }
 
 float GraphScene::getIncomingPolarAngle(int index) const
@@ -413,7 +414,7 @@ void GraphScene::setSpecularTransmittances(lb::SampleSet2D* reflectances)
     }
 }
 
-lb::ColorModel::Type GraphScene::getColorModel() const
+lb::ColorModel GraphScene::getColorModel() const
 {
     if (brdf_ || btdf_) {
         return getSampleSet()->getColorModel();
@@ -425,7 +426,7 @@ lb::ColorModel::Type GraphScene::getColorModel() const
         return specularTransmittances_->getColorModel();
     }
     else {
-        return lb::ColorModel::SPECTRAL;
+        return lb::SPECTRAL_MODEL;
     }
 }
 
@@ -664,14 +665,14 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
     updateIncomingDirectionGeometry(inDir);
 
     lb::Brdf* brdf;
-    bool isBtdf;
+    lb::DataType dataType;
     if (brdf_) {
         brdf = brdf_;
-        isBtdf = false;
+        dataType = lb::BRDF_DATA;
     }
     else if (btdf_) {
         brdf = btdf_->getBrdf();
-        isBtdf = true;
+        dataType = lb::BTDF_DATA;
     }
     else {
         return;
@@ -680,15 +681,15 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
     bxdfMeshGeode_->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::POLYGONOFFSET);
 
     switch (displayMode_) {
-        case NORMAL: {
-            setupBrdfMeshGeometry(brdf, inTheta, inPhi, spectrumIndex, isBtdf);
+        case NORMAL_DISPLAY: {
+            setupBrdfMeshGeometry(brdf, inTheta, inPhi, spectrumIndex, dataType);
             useOit_ = false;
             break;
         }
-        case ALL_INCOMING_POLAR_ANGLES: {
+        case ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
             #pragma omp parallel for
             for (int i = 0; i < numInTheta_; ++i) {
-                setupBrdfMeshGeometry(brdf, getIncomingPolarAngle(i), inPhi, spectrumIndex, isBtdf);
+                setupBrdfMeshGeometry(brdf, getIncomingPolarAngle(i), inPhi, spectrumIndex, dataType);
             }
 
             // Remove incoming direction geometry.
@@ -697,16 +698,16 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
             useOit_ = true;
             break;
         }
-        case ALL_WAVELENGTHS: {
+        case ALL_WAVELENGTHS_DISPLAY: {
             #pragma omp parallel for
             for (int i = 0; i < numWavelengths_; ++i) {
-                setupBrdfMeshGeometry(brdf, inTheta, inPhi, i, isBtdf);
+                setupBrdfMeshGeometry(brdf, inTheta, inPhi, i, dataType);
             }
             useOit_ = true;
             break;
         }
-        case SAMPLE_POINTS: {
-            setupBrdfMeshGeometry(brdf, inTheta, inPhi, spectrumIndex, isBtdf);
+        case SAMPLE_POINTS_DISPLAY: {
+            setupBrdfMeshGeometry(brdf, inTheta, inPhi, spectrumIndex, dataType);
             bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
                                                                         osg::StateAttribute::ON);
             if (!isInDirDependentCoordinateSystem()) break;
@@ -714,19 +715,19 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
             // Update point geometry.
             osg::Geometry* pointGeom = scene_util::createBrdfPointGeometry(*brdf,
                                                                            inThetaIndex, inPhiIndex, spectrumIndex,
-                                                                           useLogPlot_, baseOfLogarithm_, isBtdf);
+                                                                           useLogPlot_, baseOfLogarithm_, dataType);
             bxdfPointGeode_->removeDrawables(0, bxdfPointGeode_->getNumDrawables());
             bxdfPointGeode_->addDrawable(pointGeom);
             useOit_ = false;
             break;
         }
-        case SAMPLE_POINT_LABELS: {
+        case SAMPLE_POINT_LABELS_DISPLAY: {
             if (!isInDirDependentCoordinateSystem()) break;
 
             scene_util::attachBrdfTextLabels(bxdfTextGeode_.get(),
                                              *brdf,
                                              inThetaIndex, inPhiIndex, spectrumIndex,
-                                             useLogPlot_, baseOfLogarithm_, isBtdf);
+                                             useLogPlot_, baseOfLogarithm_, dataType);
             useOit_ = false;
             break;
         }
@@ -736,10 +737,11 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
     }
 }
 
-void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int spectrumIndex, bool isBtdf)
+void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int spectrumIndex,
+                                       lb::DataType dataType)
 {
-    bool isManySamples = (displayMode_ == ALL_INCOMING_POLAR_ANGLES && numInTheta_ > 10) ||
-                         (displayMode_ == ALL_WAVELENGTHS && numWavelengths_ > 10);
+    bool isManySamples = (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 10) ||
+                         (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 10);
     int numTheta, numPhi;
     if (isManySamples) {
         numTheta = 181;
@@ -753,32 +755,31 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
     osg::Geometry* meshGeom;
     if (dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
-            *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, isBtdf, numTheta, numPhi);
+            *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
     }
     else if (dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
-            *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, isBtdf, numTheta, numPhi);
+            *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
     }
     else {
         meshGeom = scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
-            *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, isBtdf, numTheta, numPhi);
+            *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
     }
 
     // Set a color of graph.
     const float alpha = 0.3f;
     osg::Vec4 color;
     bool updateColor = false;
-    if (displayMode_ == ALL_INCOMING_POLAR_ANGLES && numInTheta_ > 1) {
+    if (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 1) {
         float inThetaRatio = inTheta / lb::PI_2_F;
         color = osg::Vec4(scene_util::hueToRgb(inThetaRatio), alpha);
         updateColor = true;
     }
-    else if (displayMode_ == ALL_WAVELENGTHS && numWavelengths_ > 1) {
+    else if (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 1) {
         const lb::SampleSet* ss = brdf->getSampleSet();
 
-        bool isRgb = ss->getColorModel() == lb::ColorModel::RGB;
-        bool isXyz = ss->getColorModel() == lb::ColorModel::XYZ;
-        if (isRgb || isXyz) {
+        if (ss->getColorModel() == lb::RGB_MODEL ||
+            ss->getColorModel() == lb::XYZ_MODEL) {
             if (spectrumIndex == 0) {
                 color = osg::Vec4(1.0, 0.0, 0.0, alpha);
             }
@@ -831,7 +832,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
 
     specularReflectanceGeode_ = new osg::Geode;
     specularReflectanceGeode_->setName("specularReflectanceGeode_");
-    specularReflectanceGeode_->setNodeMask(NodeMask::SPECULAR_REFLECTANCE);
+    specularReflectanceGeode_->setNodeMask(SPECULAR_REFLECTANCE_MASK);
     bsdfGroup_->addChild(specularReflectanceGeode_.get());
 
     // Update the geometry of incoming direction.

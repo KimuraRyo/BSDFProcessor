@@ -37,11 +37,11 @@ public:
     inline osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
     inline void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
 
-    void setData(lb::Brdf* brdf, lb::SampleSet2D* reflectances, bool isTransmittance)
+    void setData(lb::Brdf* brdf, lb::SampleSet2D* reflectances, lb::DataType dataType)
     {
         brdf_ = brdf;
         reflectances_ = reflectances;
-        isTransmittance_ = isTransmittance;
+        dataType_ = dataType;
     }
 
     lb::Brdf* getBrdf() { return brdf_; }
@@ -94,7 +94,7 @@ private:
 
     lb::Brdf*           brdf_;
     lb::SampleSet2D*    reflectances_;
-    bool                isTransmittance_;
+    lb::DataType        dataType_;
 
     float lightIntensity_;
     float environmentIntensity_;

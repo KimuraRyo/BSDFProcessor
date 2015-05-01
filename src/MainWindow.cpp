@@ -30,6 +30,7 @@
 #include <libbsdf/Reader/DdrReader.h>
 #include <libbsdf/Reader/LightToolsBsdfReader.h>
 #include <libbsdf/Reader/MerlBinaryReader.h>
+#include <libbsdf/Reader/ReaderUtility.h>
 #include <libbsdf/Reader/SdrReader.h>
 
 #include <libbsdf/Writer/DdrWriter.h>
@@ -128,31 +129,41 @@ void MainWindow::openFile(const QString& fileName)
                     graphScene_->getSpecularReflectances() ||
                     graphScene_->getSpecularTransmittances());
 
-    bool loaded;
+    bool loaded = false;
 
-    if (fileName.endsWith(".ddr")) {
-        loaded = openDdrDdt(fileName, true);
-    }
-    else if (fileName.endsWith(".ddt")) {
-        loaded = openDdrDdt(fileName, false);
-    }
-    else if (fileName.endsWith(".sdr")) {
-        loaded = openSdrSdt(fileName, true);
-    }
-    else if (fileName.endsWith(".sdt")) {
-        loaded = openSdrSdt(fileName, false);
-    }
-    else if (fileName.endsWith(".bsdf")) {
-        loaded = openLightToolsBsdf(fileName);
-    }
-    else if (fileName.endsWith(".astm")) {
-        loaded = openAstm(fileName);
-    }
-    else if (fileName.endsWith(".binary")) {
-        loaded = openMerlBinary(fileName);
-    }
-    else {
-        loaded = false;
+    lb::FileType fileType = lb::reader_utility::classifyFile(fileName.toLocal8Bit().data());
+    switch (fileType) {
+        case lb::ASTM_FILE: {
+            loaded = openAstm(fileName);
+            break;
+        }
+        case lb::INTEGRA_DDR_FILE: {
+            loaded = openDdrDdt(fileName, lb::BRDF_DATA);
+            break;
+        }
+        case lb::INTEGRA_DDT_FILE: {
+            loaded = openDdrDdt(fileName, lb::BTDF_DATA);
+            break;
+        }
+        case lb::INTEGRA_SDR_FILE: {
+            loaded = openSdrSdt(fileName, lb::SPECULAR_REFLECTANCE_DATA);
+            break;
+        }
+        case lb::INTEGRA_SDT_FILE: {
+            loaded = openSdrSdt(fileName, lb::SPECULAR_TRANSMITTANCE_DATA);
+            break;
+        }
+        case lb::LIGHTTOOLS_FILE: {
+            loaded = openLightToolsBsdf(fileName);
+            break;
+        }
+        case lb::MERL_BINARY_FILE: {
+            loaded = openMerlBinary(fileName);
+            break;
+        }
+        default: {
+            break;
+        }
     }
 
     if (!loaded) {
@@ -186,10 +197,10 @@ void MainWindow::exportBxdfUsingDialog()
 void MainWindow::exportFile(const QString& fileName)
 {
     if (fileName.endsWith(".ddr")) {
-        exportDdrDdt(fileName, true);
+        exportDdrDdt(fileName, lb::BRDF_DATA);
     }
     else if (fileName.endsWith(".ddt")) {
-        exportDdrDdt(fileName, false);
+        exportDdrDdt(fileName, lb::BTDF_DATA);
     }
 }
 
@@ -259,24 +270,24 @@ void MainWindow::updateDisplayMode(QString modeName)
     ui_->wavelengthSlider->setEnabled(true);
     ui_->pickedValueLineEdit->setEnabled(true);
 
-    if (modeName == getDisplayModeName(GraphScene::NORMAL)) {
-        graphScene_->setDisplayMode(GraphScene::NORMAL);
+    if (modeName == getDisplayModeName(GraphScene::NORMAL_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::NORMAL_DISPLAY);
     }
-    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES)) {
-        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_POLAR_ANGLES);
+    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY);
         ui_->incomingPolarAngleSlider->setDisabled(true);
         ui_->pickedValueLineEdit->setDisabled(true);
     }
-    else if (modeName == getDisplayModeName(GraphScene::ALL_WAVELENGTHS)) {
-        graphScene_->setDisplayMode(GraphScene::ALL_WAVELENGTHS);
+    else if (modeName == getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::ALL_WAVELENGTHS_DISPLAY);
         ui_->wavelengthSlider->setDisabled(true);
         ui_->pickedValueLineEdit->setDisabled(true);
     }
-    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINTS)) {
-        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINTS);
+    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINTS_DISPLAY);
     }
-    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS)) {
-        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINT_LABELS);
+    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINT_LABELS_DISPLAY);
         ui_->pickedValueLineEdit->setDisabled(true);
     }
     else {
@@ -312,12 +323,12 @@ void MainWindow::updateWavelength(int index)
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(), 0, index);
     getMainView()->requestRedraw();
 
-    if (graphScene_->getColorModel() == lb::ColorModel::MONOCHROME &&
+    if (graphScene_->getColorModel() == lb::MONOCHROMATIC_MODEL &&
         graphScene_->getWavelength(index) == 0.0f) {
         ui_->wavelengthLabel->setText("Channel:");
         ui_->wavelengthLineEdit->clear();
     }
-    else if (graphScene_->getColorModel() == lb::ColorModel::RGB) {
+    else if (graphScene_->getColorModel() == lb::RGB_MODEL) {
         ui_->wavelengthLabel->setText("Channel:");
         switch (index) {
             case 0:  ui_->wavelengthLineEdit->setText("R"); break;
@@ -326,7 +337,7 @@ void MainWindow::updateWavelength(int index)
             default: assert(false);
         }
     }
-    else if (graphScene_->getColorModel() == lb::ColorModel::XYZ) {
+    else if (graphScene_->getColorModel() == lb::XYZ_MODEL) {
         ui_->wavelengthLabel->setText("Channel:");
         switch (index) {
             case 0:  ui_->wavelengthLineEdit->setText("X"); break;
@@ -506,11 +517,11 @@ void MainWindow::initializeUi()
     QComboBox* comboBox = ui_->displayModeComboBox;
 
     comboBox->clear();
-    comboBox->addItem(getDisplayModeName(GraphScene::NORMAL));
-    comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES));
-    comboBox->addItem(getDisplayModeName(GraphScene::ALL_WAVELENGTHS));
-    comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS));
-    comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS));
+    comboBox->addItem(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
+    comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY));
+    comboBox->addItem(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY));
+    comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY));
+    comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
 
     ui_->incomingPolarAngleSlider->setEnabled(true);
     ui_->incomingPolarAngleSlider->setMaximum(graphScene_->getNumInTheta() - 1);
@@ -525,24 +536,24 @@ void MainWindow::initializeUi()
     ui_->pickedValueLineEdit->setEnabled(true);
 
     if (graphScene_->getNumWavelengths() == 1) {
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
     }
 
     if (graphScene_->getNumInTheta() == 1) {
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)));
     }
 
     if (!graphScene_->isInDirDependentCoordinateSystem()) {
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINTS)));
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)));
     }
 
     if (graphScene_->getSpecularReflectances() ||
         graphScene_->getSpecularTransmittances()) {
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES)));
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS)));
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINTS)));
-        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)));
     }
 
     osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
@@ -574,43 +585,63 @@ void MainWindow::initializeUi()
 
 QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
 {
-    bool isSpectral = (graphScene_->getColorModel() == lb::ColorModel::SPECTRAL);
-
     switch (mode) {
-        case GraphScene::NORMAL:                    return "Normal";
-        case GraphScene::ALL_INCOMING_POLAR_ANGLES: return "All incoming polar angles";
-        case GraphScene::ALL_WAVELENGTHS:           return isSpectral ? "All wavelengths" : "All channels";
-        case GraphScene::SAMPLE_POINTS:             return "Sample points";
-        case GraphScene::SAMPLE_POINT_LABELS:       return "Sample point labels";
-        default:                                    return "";
+        case GraphScene::NORMAL_DISPLAY: {
+            return "Normal";
+            break;
+        }
+        case GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
+            return "All incoming polar angles";
+            break;
+        }
+        case GraphScene::ALL_WAVELENGTHS_DISPLAY: {
+            bool isSpectral = (graphScene_->getColorModel() == lb::SPECTRAL_MODEL);
+            return isSpectral ? "All wavelengths" : "All channels";
+            break;
+        }
+        case GraphScene::SAMPLE_POINTS_DISPLAY: {
+            return "Sample points";
+            break;
+        }
+        case GraphScene::SAMPLE_POINT_LABELS_DISPLAY: {
+            return "Sample point labels";
+            break;
+        }
+        default: {
+            return "";
+        }
     }
 }
 
-bool MainWindow::openDdrDdt(const QString& fileName, bool isDdr)
+bool MainWindow::openDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::SpecularCoordinatesBrdf* brdf = lb::DdrReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    setupBrdf(brdf, !isDdr);
+    setupBrdf(brdf, dataType);
 
     return true;
 }
 
-bool MainWindow::openSdrSdt(const QString& fileName, bool isSdr)
+bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
 {
     lb::SampleSet2D* ss2 = lb::SdrReader::read(fileName.toLocal8Bit().data());
     if (!ss2) return false;
 
     graphScene_->clearData();
 
-    if (isSdr) {
+    if (dataType == lb::SPECULAR_REFLECTANCE_DATA) {
         graphScene_->setSpecularReflectances(ss2);
     }
-    else {
+    else if (dataType == lb::SPECULAR_TRANSMITTANCE_DATA) {
         graphScene_->setSpecularTransmittances(ss2);
     }
+    else {
+        std::cerr << "[MainWindow::openSdrSdt] Invalid data type: " << dataType << std::endl;
+        return false;
+    }
 
-    renderingScene_->setData(0, ss2, !isSdr);
+    renderingScene_->setData(0, ss2, dataType);
 
     initializeUi();
 
@@ -640,26 +671,29 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
     }
     
     lb::Brdf* brdf;
-    bool isBtdf;
+    lb::DataType dataType;
     if (dialog.isFrontBrdf()) {
         brdf = material->getFrontMaterial()->getBsdf()->getBrdf();
-        isBtdf = false;
+        dataType = lb::BRDF_DATA;
     }
     else if (dialog.isFrontBtdf()) {
         brdf = material->getFrontMaterial()->getBsdf()->getBtdf()->getBrdf();
-        isBtdf = true;
+        dataType = lb::BTDF_DATA;
     }
     else if (dialog.isBackBrdf()) {
         brdf = material->getBackMaterial()->getBsdf()->getBrdf();
-        isBtdf = false;
+        dataType = lb::BRDF_DATA;
     }
     else if (dialog.isBackBtdf()) {
         brdf = material->getBackMaterial()->getBsdf()->getBtdf()->getBrdf();
-        isBtdf = true;
+        dataType = lb::BTDF_DATA;
+    }
+    else {
+        return false;
     }
 
     lb::SphericalCoordinatesBrdf* scBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf);
-    setupBrdf(new lb::SphericalCoordinatesBrdf(*scBrdf), isBtdf);
+    setupBrdf(new lb::SphericalCoordinatesBrdf(*scBrdf), dataType);
 
     delete material;
 
@@ -674,7 +708,7 @@ bool MainWindow::openAstm(const QString& fileName)
     lb::SphericalCoordinatesBrdf* brdf = lb::AstmReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    setupBrdf(brdf, dialog.isBtdf());
+    setupBrdf(brdf, dialog.getDataType());
 
     return true;
 }
@@ -689,18 +723,22 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     return true;
 }
 
-void MainWindow::setupBrdf(lb::Brdf* brdf, bool isBtdf)
+void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 {
     graphScene_->clearData();
-    if (!isBtdf) {
+    if (dataType == lb::BRDF_DATA) {
         graphScene_->setBrdf(brdf);
     }
-    else {
+    else if (dataType == lb::BTDF_DATA) {
         graphScene_->setBtdf(new lb::Btdf(brdf));
+    }
+    else {
+        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
+        return;
     }
     graphScene_->createBrdfGeode();
 
-    renderingScene_->setData(brdf, graphScene_->getReflectances(), isBtdf);
+    renderingScene_->setData(brdf, graphScene_->getReflectances(), dataType);
 
     initializeUi();
 
@@ -708,13 +746,13 @@ void MainWindow::setupBrdf(lb::Brdf* brdf, bool isBtdf)
     ui_->tableGraphicsView->fitView(0.9);
 }
 
-void MainWindow::exportDdrDdt(const QString& fileName, bool isDdr)
+void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::Brdf* brdf;
-    if (isDdr && graphScene_->getBrdf()) {
+    if (dataType == lb::BRDF_DATA && graphScene_->getBrdf()) {
         brdf = graphScene_->getBrdf();
     }
-    else if (!isDdr && graphScene_->getBtdf()) {
+    else if (dataType == lb::BTDF_DATA && graphScene_->getBtdf()) {
         brdf = graphScene_->getBtdf()->getBrdf();
     }
     else {

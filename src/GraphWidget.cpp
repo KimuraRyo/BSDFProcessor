@@ -143,7 +143,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
         osg::Vec3 intersectPosition;
         osg::Node* pickedNode = scene_util::pickNode(views.front(), osg::Vec2(event->x(), height() - event->y()),
                                                      intersectPosition,
-                                                     NodeMask::BRDF | NodeMask::SPECULAR_REFLECTANCE,
+                                                     BRDF_MASK | SPECULAR_REFLECTANCE_MASK,
                                                      false);
 
         if (pickedNode) {

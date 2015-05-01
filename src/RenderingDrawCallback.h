@@ -28,7 +28,7 @@ public:
                           osg::Image*       outDirImage,
                           lb::Brdf*         brdf,
                           lb::SampleSet2D*  reflectances,
-                          bool              isTransmittance,
+                          lb::DataType      dataType,
                           float             lightIntensity,
                           float             environmentIntensity);
 
@@ -54,7 +54,7 @@ private:
 
     lb::Brdf*           brdf_;
     lb::SampleSet2D*    reflectances_;
-    bool                isTransmittance_;
+    lb::DataType        dataType_;
 
     float lightIntensity_;
     float environmentIntensity_;

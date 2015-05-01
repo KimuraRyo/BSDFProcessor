@@ -34,11 +34,11 @@ public:
     ~GraphScene();
 
     enum DisplayMode {
-        NORMAL,
-        ALL_INCOMING_POLAR_ANGLES,
-        ALL_WAVELENGTHS,
-        SAMPLE_POINTS,
-        SAMPLE_POINT_LABELS
+        NORMAL_DISPLAY,
+        ALL_INCOMING_POLAR_ANGLES_DISPLAY,
+        ALL_WAVELENGTHS_DISPLAY,
+        SAMPLE_POINTS_DISPLAY,
+        SAMPLE_POINT_LABELS_DISPLAY
     };
 
     osg::Group* getRoot() { return root_.get(); }
@@ -82,7 +82,7 @@ public:
     inline int getNumWavelengths() { return numWavelengths_; }
 
     /*! Gets the color model of used data. */
-    lb::ColorModel::Type getColorModel() const;
+    lb::ColorModel getColorModel() const;
 
     inline lb::Spectrum& getMaxValuesPerWavelength() { return maxPerWavelength_; }
 
@@ -122,7 +122,8 @@ private:
     void updateIncomingDirectionGeometry(const lb::Vec3& inDirection);
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectrumIndex);
-    void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int spectrumIndex, bool isBtdf);
+    void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int spectrumIndex,
+                               lb::DataType dataType);
 
     void updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int spectrumIndex);
 

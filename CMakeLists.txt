@@ -24,7 +24,7 @@ file(GLOB SOURCES
 include_directories(${SOURCE_PATH})
 
 # Macro for developers
-add_definitions(-DDEVELOPMENT)
+#add_definitions(-DDEVELOPMENT)
 
 # Enable all warnings
 #add_definitions(-Wall)
@@ -83,7 +83,6 @@ if(APPLE)
 elseif(MSVC)
     set(SOURCES ${SOURCES} icon/${PROJECT_NAME}.rc)
 endif()
-
 
 qt5_add_resources(RESOURCE resource/resource.qrc)
 

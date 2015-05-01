@@ -68,15 +68,15 @@ private:
     void initializeUi();
     QString getDisplayModeName(GraphScene::DisplayMode mode);
 
-    bool openDdrDdt(const QString& fileName, bool isDdr = true);
-    bool openSdrSdt(const QString& fileName, bool isSdr = true);
+    bool openDdrDdt(const QString& fileName, lb::DataType dataType);
+    bool openSdrSdt(const QString& fileName, lb::DataType dataType);
     bool openLightToolsBsdf(const QString& fileName);
     bool openAstm(const QString& fileName);
     bool openMerlBinary(const QString& fileName);
 
-    void setupBrdf(lb::Brdf* brdf, bool isBtdf = false);
+    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
 
-    void exportDdrDdt(const QString& fileName, bool isDdr = true);
+    void exportDdrDdt(const QString& fileName, lb::DataType dataType);
 
     osgViewer::View* getMainView() const { return ui_->mainViewerWidget->getView(0); }
     osgViewer::View* getRenderingView() const { return ui_->renderingViewerWidget->getView(0); }

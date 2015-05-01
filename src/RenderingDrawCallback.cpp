@@ -8,21 +8,21 @@
 
 #include "RenderingDrawCallback.h"
 
-#include <libbsdf/Common/Spectrum.h>
+#include <libbsdf/Common/Global.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 
 RenderingDrawCallback::RenderingDrawCallback(osg::Image*        inDirImage,
                                              osg::Image*        outDirImage,
                                              lb::Brdf*          brdf,
                                              lb::SampleSet2D*   reflectances,
-                                             bool               isTransmittance,
+                                             lb::DataType       dataType,
                                              float              lightIntensity,
                                              float              environmentIntensity)
                                              : inDirImage_(inDirImage),
                                                outDirImage_(outDirImage),
                                                brdf_(brdf),
                                                reflectances_(reflectances),
-                                               isTransmittance_(isTransmittance),
+                                               dataType_(dataType),
                                                lightIntensity_(lightIntensity),
                                                environmentIntensity_(environmentIntensity) {}
 
@@ -55,7 +55,7 @@ void RenderingDrawCallback::render() const
             renderReflectance(outDir, inDirPtr);
         }
 
-        if (isTransmittance_) {
+        if (dataType_ == lb::BTDF_DATA || dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
             inDir[2] = -inDir[2];
         }
 
@@ -74,10 +74,10 @@ void RenderingDrawCallback::renderBrdf(const lb::Vec3& inDir, const lb::Vec3& ou
     const lb::SampleSet* ss = brdf_->getSampleSet();
 
     lb::Vec3 rgb;
-    if (ss->getColorModel() == lb::ColorModel::RGB) {
+    if (ss->getColorModel() == lb::RGB_MODEL) {
         rgb = sp;
     }
-    else if (ss->getColorModel() == lb::ColorModel::XYZ) {
+    else if (ss->getColorModel() == lb::XYZ_MODEL) {
         rgb = lb::SpectrumUtility::xyzToSrgb(sp);
     }
     else if (ss->getNumWavelengths() == 1) {
@@ -99,10 +99,10 @@ void RenderingDrawCallback::renderReflectance(const lb::Vec3& outDir, float* pix
     lb::Spectrum sp = reflectances_->getSpectrum(outDir);
 
     lb::Vec3 rgb;
-    if (reflectances_->getColorModel() == lb::ColorModel::RGB) {
+    if (reflectances_->getColorModel() == lb::RGB_MODEL) {
         rgb = sp;
     }
-    else if (reflectances_->getColorModel() == lb::ColorModel::XYZ) {
+    else if (reflectances_->getColorModel() == lb::XYZ_MODEL) {
         rgb = lb::SpectrumUtility::xyzToSrgb(sp);
     }
     else if (reflectances_->getNumWavelengths() == 1) {
