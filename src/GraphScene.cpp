@@ -306,7 +306,12 @@ float GraphScene::getIncomingPolarAngle(int index) const
             return ss->getAngle0(index);
         }
         else {
-            return index * lb::SphericalCoordinateSystem::MAX_ANGLE0 / (numInTheta_ - 1);
+            if (numInTheta_ == 1) {
+                return 0.0f;
+            }
+            else {
+                return index * lb::SphericalCoordinateSystem::MAX_ANGLE0 / (numInTheta_ - 1);
+            }
         }
     }
     else if (specularReflectances_) {
@@ -314,6 +319,34 @@ float GraphScene::getIncomingPolarAngle(int index) const
     }
     else if (specularTransmittances_) {
         return specularTransmittances_->getTheta(index);
+    }
+    else {
+        return 0.0f;
+    }
+}
+
+float GraphScene::getIncomingAzimuthalAngle(int index) const
+{
+    if (brdf_ || btdf_) {
+        const lb::SampleSet* ss = getSampleSet();
+
+        if (isInDirDependentCoordinateSystem()) {
+            return ss->getAngle1(index);
+        }
+        else {
+            if (numInPhi_ == 1) {
+                return 0.0f;
+            }
+            else {
+                return index * lb::SphericalCoordinateSystem::MAX_ANGLE1 / (numInPhi_ - 1);
+            }
+        }
+    }
+    else if (specularReflectances_) {
+        return specularReflectances_->getPhi(index);
+    }
+    else if (specularTransmittances_) {
+        return specularTransmittances_->getPhi(index);
     }
     else {
         return 0.0f;
@@ -652,15 +685,15 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
     const lb::SampleSet* ss = getSampleSet();
     if (!ss) return;
 
-    bool isInvalidData = (!bxdfMeshGeode_.valid() || !bxdfPointGeode_.valid() || !bxdfTextGeode_.valid());
+    bool isInvalidNode = (!bxdfMeshGeode_.valid() || !bxdfPointGeode_.valid() || !bxdfTextGeode_.valid());
     bool isInvalidParam = (inThetaIndex  >= numInTheta_ ||
                            inPhiIndex    >= numInPhi_ ||
                            spectrumIndex >= ss->getNumWavelengths());
-    if (isInvalidData || isInvalidParam) return;
+    if (isInvalidNode || isInvalidParam) return;
 
     // Update the geometry of incoming direction.
     float inTheta = getIncomingPolarAngle(inThetaIndex);
-    float inPhi = ss->getAngle1(inPhiIndex);
+    float inPhi = getIncomingAzimuthalAngle(inPhiIndex);
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
     updateIncomingDirectionGeometry(inDir);
 
@@ -692,7 +725,22 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
                 setupBrdfMeshGeometry(brdf, getIncomingPolarAngle(i), inPhi, spectrumIndex, dataType);
             }
 
-            // Remove incoming direction geometry.
+            // Remove the line of incoming direction.
+            inDirGeometry_->setVertexArray(0);
+
+            useOit_ = true;
+            break;
+        }
+        case ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
+            float endInPhi = getIncomingAzimuthalAngle(numInPhi_ - 1) - lb::SphericalCoordinateSystem::MAX_ANGLE1;
+            bool isDuplicate = lb::isEqual(getIncomingAzimuthalAngle(0), endInPhi);
+            int numInPhi = isDuplicate ? numInPhi_ - 1 : numInPhi_;
+            #pragma omp parallel for
+            for (int i = 0; i < numInPhi; ++i) {
+                setupBrdfMeshGeometry(brdf, inTheta, getIncomingAzimuthalAngle(i), spectrumIndex, dataType);
+            }
+
+            // Remove the line of incoming direction.
             inDirGeometry_->setVertexArray(0);
 
             useOit_ = true;
@@ -741,6 +789,7 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
                                        lb::DataType dataType)
 {
     bool isManySamples = (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 10) ||
+                         (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && numInPhi_ > 10) ||
                          (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 10);
     int numTheta, numPhi;
     if (isManySamples) {
@@ -766,13 +815,18 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
             *brdf, inTheta, inPhi, spectrumIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
     }
 
-    // Set a color of graph.
+    // Set the color of graph.
     const float alpha = 0.3f;
     osg::Vec4 color;
     bool updateColor = false;
     if (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 1) {
         float inThetaRatio = inTheta / lb::PI_2_F;
         color = osg::Vec4(scene_util::hueToRgb(inThetaRatio), alpha);
+        updateColor = true;
+    }
+    else if (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && numInPhi_ > 1) {
+        float inPhiRatio = inPhi / (2.0f * lb::PI_F);
+        color = osg::Vec4(scene_util::hueToRgb(inPhiRatio), alpha);
         updateColor = true;
     }
     else if (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 1) {
@@ -905,7 +959,7 @@ lb::Vec3 GraphScene::getInDir(int inThetaIndex, int inPhiIndex)
     if (!ss) return lb::Vec3::Zero();
 
     float inTheta = getIncomingPolarAngle(inThetaIndex);
-    float inPhi = ss->getAngle1(inPhiIndex);
+    float inPhi = getIncomingAzimuthalAngle(inPhiIndex);
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
 
     assert(inDir.z() >= 0.0);
@@ -953,16 +1007,12 @@ void GraphScene::computeReflectances()
     reflectances_->getWavelengths() = ss->getWavelengths();
     
     for (int inThIndex = 0; inThIndex < numInTheta_; ++inThIndex) {
-        lb::Vec3 inDir = getInDir(inThIndex, 0);
-        float inTheta, inPhi;
-        lb::SphericalCoordinateSystem::fromXyz(inDir, &inTheta, &inPhi);
+        float inTheta = getIncomingPolarAngle(inThIndex);
         reflectances_->setTheta(inThIndex, inTheta);
     }
 
     for (int inPhIndex = 0; inPhIndex < numInPhi_; ++inPhIndex) {
-        lb::Vec3 inDir = getInDir(0, inPhIndex);
-        float inTheta, inPhi;
-        lb::SphericalCoordinateSystem::fromXyz(inDir, &inTheta, &inPhi);
+        float inPhi = getIncomingAzimuthalAngle(inPhIndex);
         reflectances_->setPhi(inPhIndex, inPhi);
     }
 

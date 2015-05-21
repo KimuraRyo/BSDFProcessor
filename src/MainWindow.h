@@ -49,6 +49,7 @@ private slots:
 
     void updateDisplayMode(QString modeName);
     void updateIncomingPolarAngle(int index);
+    void updateIncomingAzimuthalAngle(int index);
     void updateWavelength(int index);
     void useLogPlot(bool on);
     void updateBaseOfLogarithm(int index);
@@ -75,9 +76,9 @@ private:
     bool openAstm(const QString& fileName);
     bool openMerlBinary(const QString& fileName);
 
-    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
-
     void exportDdrDdt(const QString& fileName, lb::DataType dataType);
+
+    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
 
     osgViewer::View* getMainView() const { return ui_->mainViewerWidget->getView(0); }
     osgViewer::View* getRenderingView() const { return ui_->renderingViewerWidget->getView(0); }

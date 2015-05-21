@@ -36,6 +36,7 @@ public:
     enum DisplayMode {
         NORMAL_DISPLAY,
         ALL_INCOMING_POLAR_ANGLES_DISPLAY,
+        ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY,
         ALL_WAVELENGTHS_DISPLAY,
         SAMPLE_POINTS_DISPLAY,
         SAMPLE_POINT_LABELS_DISPLAY
@@ -57,6 +58,7 @@ public:
     void clearData();
 
     float getIncomingPolarAngle(int index) const;
+    float getIncomingAzimuthalAngle(int index) const;
 
     lb::Vec3 getInDir(int inThetaIndex, int inPhiIndex);
 

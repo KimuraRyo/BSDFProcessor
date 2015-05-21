@@ -56,8 +56,8 @@
      <rect>
       <x>320</x>
       <y>10</y>
-      <width>331</width>
-      <height>201</height>
+      <width>271</width>
+      <height>231</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -69,14 +69,14 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>150</height>
+      <height>222</height>
      </size>
     </property>
     <property name="windowTitle">
      <string>Control</string>
     </property>
     <widget class="QWidget" name="dockWidgetContents_2">
-     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <layout class="QFormLayout" name="formLayout_2">
         <property name="fieldGrowthPolicy">
@@ -106,6 +106,13 @@
         <property name="fieldGrowthPolicy">
          <enum>QFormLayout::ExpandingFieldsGrow</enum>
         </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Incoming polar angle:</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
@@ -116,19 +123,13 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
-            <property name="invertedAppearance">
-             <bool>false</bool>
-            </property>
-            <property name="invertedControls">
-             <bool>false</bool>
-            </property>
            </widget>
           </item>
           <item>
            <widget class="QLineEdit" name="incomingPolarAngleLineEdit">
             <property name="maximumSize">
              <size>
-              <width>30</width>
+              <width>50</width>
               <height>16777215</height>
              </size>
             </property>
@@ -149,13 +150,20 @@
          </layout>
         </item>
         <item row="1" column="0">
+         <widget class="QLabel" name="incomingAzimuthalAngleLabel">
+          <property name="text">
+           <string>Incoming azimuthal angle:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QLabel" name="wavelengthLabel">
           <property name="text">
            <string>Wavelength:</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="2" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QSlider" name="wavelengthSlider">
@@ -188,12 +196,41 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Incoming polar angle:</string>
-          </property>
-         </widget>
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="incomingAzimuthalAngleLayout">
+          <item>
+           <widget class="QSlider" name="incomingAzimuthalAngleSlider">
+            <property name="pageStep">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="incomingAzimuthalAngleLineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="maxLength">
+             <number>6</number>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -477,7 +514,7 @@
       <x>39</x>
       <y>280</y>
       <width>271</width>
-      <height>300</height>
+      <height>341</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -554,8 +591,11 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="maximum">
-           <double>999.990000000000009</double>
+           <double>999.999000000000024</double>
           </property>
           <property name="singleStep">
            <double>0.100000000000000</double>
@@ -580,8 +620,11 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="maximum">
-           <double>999.990000000000009</double>
+           <double>999.999000000000024</double>
           </property>
           <property name="singleStep">
            <double>0.100000000000000</double>
@@ -718,6 +761,23 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>displayModeComboBox</tabstop>
+  <tabstop>incomingPolarAngleSlider</tabstop>
+  <tabstop>incomingPolarAngleLineEdit</tabstop>
+  <tabstop>wavelengthSlider</tabstop>
+  <tabstop>wavelengthLineEdit</tabstop>
+  <tabstop>incomingAzimuthalAngleSlider</tabstop>
+  <tabstop>incomingAzimuthalAngleLineEdit</tabstop>
+  <tabstop>logPlotGroupBox</tabstop>
+  <tabstop>logPlotBaseSlider</tabstop>
+  <tabstop>logPlotBaseLineEdit</tabstop>
+  <tabstop>tableGraphicsView</tabstop>
+  <tabstop>pickedValueLineEdit</tabstop>
+  <tabstop>pickedReflectanceLineEdit</tabstop>
+  <tabstop>lightIntensitySpinBox</tabstop>
+  <tabstop>environmentIntensitySpinBox</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -727,12 +787,12 @@
    <slot>updateIncomingPolarAngle(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>543</x>
+     <x>523</x>
      <y>113</y>
     </hint>
     <hint type="destinationlabel">
-     <x>677</x>
-     <y>282</y>
+     <x>604</x>
+     <y>106</y>
     </hint>
    </hints>
   </connection>
@@ -744,11 +804,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>523</x>
-     <y>143</y>
+     <y>173</y>
     </hint>
     <hint type="destinationlabel">
-     <x>531</x>
-     <y>319</y>
+     <x>601</x>
+     <y>171</y>
     </hint>
    </hints>
   </connection>
@@ -759,8 +819,8 @@
    <slot>updateBaseOfLogarithm(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>458</x>
-     <y>196</y>
+     <x>503</x>
+     <y>226</y>
     </hint>
     <hint type="destinationlabel">
      <x>416</x>
@@ -807,8 +867,8 @@
    <slot>updateLightIntensity(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>203</x>
-     <y>480</y>
+     <x>236</x>
+     <y>606</y>
     </hint>
     <hint type="destinationlabel">
      <x>63</x>
@@ -823,8 +883,8 @@
    <slot>updateEnvironmentIntensity(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>234</x>
-     <y>500</y>
+     <x>236</x>
+     <y>632</y>
     </hint>
     <hint type="destinationlabel">
      <x>182</x>
@@ -832,14 +892,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>incomingAzimuthalAngleSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateIncomingAzimuthalAngle(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>523</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>632</x>
+     <y>126</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>updateIncomingPolarAngle(int)</slot>
   <slot>createBrdfFromReflectanceModel()</slot>
-  <slot>changeLambertianButtonColor()</slot>
-  <slot>changePhongButtonColor()</slot>
-  <slot>changeWardIsotropicButtonColor()</slot>
-  <slot>changeCookTorranceButtonColor()</slot>
   <slot>updateWavelength(int)</slot>
   <slot>updateBaseOfLogarithm(int)</slot>
   <slot>useLogPlot(bool)</slot>
@@ -849,5 +921,11 @@
   <slot>updateDisplayMode(QString)</slot>
   <slot>updateLightIntensity(double)</slot>
   <slot>updateEnvironmentIntensity(double)</slot>
+  <slot>updateIncomingAzimuthalAngle(int)</slot>
+  <slot>changeCookTorranceButtonColor()</slot>
+  <slot>changeLambertianButtonColor()</slot>
+  <slot>changePhongButtonColor()</slot>
+  <slot>changeWardAnisotropicButtonColor()</slot>
+  <slot>changeWardIsotropicButtonColor()</slot>
  </slots>
 </ui>

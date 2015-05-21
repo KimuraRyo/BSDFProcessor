@@ -18,19 +18,19 @@
  * \brief   The SpecularCenteredCoordinateSystem class provides the functions of a specular-centered coordinate system.
  *
  * The coordinate system has four angle parameters.
- *   - inTheta: the polar angle of an incoming direction
- *   - inPhi: the azimuthal angle of an incoming direction
- *   - specTheta: the polar angle of a specular direction
- *   - specPhi: the azimuthal angle of a specular direction
+ *   - \a inTheta: the polar angle of an incoming direction
+ *   - \a inPhi: the azimuthal angle of an incoming direction
+ *   - \a specTheta: the polar angle of a specular direction
+ *   - \a specPhi: the azimuthal angle of a specular direction
  *
- * Spec is an abbreviation for specular.
+ * \a spec is an abbreviation for specular. \a inPhi isn't used for isotropic BRDFs.
  */
 class SpecularCenteredCoordinateSystem
 {
 public:
     /*!
      * Converts from four angles to incoming and outgoing directions and
-     * assigns them to *inDir and *outDir.
+     * assigns them to \a inDir and \a outDir.
      */
     static inline void toXyz(float inTheta, float inPhi, float specTheta, float specPhi,
                              lb::Vec3* inDir, lb::Vec3* outDir)
@@ -55,9 +55,9 @@ private:
     {
         lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
         float rotAngle = inTheta * (1.0f - specTheta / MAX_ANGLE2);
-        lb::Vec2f rotVec = Eigen::Rotation2D<lb::Vec2f::Scalar>(rotAngle) * lb::Vec2f(xyzVec(0), xyzVec(2));
+        lb::Vec2f rotVec = Eigen::Rotation2D<lb::Vec2f::Scalar>(rotAngle) * lb::Vec2f(xyzVec[0], xyzVec[2]);
 
-        return lb::Vec3(rotVec(0), xyzVec(1), rotVec(1));
+        return lb::Vec3(rotVec[0], xyzVec[1], rotVec[1]);
     }
 };
 

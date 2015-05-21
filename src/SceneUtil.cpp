@@ -684,27 +684,24 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
 {
     const lb::SampleSet* ss = brdf.getSampleSet();
 
-    int i0 = inThetaIndex;
-    int i1 = inPhiIndex;
-
     osg::Vec3Array* vertices = new osg::Vec3Array;
 
     for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
     for (int i3 = 0; i3 < ss->getNumAngles3(); ++i3) {
         lb::Vec3 inDir, outDir;
-        brdf.getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
+        brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
         if (outDir[2] < -lb::EPSILON_F) continue;
 
-        if (dataType == lb::BTDF_DATA) {
-            outDir[2] = -outDir[2];
-        }
-
-        float brdfValue = ss->getSpectrum(i0, i1, i2, i3)[spectrumIndex];
+        float brdfValue = brdf.getSpectrum(inDir, outDir)[spectrumIndex];
         if (brdfValue <= 0.0f) continue;
 
         if (useLogPlot) {
             brdfValue = std::log(brdfValue + 1.0) / std::log(baseOfLogarithm);
+        }
+
+        if (dataType == lb::BTDF_DATA) {
+            outDir[2] = -outDir[2];
         }
 
         vertices->push_back(toOsg(outDir * brdfValue));
@@ -747,9 +744,6 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
 {
     const lb::SampleSet* ss = brdf.getSampleSet();
 
-    int i0 = inThetaIndex;
-    int i1 = inPhiIndex;
-
     const int maxSamples = 5000; // reduction threshold of samples
 
     osgText::Font* font = new osgText::Font(new osgQt::QFontImplementation(QFont("Times")));
@@ -770,7 +764,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
             if (i2 == 0 && i3 > 0) continue;
 
             lb::Vec3 inDir, outDir;
-            brdf.getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
+            brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
             if (outDir[2] < -lb::EPSILON_F) {
                 continue;
@@ -780,7 +774,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 outDir[2] = -outDir[2];
             }
 
-            float brdfValue = ss->getSpectrum(i0, i1, i2, i3)[spectrumIndex];
+            float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[spectrumIndex];
             if (brdfValue <= 0.0f) continue;
 
             float distance;
@@ -852,7 +846,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
         bool isNegativeZ = false;
         for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
             lb::Vec3 inDir, outDir;
-            brdf.getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
+            brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
             if (outDir[2] < -lb::EPSILON_F) {
                 if (isNegativeZ) {
@@ -867,7 +861,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 outDir[2] = -outDir[2];
             }
 
-            float brdfValue = ss->getSpectrum(i0, i1, i2, i3)[spectrumIndex];
+            float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[spectrumIndex];
             float distance;
             if (useLogPlot) {
                 distance = std::log(brdfValue + 1.0) / std::log(baseOfLogarithm);

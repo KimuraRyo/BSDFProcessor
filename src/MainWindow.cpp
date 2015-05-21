@@ -271,8 +271,27 @@ void MainWindow::about()
 
 void MainWindow::updateDisplayMode(QString modeName)
 {
-    ui_->incomingPolarAngleSlider->setEnabled(true);
-    ui_->wavelengthSlider->setEnabled(true);
+    if (graphScene_->getNumInTheta() == 1) {
+        ui_->incomingPolarAngleSlider->setDisabled(true);
+    }
+    else {
+        ui_->incomingPolarAngleSlider->setEnabled(true);
+    }
+
+    if (graphScene_->getNumInPhi() == 1) {
+        ui_->incomingAzimuthalAngleSlider->setDisabled(true);
+    }
+    else {
+        ui_->incomingAzimuthalAngleSlider->setEnabled(true);
+    }
+
+    if (graphScene_->getNumWavelengths() == 1) {
+        ui_->wavelengthSlider->setDisabled(true);
+    }
+    else {
+        ui_->wavelengthSlider->setEnabled(true);
+    }
+    
     ui_->pickedValueLineEdit->setEnabled(true);
 
     if (modeName == getDisplayModeName(GraphScene::NORMAL_DISPLAY)) {
@@ -281,6 +300,11 @@ void MainWindow::updateDisplayMode(QString modeName)
     else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY);
         ui_->incomingPolarAngleSlider->setDisabled(true);
+        ui_->pickedValueLineEdit->setDisabled(true);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY);
+        ui_->incomingAzimuthalAngleSlider->setDisabled(true);
         ui_->pickedValueLineEdit->setDisabled(true);
     }
     else if (modeName == getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)) {
@@ -300,7 +324,9 @@ void MainWindow::updateDisplayMode(QString modeName)
         return;
     }
 
-    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(), 0, ui_->wavelengthSlider->value());
+    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
+                                     ui_->incomingAzimuthalAngleSlider->value(),
+                                     ui_->wavelengthSlider->value());
     graphScene_->updateView(graphWidget_->width(), graphWidget_->height());
 
     getMainView()->requestRedraw();
@@ -310,10 +336,27 @@ void MainWindow::updateDisplayMode(QString modeName)
 
 void MainWindow::updateIncomingPolarAngle(int index)
 {
-    graphScene_->updateGraphGeometry(index, 0, ui_->wavelengthSlider->value());
+    graphScene_->updateGraphGeometry(index,
+                                     ui_->incomingAzimuthalAngleSlider->value(),
+                                     ui_->wavelengthSlider->value());
 
-    float inPolarDegree = graphScene_->getIncomingPolarAngle(index) / lb::PI_F * 180.0f;
+    float inPolarDegree = lb::toDegree(graphScene_->getIncomingPolarAngle(index));
     ui_->incomingPolarAngleLineEdit->setText(QString::number(inPolarDegree));
+
+    getMainView()->requestRedraw();
+
+    clearPickedValue();
+    displayReflectance();
+}
+
+void MainWindow::updateIncomingAzimuthalAngle(int index)
+{
+    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
+                                     index,
+                                     ui_->wavelengthSlider->value());
+
+    float inAzimuthalDegree = lb::toDegree(graphScene_->getIncomingAzimuthalAngle(index));
+    ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inAzimuthalDegree));
 
     getMainView()->requestRedraw();
 
@@ -325,7 +368,9 @@ void MainWindow::updateWavelength(int index)
 {
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
-    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(), 0, index);
+    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
+                                     ui_->incomingAzimuthalAngleSlider->value(),
+                                     index);
     getMainView()->requestRedraw();
 
     if (graphScene_->getColorModel() == lb::MONOCHROMATIC_MODEL &&
@@ -377,7 +422,7 @@ void MainWindow::updateBaseOfLogarithm(int index)
 {
     graphScene_->setBaseOfLogarithm(index);
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
-                                     0,
+                                     ui_->incomingAzimuthalAngleSlider->value(),
                                      ui_->wavelengthSlider->value());
     getMainView()->requestRedraw();
 
@@ -416,13 +461,14 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
         lb::Brdf* brdf = graphScene_->getBrdf();
         lb::SampleSet2D* sr = graphScene_->getSpecularReflectances();
         if (brdf) {
-            lb::Vec3 inDir = graphScene_->getInDir(ui_->incomingPolarAngleSlider->value(), 0);
+            lb::Vec3 inDir = graphScene_->getInDir(ui_->incomingPolarAngleSlider->value(),
+                                                   ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 outDir = lb::toVec3(position).normalized();
             sp = brdf->getSpectrum(inDir, outDir);
         }
         else if (sr) {
             float inTheta = sr->getTheta(ui_->incomingPolarAngleSlider->value());
-            float inPhi = sr->getPhi(0);
+            float inPhi = sr->getPhi(ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
             sp = sr->getSpectrum(inDir);
         }
@@ -434,13 +480,14 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
         lb::Btdf* btdf = graphScene_->getBtdf();
         lb::SampleSet2D* st = graphScene_->getSpecularTransmittances();
         if (btdf) {
-            lb::Vec3 inDir = graphScene_->getInDir(ui_->incomingPolarAngleSlider->value(), 0);
+            lb::Vec3 inDir = graphScene_->getInDir(ui_->incomingPolarAngleSlider->value(),
+                                                   ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 outDir = lb::toVec3(position).normalized();
             sp = btdf->getSpectrum(inDir, outDir);
         }
         else if (st) {
             float inTheta = st->getTheta(ui_->incomingPolarAngleSlider->value());
-            float inPhi = st->getPhi(0);
+            float inPhi = st->getPhi(ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
             sp = st->getSpectrum(inDir);
         }
@@ -482,7 +529,8 @@ void MainWindow::displayReflectance()
         return;
     }
 
-    const lb::Spectrum& sp = ss2->getSpectrum(ui_->incomingPolarAngleSlider->value());
+    const lb::Spectrum& sp = ss2->getSpectrum(ui_->incomingPolarAngleSlider->value(),
+                                              ui_->incomingAzimuthalAngleSlider->value());
     float reflectance = sp[ui_->wavelengthSlider->value()];
     ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
 }
@@ -524,21 +572,22 @@ void MainWindow::initializeUi()
     comboBox->clear();
     comboBox->addItem(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY));
+    comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
 
-    ui_->incomingPolarAngleSlider->setEnabled(true);
     ui_->incomingPolarAngleSlider->setMaximum(graphScene_->getNumInTheta() - 1);
     ui_->incomingPolarAngleSlider->setValue(0);
     updateIncomingPolarAngle(0);
 
-    ui_->wavelengthSlider->setEnabled(true);
+    ui_->incomingAzimuthalAngleSlider->setMaximum(graphScene_->getNumInPhi() - 1);
+    ui_->incomingAzimuthalAngleSlider->setValue(0);
+    updateIncomingAzimuthalAngle(0);
+
     ui_->wavelengthSlider->setMaximum(graphScene_->getNumWavelengths() - 1);
     ui_->wavelengthSlider->setValue(0);
     updateWavelength(0);
-
-    ui_->pickedValueLineEdit->setEnabled(true);
 
     if (graphScene_->getNumWavelengths() == 1) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
@@ -546,6 +595,10 @@ void MainWindow::initializeUi()
 
     if (graphScene_->getNumInTheta() == 1) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)));
+    }
+
+    if (graphScene_->getNumInPhi() == 1) {
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)));
     }
 
     if (!graphScene_->isInDirDependentCoordinateSystem()) {
@@ -556,10 +609,13 @@ void MainWindow::initializeUi()
     if (graphScene_->getSpecularReflectances() ||
         graphScene_->getSpecularTransmittances()) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)));
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)));
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)));
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)));
     }
+
+    updateDisplayMode(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
 
     osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
     if (trackball) {
@@ -575,13 +631,15 @@ void MainWindow::initializeUi()
 
     if (renderingScene_->getBrdf()) {
         ui_->lightIntensitySpinBox->setEnabled(true);
-        ui_->lightIntensitySpinBox->setValue(1.0);
-        ui_->environmentIntensitySpinBox->setValue(0.0);
+        if (ui_->lightIntensitySpinBox->value() == 0.0) {
+            ui_->lightIntensitySpinBox->setValue(1.0);
+        }
     }
     else if (renderingScene_->getReflectance()) {
-        ui_->lightIntensitySpinBox->setValue(0.0);
         ui_->lightIntensitySpinBox->setDisabled(true);
-        ui_->environmentIntensitySpinBox->setValue(1.0);
+        if (ui_->environmentIntensitySpinBox->value() == 0.0) {
+            ui_->environmentIntensitySpinBox->setValue(1.0);
+        }
     }
 
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
@@ -597,6 +655,10 @@ QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
         }
         case GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
             return "All incoming polar angles";
+            break;
+        }
+        case GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
+            return "All incoming azimuthal angles";
             break;
         }
         case GraphScene::ALL_WAVELENGTHS_DISPLAY: {
@@ -739,29 +801,6 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     return true;
 }
 
-void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
-{
-    graphScene_->clearData();
-    if (dataType == lb::BRDF_DATA) {
-        graphScene_->setBrdf(brdf);
-    }
-    else if (dataType == lb::BTDF_DATA) {
-        graphScene_->setBtdf(new lb::Btdf(brdf));
-    }
-    else {
-        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
-        return;
-    }
-    graphScene_->createBrdfGeode();
-
-    renderingScene_->setData(brdf, graphScene_->getReflectances(), dataType);
-
-    initializeUi();
-
-    ui_->logPlotGroupBox->setEnabled(true);
-    ui_->tableGraphicsView->fitView(0.9);
-}
-
 void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::Brdf* brdf;
@@ -806,6 +845,29 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
     lb::DdrWriter::write(fileName.toLocal8Bit().data(), *exportedBrdf);
     delete exportedBrdf;
+}
+
+void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
+{
+    graphScene_->clearData();
+    if (dataType == lb::BRDF_DATA) {
+        graphScene_->setBrdf(brdf);
+    }
+    else if (dataType == lb::BTDF_DATA) {
+        graphScene_->setBtdf(new lb::Btdf(brdf));
+    }
+    else {
+        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
+        return;
+    }
+    graphScene_->createBrdfGeode();
+
+    renderingScene_->setData(brdf, graphScene_->getReflectances(), dataType);
+
+    initializeUi();
+
+    ui_->logPlotGroupBox->setEnabled(true);
+    ui_->tableGraphicsView->fitView(0.9);
 }
 
 void MainWindow::updateCameraPosition()
