@@ -34,9 +34,9 @@ public slots:
 
 private slots:
     void openBxdfUsingDialog();
+    void openCcbxdfUsingDialog();
 
     void exportBxdfUsingDialog();
-    void exportFile(const QString& fileName);
 
     void viewFront();
     void viewBack();
@@ -76,6 +76,7 @@ private:
     bool openAstm(const QString& fileName);
     bool openMerlBinary(const QString& fileName);
 
+    void exportFile(const QString& fileName);
     void exportDdrDdt(const QString& fileName, lb::DataType dataType);
 
     void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
@@ -92,6 +93,8 @@ private:
 
     GraphWidget*        graphWidget_;
     RenderingWidget*    renderingWidget_;
+
+    bool isCosineCorrected_;
 
     Ui::MainWindowBase* ui_;
 };

@@ -651,6 +651,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="actionOpenBrdf"/>
+    <addaction name="actionOpenCcbrdf"/>
     <addaction name="separator"/>
     <addaction name="actionExport"/>
     <addaction name="separator"/>
@@ -693,7 +694,7 @@
   </action>
   <action name="actionOpenBrdf">
    <property name="text">
-    <string>&amp;Open...</string>
+    <string>&amp;Open BRDF/BTDF...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -740,6 +741,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionOpenCcbrdf">
+   <property name="text">
+    <string>&amp;Open CCBRDF/CCBTDF...</string>
    </property>
   </action>
  </widget>

@@ -19,6 +19,7 @@
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/Btdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
+#include <libbsdf/Brdf/Processor.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
@@ -49,7 +50,9 @@ lb::Vec3 qcolorToVec3(const QColor& color)
     return lb::Vec3(r, g, b);
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui_(new Ui::MainWindowBase)
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
+                                          isCosineCorrected_(false),
+                                          ui_(new Ui::MainWindowBase)
 {
     ui_->setupUi(this);
 
@@ -104,23 +107,6 @@ MainWindow::~MainWindow()
 {
     delete graphScene_;
     delete ui_;
-}
-
-void MainWindow::openBxdfUsingDialog()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open BxDF File"), QString(),
-                                                    tr("BxDF Files (*.ddr *.ddt *.sdr *.sdt *.bsdf *.astm *.binary);;"
-                                                       "Integra DDR Files (*.ddr);;"
-                                                       "Integra DDT Files (*.ddt);;"
-                                                       "Integra SDR Files (*.sdr);;"
-                                                       "Integra SDR Files (*.sdt);;"
-                                                       "LightTools/Zemax BSDF Files (*.bsdf);;"
-                                                       "ASTM Files (*.astm);;"
-                                                       "MERL binary Files (*.binary)"));
-    
-    if (fileName.isEmpty()) return;
-
-    openFile(fileName);
 }
 
 void MainWindow::openFile(const QString& fileName)
@@ -186,6 +172,39 @@ void MainWindow::openFile(const QString& fileName)
     this->setWindowTitle(fileInfo.fileName() + " - BSDF Viewer");
 }
 
+void MainWindow::openBxdfUsingDialog()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open BRDF/BTDF File"), QString(),
+                                                    tr("BxDF Files (*.ddr *.ddt *.sdr *.sdt *.bsdf *.astm *.binary);;"
+                                                       "Integra DDR Files (*.ddr);;"
+                                                       "Integra DDT Files (*.ddt);;"
+                                                       "Integra SDR Files (*.sdr);;"
+                                                       "Integra SDR Files (*.sdt);;"
+                                                       "LightTools/Zemax BSDF Files (*.bsdf);;"
+                                                       "ASTM Files (*.astm);;"
+                                                       "MERL binary Files (*.binary)"));
+
+    if (fileName.isEmpty()) return;
+
+    openFile(fileName);
+}
+
+void MainWindow::openCcbxdfUsingDialog()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open CCBRDF/CCBTDF File"), QString(),
+                                                    tr("BxDF Files (*.ddr *.ddt *.bsdf *.astm);;"
+                                                       "Integra DDR Files (*.ddr);;"
+                                                       "Integra DDT Files (*.ddt);;"
+                                                       "LightTools/Zemax BSDF Files (*.bsdf);;"
+                                                       "ASTM Files (*.astm)"));
+
+    if (fileName.isEmpty()) return;
+
+    isCosineCorrected_ = true;
+    openFile(fileName);
+    isCosineCorrected_ = false;
+}
+
 void MainWindow::exportBxdfUsingDialog()
 {
     if (!graphScene_->getBrdf() && !graphScene_->getBtdf()) return;
@@ -197,16 +216,6 @@ void MainWindow::exportBxdfUsingDialog()
     if (fileName.isEmpty()) return;
 
     exportFile(fileName);
-}
-
-void MainWindow::exportFile(const QString& fileName)
-{
-    if (fileName.endsWith(".ddr")) {
-        exportDdrDdt(fileName, lb::BRDF_DATA);
-    }
-    else if (fileName.endsWith(".ddt")) {
-        exportDdrDdt(fileName, lb::BTDF_DATA);
-    }
 }
 
 void MainWindow::viewFront()
@@ -545,6 +554,7 @@ void MainWindow::createActions()
     ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL + Qt::Key_T);
 
     connect(ui_->actionOpenBrdf,    SIGNAL(triggered()), this, SLOT(openBxdfUsingDialog()));
+    connect(ui_->actionOpenCcbrdf,  SIGNAL(triggered()), this, SLOT(openCcbxdfUsingDialog()));
     connect(ui_->actionExport,      SIGNAL(triggered()), this, SLOT(exportBxdfUsingDialog()));
     connect(ui_->actionQuit,        SIGNAL(triggered()), this, SLOT(close()));
 
@@ -801,6 +811,16 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     return true;
 }
 
+void MainWindow::exportFile(const QString& fileName)
+{
+    if (fileName.endsWith(".ddr")) {
+        exportDdrDdt(fileName, lb::BRDF_DATA);
+    }
+    else if (fileName.endsWith(".ddt")) {
+        exportDdrDdt(fileName, lb::BTDF_DATA);
+    }
+}
+
 void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::Brdf* brdf;
@@ -849,6 +869,10 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
 void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 {
+    if (isCosineCorrected_) {
+        lb::divideByCosineOutTheta(brdf);
+    }
+
     graphScene_->clearData();
     if (dataType == lb::BRDF_DATA) {
         graphScene_->setBrdf(brdf);
