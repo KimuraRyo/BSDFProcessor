@@ -39,7 +39,7 @@ See the LICENSE file.
 
 ### Download
 Windows (32bit):  
-[BSDFViewer-1.0.2-windows-x86.zip][6]
+[BSDFViewer-1.0.3-windows-x86.zip][6]
 
 ## Building BSDF Viewer
 BSDF Viewer uses the following open source libraries:
@@ -64,4 +64,4 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 [3]: http://www.openscenegraph.org "OpenSceneGraph"
 [4]: http://www.qt.io "Qt"
 [5]: http://www.integra.jp/en "Integra"
-[6]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/binaries/BSDFViewer-1.0.2-windows-x86.zip
+[6]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFViewer/binaries/BSDFViewer-1.0.3-windows-x86.zip
