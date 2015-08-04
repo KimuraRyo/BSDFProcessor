@@ -51,7 +51,7 @@ lb::Vec3 qcolorToVec3(const QColor& color)
 }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
-                                          isCosineCorrected_(false),
+                                          cosineCorrected_(false),
                                           ui_(new Ui::MainWindowBase)
 {
     ui_->setupUi(this);
@@ -200,9 +200,9 @@ void MainWindow::openCcbxdfUsingDialog()
 
     if (fileName.isEmpty()) return;
 
-    isCosineCorrected_ = true;
+    cosineCorrected_ = true;
     openFile(fileName);
-    isCosineCorrected_ = false;
+    cosineCorrected_ = false;
 }
 
 void MainWindow::exportBxdfUsingDialog()
@@ -672,8 +672,8 @@ QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
             break;
         }
         case GraphScene::ALL_WAVELENGTHS_DISPLAY: {
-            bool isSpectral = (graphScene_->getColorModel() == lb::SPECTRAL_MODEL);
-            return isSpectral ? "All wavelengths" : "All channels";
+            bool spectral = (graphScene_->getColorModel() == lb::SPECTRAL_MODEL);
+            return spectral ? "All wavelengths" : "All channels";
             break;
         }
         case GraphScene::SAMPLE_POINTS_DISPLAY: {
@@ -858,10 +858,10 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
     lb::SampleSet* exportedSs = exportedBrdf->getSampleSet();
     if (exportedSs->getColorModel() == lb::XYZ_MODEL) {
-        exportedSs->convertFromXyzToSrgb();
+        lb::convertFromXyzToSrgb(exportedSs);
     }
-    exportedBrdf->expand();
-    exportedBrdf->fixEnergyConservation();
+    exportedBrdf->expandAngles();
+    lb::fixEnergyConservation(exportedBrdf);
 
     lb::DdrWriter::write(fileName.toLocal8Bit().data(), *exportedBrdf);
     delete exportedBrdf;
@@ -869,7 +869,7 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
 void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 {
-    if (isCosineCorrected_) {
+    if (cosineCorrected_) {
         lb::divideByCosineOutTheta(brdf);
     }
 

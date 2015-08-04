@@ -94,7 +94,7 @@ private:
     GraphWidget*        graphWidget_;
     RenderingWidget*    renderingWidget_;
 
-    bool isCosineCorrected_;
+    bool cosineCorrected_;
 
     Ui::MainWindowBase* ui_;
 };

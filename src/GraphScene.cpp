@@ -376,7 +376,7 @@ void GraphScene::setBrdf(lb::Brdf* brdf)
     if (brdf_) {
         lb::SampleSet* ss = brdf_->getSampleSet();
 
-        ss->checkEqualIntervalAngles();
+        ss->updateAngleAttributes();
 
         if (isInDirDependentCoordinateSystem()) {
             numInTheta_ = ss->getNumAngles0();
@@ -400,7 +400,7 @@ void GraphScene::setBtdf(lb::Btdf* btdf)
     if (btdf_) {
         lb::SampleSet* ss = btdf_->getSampleSet();
 
-        ss->checkEqualIntervalAngles();
+        ss->updateAngleAttributes();
 
         if (isInDirDependentCoordinateSystem()) {
             numInTheta_ = ss->getNumAngles0();
@@ -422,7 +422,7 @@ void GraphScene::setSpecularReflectances(lb::SampleSet2D* reflectances)
     specularReflectances_ = reflectances;
 
     if (specularReflectances_) {
-        specularReflectances_->checkEqualIntervalAngles();
+        specularReflectances_->updateAngleAttributes();
 
         numInTheta_     = specularReflectances_->getNumTheta();
         numInPhi_       = specularReflectances_->getNumPhi();
@@ -437,7 +437,7 @@ void GraphScene::setSpecularTransmittances(lb::SampleSet2D* reflectances)
     specularTransmittances_ = reflectances;
 
     if (specularTransmittances_) {
-        specularTransmittances_->checkEqualIntervalAngles();
+        specularTransmittances_->updateAngleAttributes();
 
         numInTheta_     = specularTransmittances_->getNumTheta();
         numInPhi_       = specularTransmittances_->getNumPhi();
@@ -685,11 +685,13 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
     const lb::SampleSet* ss = getSampleSet();
     if (!ss) return;
 
-    bool isInvalidNode = (!bxdfMeshGeode_.valid() || !bxdfPointGeode_.valid() || !bxdfTextGeode_.valid());
-    bool isInvalidParam = (inThetaIndex  >= numInTheta_ ||
-                           inPhiIndex    >= numInPhi_ ||
-                           spectrumIndex >= ss->getNumWavelengths());
-    if (isInvalidNode || isInvalidParam) return;
+    bool nodeInvalid = (!bxdfMeshGeode_.valid() ||
+                        !bxdfPointGeode_.valid() ||
+                        !bxdfTextGeode_.valid());
+    bool paramInvalid = (inThetaIndex  >= numInTheta_ ||
+                         inPhiIndex    >= numInPhi_ ||
+                         spectrumIndex >= ss->getNumWavelengths());
+    if (nodeInvalid || paramInvalid) return;
 
     // Update the geometry of incoming direction.
     float inTheta = getIncomingPolarAngle(inThetaIndex);
@@ -733,8 +735,8 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
         }
         case ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
             float endInPhi = getIncomingAzimuthalAngle(numInPhi_ - 1) - lb::SphericalCoordinateSystem::MAX_ANGLE1;
-            bool isDuplicate = lb::isEqual(getIncomingAzimuthalAngle(0), endInPhi);
-            int numInPhi = isDuplicate ? numInPhi_ - 1 : numInPhi_;
+            bool duplicate = lb::isEqual(getIncomingAzimuthalAngle(0), endInPhi);
+            int numInPhi = duplicate ? numInPhi_ - 1 : numInPhi_;
             #pragma omp parallel for
             for (int i = 0; i < numInPhi; ++i) {
                 setupBrdfMeshGeometry(brdf, inTheta, getIncomingAzimuthalAngle(i), spectrumIndex, dataType);
@@ -788,11 +790,11 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectr
 void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int spectrumIndex,
                                        lb::DataType dataType)
 {
-    bool isManySamples = (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 10) ||
-                         (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && numInPhi_ > 10) ||
-                         (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 10);
+    bool many = ((displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 10) ||
+                 (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && numInPhi_ > 10) ||
+                 (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 10));
     int numTheta, numPhi;
-    if (isManySamples) {
+    if (many) {
         numTheta = 181;
         numPhi = 91;
     }
@@ -875,10 +877,10 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
         return;
     }
 
-    bool isInvalidParam = (inThetaIndex  >= ss2->getNumTheta() ||
-                           inPhiIndex    >= ss2->getNumPhi() ||
-                           spectrumIndex >= ss2->getNumWavelengths());
-    if (isInvalidParam) return;
+    bool paramInvalid = (inThetaIndex  >= ss2->getNumTheta() ||
+                         inPhiIndex    >= ss2->getNumPhi() ||
+                         spectrumIndex >= ss2->getNumWavelengths());
+    if (paramInvalid) return;
 
     if (specularReflectanceGeode_.valid()) {
         bsdfGroup_->removeChild(specularReflectanceGeode_.get());

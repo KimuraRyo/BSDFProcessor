@@ -16,7 +16,7 @@
 
 #define BSDFVIEWER_MAJOR_VERSION 1
 #define BSDFVIEWER_MINOR_VERSION 0
-#define BSDFVIEWER_PATCH_VERSION 3
+#define BSDFVIEWER_PATCH_VERSION 4
 
 /*! Returns the version number of BSDF Viewer. */
 const char* getVersion();

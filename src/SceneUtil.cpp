@@ -753,12 +753,12 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
     // Add labels.
     for (int i3 = 0; i3 < ss->getNumAngles3() - 1; ++i3) {
         // Avoid extra azimuthal angles.
-        bool isManySamples = (ss->getNumAngles2() * (ss->getNumAngles3() - 1) > maxSamples);
+        bool many = (ss->getNumAngles2() * (ss->getNumAngles3() - 1) > maxSamples);
         const float interval = lb::PI_2_F;
         float modulo = std::fmod(ss->getAngle3(i3), interval);
-        bool isOnAxis = (modulo < lb::EPSILON_F * interval * 10.0f ||
-                         modulo > interval - lb::EPSILON_F * interval * 10.0f);
-        if (isManySamples && !isOnAxis) continue;
+        bool onAxis = (modulo < lb::EPSILON_F * interval * 10.0f ||
+                       modulo > interval - lb::EPSILON_F * interval * 10.0f);
+        if (many && !onAxis) continue;
 
         for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
             if (i2 == 0 && i3 > 0) continue;
@@ -835,25 +835,25 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
     // Add lines.
     for (int i3 = 0; i3 < ss->getNumAngles3() - 1; ++i3) {
         // Avoid extra azimuthal angles.
-        bool isManySamples = (ss->getNumAngles2() * (ss->getNumAngles3() - 1) > maxSamples);
+        bool many = (ss->getNumAngles2() * (ss->getNumAngles3() - 1) > maxSamples);
         const float interval = lb::PI_2_F;
         float modulo = std::fmod(ss->getAngle3(i3), interval);
-        bool isOnAxis = (modulo < lb::EPSILON_F * interval * 10.0f ||
-                         modulo > interval - lb::EPSILON_F * interval * 10.0f);
-        if (isManySamples && !isOnAxis) continue;
+        bool onAxis = (modulo < lb::EPSILON_F * interval * 10.0f ||
+                       modulo > interval - lb::EPSILON_F * interval * 10.0f);
+        if (many && !onAxis) continue;
 
         osg::Vec3Array* lineVertices = new osg::Vec3Array;
-        bool isNegativeZ = false;
+        bool zNegative = false;
         for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
             lb::Vec3 inDir, outDir;
             brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
             if (outDir[2] < -lb::EPSILON_F) {
-                if (isNegativeZ) {
+                if (zNegative) {
                     continue;
                 }
                 else {
-                    isNegativeZ = true;
+                    zNegative = true;
                 }
             }
 
