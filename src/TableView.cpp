@@ -30,7 +30,7 @@ TableView::TableView(QWidget* parent) : QGraphicsView(parent),
     setScene(graphicsScene_);
 }
 
-void TableView::createTable(int spectrumIndex, float gamma)
+void TableView::createTable(int wavelengthIndex, float gamma)
 {
     if (!graphScene_) return;
 
@@ -40,30 +40,30 @@ void TableView::createTable(int spectrumIndex, float gamma)
     scene()->setSceneRect(-sceneSize / 2.0, -sceneSize / 2.0, sceneSize, sceneSize);
 
     if (graphScene_->getBrdf() || graphScene_->getBtdf()) {
-        createBrdfTable(spectrumIndex, gamma);
+        createBrdfTable(wavelengthIndex, gamma);
     }
     else if (graphScene_->getSpecularReflectances() || graphScene_->getSpecularTransmittances()) {
-        createReflectanceTable(spectrumIndex);
+        createReflectanceTable(wavelengthIndex);
     }
 }
 
-void TableView::createBrdfTable(int spectrumIndex, float gamma)
+void TableView::createBrdfTable(int wavelengthIndex, float gamma)
 {
     const lb::SampleSet* ss = graphScene_->getSampleSet();
     if (!ss) return;
 
     int numSamples = ss->getNumAngles0() * ss->getNumAngles1() * ss->getNumAngles2() * ss->getNumAngles3();
     if (numSamples < 100000) {
-        createBrdfDataItems(ss, spectrumIndex, gamma);
+        createBrdfDataItems(ss, wavelengthIndex, gamma);
     }
     else {
-        createBrdfDataPixmapItem(ss, spectrumIndex, gamma);
+        createBrdfDataPixmapItem(ss, wavelengthIndex, gamma);
     }
 
     createBrdfAngleItems(ss);
 }
 
-void TableView::createBrdfDataItems(const lb::SampleSet* ss, int spectrumIndex, float gamma)
+void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex, float gamma)
 {
     int num0 = ss->getNumAngles0();
     int num1 = ss->getNumAngles1();
@@ -77,9 +77,9 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int spectrumIndex, 
     for (int i1 = 0; i1 < num1; ++i1) {
     for (int i2 = 0; i2 < num2; ++i2) {
     for (int i3 = 0; i3 < num3; ++i3) {
-        float sampleValue = ss->getSpectrum(i0, i1, i2, i3)[spectrumIndex];
+        float sampleValue = ss->getSpectrum(i0, i1, i2, i3)[wavelengthIndex];
         sampleValue = std::max(sampleValue, 0.0f);
-        float maxValue = graphScene_->getMaxValuesPerWavelength()[spectrumIndex];
+        float maxValue = graphScene_->getMaxValuesPerWavelength()[wavelengthIndex];
         
         int color;
         if (maxValue == 0.0f) {
@@ -109,7 +109,7 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int spectrumIndex, 
     }
 }
 
-void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int spectrumIndex, float gamma)
+void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex, float gamma)
 {
     int num0 = ss->getNumAngles0();
     int num1 = ss->getNumAngles1();
@@ -126,9 +126,9 @@ void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int spectrumIn
         int color;
         #pragma omp parallel for private(sampleValue, maxValue, color)
         for (int i3 = 0; i3 < num3; ++i3) {
-            sampleValue = ss->getSpectrum(i0, i1, i2, i3)[spectrumIndex];
+            sampleValue = ss->getSpectrum(i0, i1, i2, i3)[wavelengthIndex];
             sampleValue = std::max(sampleValue, 0.0f);
-            maxValue = graphScene_->getMaxValuesPerWavelength()[spectrumIndex];
+            maxValue = graphScene_->getMaxValuesPerWavelength()[wavelengthIndex];
 
             if (maxValue == 0.0f) {
                 color = 0;
@@ -189,7 +189,7 @@ void TableView::createBrdfAngleItems(const lb::SampleSet* ss)
     }}
 }
 
-void TableView::createReflectanceTable(int spectrumIndex, float gamma)
+void TableView::createReflectanceTable(int wavelengthIndex, float gamma)
 {
     const lb::SampleSet2D* ss2;
     if (graphScene_->getSpecularReflectances()) {
@@ -212,7 +212,7 @@ void TableView::createReflectanceTable(int spectrumIndex, float gamma)
     // data table
     for (int i0 = 0; i0 < num0; ++i0) {
     for (int i1 = 0; i1 < num1; ++i1) {
-        float sampleValue = ss2->getSpectrum(i0, i1)[spectrumIndex];
+        float sampleValue = ss2->getSpectrum(i0, i1)[wavelengthIndex];
         sampleValue = std::max(sampleValue, 0.0f);
         float value = std::pow(sampleValue, 1.0f / gamma) * 255.0f;
 

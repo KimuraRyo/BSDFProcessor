@@ -53,7 +53,9 @@ public:
 
     void createAxis(bool useTextLabel = false, bool useLogPlot = false, float baseOfLogarithm = 10.0f);
 
-    void updateGraphGeometry(int inThetaIndex, int inPhiIndex, int spectrumIndex);
+    void updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
+
+    void updateInOutDirLine(const lb::Vec3& inDir, const lb::Vec3& outDir, int wavelengthIndex);
 
     void clearData();
 
@@ -119,15 +121,18 @@ private:
     /*! Creates a post processing group. */
     osg::Group* createPostProcessing(osg::Node* subgraph, int width, int height, int numFboSamples = 4);
 
-    void createInDirGeode();
+    void initializeInDirLine();
+    void updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex);
+    osg::Vec3 modifyDirLineLength(const lb::Vec3& lineDir, int wavelengthIndex);
+    void clearInDirLine() { inDirGeode_->removeChildren(0, inDirGeode_->getNumChildren()); }
 
-    void updateIncomingDirectionGeometry(const lb::Vec3& inDirection);
+    void initializeInOutDirLine();
 
-    void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int spectrumIndex);
-    void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int spectrumIndex,
+    void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
+    void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
                                lb::DataType dataType);
 
-    void updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int spectrumIndex);
+    void updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
 
     void clearGraphGeometry();
 
@@ -172,8 +177,8 @@ private:
     osg::ref_ptr<osg::Geode> circleGeode_;
     osg::ref_ptr<osg::Geode> axisTextLabelGeode_;
     
-    osg::ref_ptr<osg::Geode>    inDirGeode_;
-    osg::ref_ptr<osg::Geometry> inDirGeometry_;
+    osg::ref_ptr<osg::Geode> inDirGeode_;
+    osg::ref_ptr<osg::Geode> inOutDirGeode_;
 
     int     numMultiSamples_;
     bool    useOit_;

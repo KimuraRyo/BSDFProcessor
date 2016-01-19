@@ -16,6 +16,8 @@
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
 
+#include "RenderingDrawCallback.h"
+
 /*!
  * \class   RenderingScene
  * \brief   The RenderingScene class provides the scene data for a rendering view.
@@ -49,6 +51,9 @@ public:
 
     void setLightIntensity(float intensity) { lightIntensity_ = intensity; }
     void setEnvironmentIntensity(float intensity) { environmentIntensity_ = intensity; }
+
+    lb::Vec3 getInDir(int x, int y);
+    lb::Vec3 getOutDir(int x, int y);
 
     /*!
      * Fits the camera position to render the entire scene. The camera looks at the center of model.
@@ -91,6 +96,8 @@ private:
 
     osg::Camera*                camera_;
     osgGA::CameraManipulator*   cameraManipulator_;
+
+    osg::ref_ptr<RenderingDrawCallback> drawCallback_;
 
     lb::Brdf*           brdf_;
     lb::SampleSet2D*    reflectances_;

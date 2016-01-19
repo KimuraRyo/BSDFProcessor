@@ -52,6 +52,8 @@ lb::Vec3 qcolorToVec3(const QColor& color)
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           cosineCorrected_(false),
+                                          pickedInDir_(0.0, 0.0, 0.0),
+                                          pickedOutDir_(0.0, 0.0, 0.0),
                                           ui_(new Ui::MainWindowBase)
 {
     ui_->setupUi(this);
@@ -433,11 +435,24 @@ void MainWindow::updateBaseOfLogarithm(int index)
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
                                      ui_->incomingAzimuthalAngleSlider->value(),
                                      ui_->wavelengthSlider->value());
+    graphScene_->updateInOutDirLine(pickedInDir_,
+                                    pickedOutDir_,
+                                    ui_->wavelengthSlider->value());
     getMainView()->requestRedraw();
 
     ui_->logPlotBaseLineEdit->setText(QString::number(index));
 
     createTable();
+}
+
+void MainWindow::updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir)
+{
+    pickedInDir_ = inDir;
+    pickedOutDir_ = outDir;
+
+    graphScene_->updateInOutDirLine(inDir, outDir, ui_->wavelengthSlider->value());
+
+    getMainView()->requestRedraw();
 }
 
 void MainWindow::updateLightIntensity(double intensity)
@@ -571,6 +586,9 @@ void MainWindow::createActions()
     connect(graphWidget_, SIGNAL(picked(osg::Vec3)),    this, SLOT(displayPickedValue(osg::Vec3)));
     connect(graphWidget_, SIGNAL(clearPickedValue()),   this, SLOT(clearPickedValue()));
     connect(graphWidget_, SIGNAL(viewFront()),          this, SLOT(viewFront()));
+
+    connect(renderingWidget_, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
+            this, SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
 }
 
 void MainWindow::initializeUi()
@@ -651,6 +669,8 @@ void MainWindow::initializeUi()
             ui_->environmentIntensitySpinBox->setValue(1.0);
         }
     }
+
+    graphScene_->updateInOutDirLine(lb::Vec3::Zero(), lb::Vec3::Zero(), 0);
 
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
     getRenderingView()->requestRedraw();
@@ -858,7 +878,7 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
     lb::SampleSet* exportedSs = exportedBrdf->getSampleSet();
     if (exportedSs->getColorModel() == lb::XYZ_MODEL) {
-        lb::convertFromXyzToSrgb(exportedSs);
+        lb::xyzToSrgb(exportedSs);
     }
     exportedBrdf->expandAngles();
     lb::fixEnergyConservation(exportedBrdf);

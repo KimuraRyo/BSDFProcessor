@@ -37,6 +37,9 @@ public:
         render();
     }
 
+    osg::Image* getInDirImage() { return copiedInDirImage_.get(); }
+    osg::Image* getOutDirImage() { return outDirImage_; }
+
 private:
     virtual ~RenderingDrawCallback() {}
 
@@ -49,8 +52,8 @@ private:
     /*! Renders a pixel with a reflectance and transmittance. */
     void renderReflectance(const lb::Vec3& outDir, float* pixel) const;
 
-    osg::Image* inDirImage_;
-    osg::Image* outDirImage_;
+    osg::Image* inDirImage_;    /*!< Incoming directions as input and the renderd image as output. */
+    osg::Image* outDirImage_;   /*!< Outgoing directions. */
 
     lb::Brdf*           brdf_;
     lb::SampleSet2D*    reflectances_;
@@ -58,6 +61,9 @@ private:
 
     float lightIntensity_;
     float environmentIntensity_;
+
+    /*!< Incoming directions copied from \a inDirImage_. This property is used for picking. */
+    osg::ref_ptr<osg::Image> copiedInDirImage_;
 };
 
 #endif // RENDERING_DRAW_CALLBACK_H

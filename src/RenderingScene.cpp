@@ -15,7 +15,6 @@
 #include <osg/Geometry>
 #include <osg/Texture2D>
 
-#include "RenderingDrawCallback.h"
 #include "SceneUtil.h"
 
 RenderingScene::RenderingScene() : numMultiSamples_(0),
@@ -80,6 +79,57 @@ void RenderingScene::updateView(int width, int height)
             (*it)->replaceChild(oldGroup, newGroup);
         }
     }
+}
+
+lb::Vec3 RenderingScene::getInDir(int x, int y)
+{
+    if (!drawCallback_.valid()) {
+        return lb::Vec3::Zero();
+    }
+
+    osg::Image* image = drawCallback_->getInDirImage();
+    if (!image) {
+        return lb::Vec3::Zero();
+    }
+
+    osg::Vec4 color = image->getColor(x, (image->t() - 1) - y);
+    if (color.a() != 0.0f) {
+        return lb::Vec3::Zero();
+    }
+
+    lb::Vec3 inDir = lb::toVec3(color);
+    inDir = inDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
+    inDir.normalize();
+
+    if (dataType_ == lb::BTDF_DATA || dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
+        inDir[2] = -inDir[2];
+    }
+
+    return inDir;
+}
+
+lb::Vec3 RenderingScene::getOutDir(int x, int y)
+{
+    if (!drawCallback_.valid()) {
+        return lb::Vec3::Zero();
+    }
+
+    osg::Image* image = drawCallback_->getOutDirImage();
+    if (!image) {
+        return lb::Vec3::Zero();
+    }
+
+    osg::Vec4 color = image->getColor(x, (image->t() - 1) - y);
+    if (color.a() != 0.0f) {
+        return lb::Vec3::Zero();
+    }
+
+    lb::Vec3 outDir = lb::toVec3(color);
+    outDir = outDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
+    outDir[2] = std::max(outDir[2], 0.0f);
+    outDir.normalize();
+
+    return outDir;
 }
 
 void RenderingScene::fitCameraPosition(osg::Camera*     camera,
@@ -268,18 +318,19 @@ osg::Group* RenderingScene::createRenderingGroup(osg::Group*    subgraph,
         fboCamera->setRenderOrder(osg::Camera::PRE_RENDER);
         fboCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 
-        osg::Image* image0 = new osg::Image;
-        osg::Image* image1 = new osg::Image;
-        image0->allocateImage(width, height, 1, GL_RGBA, GL_FLOAT);
-        image1->allocateImage(width, height, 1, GL_RGBA, GL_FLOAT);
-        fboCamera->attach(osg::Camera::COLOR_BUFFER0, image0, numMultiSamples_, 0);
-        fboCamera->attach(osg::Camera::COLOR_BUFFER1, image1, numMultiSamples_, 0);
+        osg::Image* inDirImage = new osg::Image;
+        osg::Image* outDirImage = new osg::Image;
+        inDirImage->allocateImage(width, height, 1, GL_RGBA, GL_FLOAT);
+        outDirImage->allocateImage(width, height, 1, GL_RGBA, GL_FLOAT);
+        fboCamera->attach(osg::Camera::COLOR_BUFFER0, inDirImage, numMultiSamples_, 0);
+        fboCamera->attach(osg::Camera::COLOR_BUFFER1, outDirImage, numMultiSamples_, 0);
 
         if (brdf_ || reflectances_) {
-            fboCamera->setPostDrawCallback(new RenderingDrawCallback(image0, image1,
-                                                                     brdf_, reflectances_, dataType_,
-                                                                     lightIntensity_, environmentIntensity_));
-            texture->setImage(image0);
+            drawCallback_ = new RenderingDrawCallback(inDirImage, outDirImage,
+                                                      brdf_, reflectances_, dataType_,
+                                                      lightIntensity_, environmentIntensity_);
+            fboCamera->setPostDrawCallback(drawCallback_.get());
+            texture->setImage(inDirImage);
         }
 
         renderingGroup->addChild(fboCamera);

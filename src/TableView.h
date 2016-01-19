@@ -29,7 +29,7 @@ class TableView : public QGraphicsView
 public:
     explicit TableView(QWidget* parent = 0);
 
-    void createTable(int spectrumIndex, float gamma = 1.0f);
+    void createTable(int wavelengthIndex, float gamma = 1.0f);
 
     void setGraphScene(GraphScene* scene) { graphScene_ = scene; }
 
@@ -43,12 +43,12 @@ public slots:
 private:
     Q_DISABLE_COPY(TableView)
 
-    void createBrdfTable(int spectrumIndex, float gamma = 1.0f);
-    void createBrdfDataItems(const lb::SampleSet* ss, int spectrumIndex, float gamma = 1.0f);
-    void createBrdfDataPixmapItem(const lb::SampleSet* ss, int spectrumIndex, float gamma = 1.0f);
+    void createBrdfTable(int wavelengthIndex, float gamma = 1.0f);
+    void createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex, float gamma = 1.0f);
+    void createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex, float gamma = 1.0f);
     void createBrdfAngleItems(const lb::SampleSet* ss);
 
-    void createReflectanceTable(int spectrumIndex, float gamma = 1.0f);
+    void createReflectanceTable(int wavelengthIndex, float gamma = 1.0f);
 
     void addAngleItem(const QColor& color, float angle,
                       qreal posX, qreal posY,

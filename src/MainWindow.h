@@ -54,6 +54,7 @@ private slots:
     void useLogPlot(bool on);
     void updateBaseOfLogarithm(int index);
 
+    void updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir);
     void updateLightIntensity(double intensity);
     void updateEnvironmentIntensity(double intensity);
 
@@ -96,7 +97,12 @@ private:
 
     bool cosineCorrected_;
 
+    lb::Vec3 pickedInDir_, pickedOutDir_;
+
     Ui::MainWindowBase* ui_;
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 #endif // MAIN_WINDOW_H

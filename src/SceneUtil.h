@@ -38,6 +38,12 @@ namespace scene_util {
 template <typename T>
 inline osg::Vec3 toOsg(const T& vec) { return osg::Vec3(vec[0], vec[1], vec[2]); }
 
+template <typename T>
+inline T toLogValue(const T& value, const T& baseOfLogarithm)
+{
+    return std::log(value + 1.0) / std::log(baseOfLogarithm);
+}
+
 /*! Corrects a gamma value. */
 inline osg::Vec3d correctGamma(const osg::Vec3d& color, double gamma)
 {
@@ -158,7 +164,7 @@ template <typename CoordSysT>
 osg::Geometry* createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                       float             inTheta,
                                       float             inPhi,
-                                      int               spectrumIndex,
+                                      int               wavelengthIndex,
                                       bool              useLogPlot,
                                       float             baseOfLogarithm,
                                       lb::DataType      dataType,
@@ -169,7 +175,7 @@ osg::Geometry* createBrdfMeshGeometry(const lb::Brdf&   brdf,
 osg::Geometry* createBrdfPointGeometry(const lb::Brdf&  brdf,
                                        int              inThetaIndex,
                                        int              inPhiIndex,
-                                       int              spectrumIndex,
+                                       int              wavelengthIndex,
                                        bool             useLogPlot,
                                        float            baseOfLogarithm,
                                        lb::DataType     dataType);
@@ -179,7 +185,7 @@ void attachBrdfTextLabels(osg::Geode*       geode,
                           const lb::Brdf&   brdf,
                           int               inThetaIndex,
                           int               inPhiIndex,
-                          int               spectrumIndex,
+                          int               wavelengthIndex,
                           bool              useLogPlot,
                           float             baseOfLogarithm,
                           lb::DataType      dataType);
@@ -188,13 +194,28 @@ void attachBrdfTextLabels(osg::Geode*       geode,
 osg::Geode* createAxis(double length = 1.0, bool useRgb = false);
 
 osg::Geometry* createCircleFloor(float  radius,
-                                 int    numPoints,
+                                 int    numSegments,
                                  float  lineWidth = 1.0f,
                                  bool   useStipple = false,
                                  bool   useLogPlot = false,
                                  float  baseOfLogarithm = 10.0f);
 
-osg::Geometry* createInDirLine();
+/*! Creates a stippled line. */
+osg::Geometry* createStippledLine(const osg::Vec3&  pos0,
+                                  const osg::Vec3&  pos1,
+                                  const osg::Vec4&  color,
+                                  float             width = 2.0f,
+                                  GLint             stippleFactor = 1,
+                                  GLushort          stipplePattern = 0xf0f0);
+
+/*! Creates the arc of a circle. */
+osg::Geometry* createArc(const osg::Vec3&   pos0,
+                         const osg::Vec3&   pos1,
+                         int                numSegments,
+                         const osg::Vec4&   color,
+                         float              width = 1.0f,
+                         GLint              stippleFactor = 1,
+                         GLushort           stipplePattern = 0xffff);
 
 } // namespace scene_util
 

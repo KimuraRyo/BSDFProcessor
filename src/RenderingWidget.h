@@ -15,7 +15,7 @@
 
 #include <osgQt/GraphicsWindowQt>
 
-class RenderingScene;
+#include "RenderingScene.h"
 
 /*!
  * \class   RenderingWidget
@@ -39,6 +39,9 @@ public:
         resetCameraPosition();
     }
 
+signals:
+    void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);
+
 private slots:
     void resetCameraPosition();
     void showSphere();
@@ -54,6 +57,8 @@ private:
     void keyPressEvent(QKeyEvent* event);
     void mouseMoveEvent(QMouseEvent* event);
     void mousePressEvent(QMouseEvent* event);
+    void mouseReleaseEvent(QMouseEvent* event);
+    void mouseDoubleClickEvent(QMouseEvent* event);
     void dragEnterEvent(QDragEnterEvent* event);
     void dropEvent(QDropEvent* event);
     void wheelEvent(QWheelEvent* event);

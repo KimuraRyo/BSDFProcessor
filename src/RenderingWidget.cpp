@@ -17,7 +17,6 @@
 #include <osgGA/TrackballManipulator>
 #include <osgUtil/Optimizer>
 
-#include "RenderingScene.h"
 #include "SceneUtil.h"
 
 RenderingWidget::RenderingWidget(const QGLFormat&   format,
@@ -202,6 +201,52 @@ void RenderingWidget::mousePressEvent(QMouseEvent* event)
 {
     osgQt::GLWidget::mousePressEvent(event);
     movedMouse_ = false;
+}
+
+void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
+{
+    osgQt::GLWidget::mouseReleaseEvent(event);
+
+    if (event->button() == Qt::LeftButton && !movedMouse_) {
+        if (!renderingScene_) return;
+
+        int x = event->pos().x();
+        int y = event->pos().y();
+
+        lb::Vec3 inDir = renderingScene_->getInDir(x, y);
+        lb::Vec3 outDir = renderingScene_->getOutDir(x, y);
+        if (inDir.isZero() || outDir.isZero()) {
+            emit inOutDirPicked(lb::Vec3::Zero(), lb::Vec3::Zero());
+            return;
+        }
+
+        const lb::Brdf* brdf = renderingScene_->getBrdf();
+        const lb::SampleSet2D* ss2 = renderingScene_->getReflectance();
+
+        if (brdf) {
+            if (brdf->getSampleSet()->isIsotropic()) {
+                float inTheta, outTheta, outPhi;
+                lb::SphericalCoordinateSystem::fromXyz(inDir, outDir, &inTheta, &outTheta, &outPhi);
+                lb::SphericalCoordinateSystem::toXyz(inTheta, 0.0f, outTheta, outPhi, &inDir, &outDir);
+            }
+        }
+        else if (ss2) {
+            if (ss2->isIsotropic()) {
+                float theta, phi;
+                lb::SphericalCoordinateSystem::fromXyz(outDir, &theta, &phi);
+                outDir = lb::SphericalCoordinateSystem::toXyz(theta, lb::PI_F);
+            }
+
+            inDir = lb::reflect(outDir, lb::Vec3(0.0, 0.0, 1.0));
+        }
+
+        emit inOutDirPicked(inDir, outDir);
+    }
+}
+
+void RenderingWidget::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    osgQt::GLWidget::mouseDoubleClickEvent(event);
 }
 
 void RenderingWidget::dragEnterEvent(QDragEnterEvent* event)

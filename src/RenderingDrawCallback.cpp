@@ -24,19 +24,30 @@ RenderingDrawCallback::RenderingDrawCallback(osg::Image*        inDirImage,
                                                reflectances_(reflectances),
                                                dataType_(dataType),
                                                lightIntensity_(lightIntensity),
-                                               environmentIntensity_(environmentIntensity) {}
+                                               environmentIntensity_(environmentIntensity)
+{
+    copiedInDirImage_ = new osg::Image(*inDirImage_);
+}
 
 void RenderingDrawCallback::render() const
 {
     float* inDirData = reinterpret_cast<float*>(inDirImage_->data());
     const float* outDirData = reinterpret_cast<const float*>(outDirImage_->data());
+    float* copiedInDirData = reinterpret_cast<float*>(copiedInDirImage_->data());
 
     float* inDirPtr;
+    float* renderedData;
     lb::Vec3 inDir, outDir;
     int numPixels = inDirImage_->s() * inDirImage_->t();
-    #pragma omp parallel for private(inDirPtr, inDir, outDir)
+    #pragma omp parallel for private(inDir, outDir)
     for (int i = 0; i < numPixels; ++i) {
         inDirPtr = &inDirData[i * 4];
+        renderedData = inDirPtr;
+
+        copiedInDirData[i * 4    ] = inDirPtr[0];
+        copiedInDirData[i * 4 + 1] = inDirPtr[1];
+        copiedInDirData[i * 4 + 2] = inDirPtr[2];
+        copiedInDirData[i * 4 + 3] = inDirPtr[3];
 
         // Ignore background.
         if (inDirPtr[3] != 0.0f) continue;
@@ -49,10 +60,10 @@ void RenderingDrawCallback::render() const
         outDir[2] = std::max(outDir[2], 0.0f);
         outDir.normalize();
 
-        inDirPtr[0] = inDirPtr[1] = inDirPtr[2] = 0.0f;
+        renderedData[0] = renderedData[1] = renderedData[2] = 0.0f;
 
         if (reflectances_ && environmentIntensity_ > 0.0f) {
-            renderReflectance(outDir, inDirPtr);
+            renderReflectance(outDir, renderedData);
         }
 
         if (dataType_ == lb::BTDF_DATA || dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
@@ -63,7 +74,7 @@ void RenderingDrawCallback::render() const
         inDir.normalize();
 
         if (brdf_ && lightIntensity_ > 0.0f) {
-            renderBrdf(inDir, outDir, inDirPtr);
+            renderBrdf(inDir, outDir, renderedData);
         }
     }
 }
@@ -78,7 +89,7 @@ void RenderingDrawCallback::renderBrdf(const lb::Vec3& inDir, const lb::Vec3& ou
         rgb = sp;
     }
     else if (ss->getColorModel() == lb::XYZ_MODEL) {
-        rgb = lb::SpectrumUtility::xyzToSrgb(sp);
+        rgb = lb::xyzToSrgb(sp);
     }
     else if (ss->getNumWavelengths() == 1) {
         rgb[0] = rgb[1] = rgb[2] = sp[0];
@@ -103,7 +114,7 @@ void RenderingDrawCallback::renderReflectance(const lb::Vec3& outDir, float* pix
         rgb = sp;
     }
     else if (reflectances_->getColorModel() == lb::XYZ_MODEL) {
-        rgb = lb::SpectrumUtility::xyzToSrgb(sp);
+        rgb = lb::xyzToSrgb(sp);
     }
     else if (reflectances_->getNumWavelengths() == 1) {
         rgb[0] = rgb[1] = rgb[2] = sp[0];

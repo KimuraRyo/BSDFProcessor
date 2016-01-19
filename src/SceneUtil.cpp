@@ -521,7 +521,7 @@ template <typename CoordSysT>
 osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                                   float             inTheta,
                                                   float             inPhi,
-                                                  int               spectrumIndex,
+                                                  int               wavelengthIndex,
                                                   bool              useLogPlot,
                                                   float             baseOfLogarithm,
                                                   lb::DataType      dataType,
@@ -565,14 +565,14 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         inDir.normalize();
         outDir.normalize();
 
-        float brdfValue = brdf.getValue(inDir, outDir, spectrumIndex);
+        float brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
         if (brdfValue <= 0.0f) {
             positions.push_back(lb::Vec3::Zero());
             continue;
         }
 
         if (useLogPlot) {
-            brdfValue = std::log(brdfValue + 1.0) / std::log(baseOfLogarithm);
+            brdfValue = toLogValue(brdfValue, baseOfLogarithm);
         }
 
         if (maxBrdfValue < brdfValue) {
@@ -663,21 +663,21 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
 }
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
-    const lb::Brdf& brdf, float inTheta, float inPhi, int spectrumIndex,
+    const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
     bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
-    const lb::Brdf& brdf, float inTheta, float inPhi, int spectrumIndex,
+    const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
     bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
-    const lb::Brdf& brdf, float inTheta, float inPhi, int spectrumIndex,
+    const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
     bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
 
 osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
                                                    int              inThetaIndex,
                                                    int              inPhiIndex,
-                                                   int              spectrumIndex,
+                                                   int              wavelengthIndex,
                                                    bool             useLogPlot,
                                                    float            baseOfLogarithm,
                                                    lb::DataType     dataType)
@@ -693,11 +693,11 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
 
         if (outDir[2] < -lb::EPSILON_F) continue;
 
-        float brdfValue = brdf.getSpectrum(inDir, outDir)[spectrumIndex];
+        float brdfValue = brdf.getSpectrum(inDir, outDir)[wavelengthIndex];
         if (brdfValue <= 0.0f) continue;
 
         if (useLogPlot) {
-            brdfValue = std::log(brdfValue + 1.0) / std::log(baseOfLogarithm);
+            brdfValue = toLogValue(brdfValue, baseOfLogarithm);
         }
 
         if (dataType == lb::BTDF_DATA) {
@@ -737,7 +737,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                                       const lb::Brdf&   brdf,
                                       int               inThetaIndex,
                                       int               inPhiIndex,
-                                      int               spectrumIndex,
+                                      int               wavelengthIndex,
                                       bool              useLogPlot,
                                       float             baseOfLogarithm,
                                       lb::DataType      dataType)
@@ -774,12 +774,12 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 outDir[2] = -outDir[2];
             }
 
-            float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[spectrumIndex];
+            float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[wavelengthIndex];
             if (brdfValue <= 0.0f) continue;
 
             float distance;
             if (useLogPlot) {
-                distance = std::log(brdfValue + 1.0) / std::log(baseOfLogarithm);
+                distance = toLogValue(brdfValue, baseOfLogarithm);
             }
             else {
                 distance = brdfValue;
@@ -861,10 +861,10 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 outDir[2] = -outDir[2];
             }
 
-            float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[spectrumIndex];
+            float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[wavelengthIndex];
             float distance;
             if (useLogPlot) {
-                distance = std::log(brdfValue + 1.0) / std::log(baseOfLogarithm);
+                distance = toLogValue(brdfValue, baseOfLogarithm);
             }
             else {
                 distance = brdfValue;
@@ -936,22 +936,24 @@ osg::Geode* scene_util::createAxis(double length, bool useRgb)
 }
 
 osg::Geometry* scene_util::createCircleFloor(float  radius,
-                                             int    numPoints,
+                                             int    numSegments,
                                              float  lineWidth,
                                              bool   useStipple,
                                              bool   useLogPlot,
                                              float  baseOfLogarithm)
 {
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+    geom->setName("CircleFloor");
 
-    osg::Vec3Array* vertices = new osg::Vec3Array(numPoints);
-    double angle = 2.0 * osg::PI / numPoints;
-    for (int i = 0; i < numPoints; ++i) {
-        (*vertices)[i].set(osg::Vec3(std::cos(angle * i), std::sin(angle * i), 0.0) * radius);
+    osg::Vec3Array* vertices = new osg::Vec3Array(numSegments);
+    double angle = 2.0 * osg::PI / numSegments;
+    for (int i = 0; i < numSegments; ++i) {
+        osg::Vec3 pos = osg::Vec3(std::cos(angle * i), std::sin(angle * i), 0.0) * radius;
+        (*vertices)[i].set(pos);
     }
 
     geom->setVertexArray(vertices);
-    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_LOOP, 0, numPoints));
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_LOOP, 0, numSegments));
 
     osg::Vec4Array* colors = new osg::Vec4Array;
     colors->push_back(osg::Vec4(0.1, 0.1, 0.1, 1.0));
@@ -975,18 +977,23 @@ osg::Geometry* scene_util::createCircleFloor(float  radius,
     return geom.release();
 }
 
-osg::Geometry* scene_util::createInDirLine()
+osg::Geometry* scene_util::createStippledLine(const osg::Vec3&  pos0,
+                                              const osg::Vec3&  pos1,
+                                              const osg::Vec4&  color,
+                                              float             width,
+                                              GLint             stippleFactor,
+                                              GLushort          stipplePattern)
 {
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
-    geom->setName("inDirLine");
+    geom->setName("StippledLine");
     
     osg::Vec3Array* vertices = new osg::Vec3Array;
-    vertices->push_back(osg::Vec3(0.0, 0.0, 0.0));
-    vertices->push_back(osg::Vec3(0.0, 0.0, 1.0));
+    vertices->push_back(pos0);
+    vertices->push_back(pos1);
     geom->setVertexArray(vertices);
 
     osg::Vec4Array* colors = new osg::Vec4Array;
-    colors->push_back(osg::Vec4(1.0, 0.0, 0.0, 1.0));
+    colors->push_back(color);
     geom->setColorArray(colors);
     geom->setColorBinding(osg::Geometry::BIND_OVERALL);
 
@@ -1000,15 +1007,68 @@ osg::Geometry* scene_util::createInDirLine()
     stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
     osg::LineWidth* lineWidth = new osg::LineWidth;
-    lineWidth->setWidth(2.0f);
+    lineWidth->setWidth(width);
     stateSet->setAttributeAndModes(lineWidth, osg::StateAttribute::ON);
 
     osg::LineStipple* lineStipple = new osg::LineStipple;
-    lineStipple->setFactor(1);
-    lineStipple->setPattern(0xf0f0);
+    lineStipple->setFactor(stippleFactor);
+    lineStipple->setPattern(stipplePattern);
     stateSet->setAttributeAndModes(lineStipple, osg::StateAttribute::ON);
 
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, 2));
+
+    return geom.release();
+}
+
+osg::Geometry* scene_util::createArc(const osg::Vec3&   pos0,
+                                     const osg::Vec3&   pos1,
+                                     int                numSegments,
+                                     const osg::Vec4&   color,
+                                     float              width,
+                                     GLint              stippleFactor,
+                                     GLushort           stipplePattern)
+{
+    osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+    geom->setName("ArcLine");
+
+    numSegments = std::max(numSegments, 1);
+    int numVerts = numSegments + 1;
+    osg::Vec3Array* vertices = new osg::Vec3Array(numVerts);
+    for (int i = 0; i < numVerts; ++i) {
+        float weight = static_cast<float>(i) / numSegments;
+        osg::Vec3 pos = lb::lerp(pos0, pos1, weight);
+        float radius = lb::lerp(pos0.length(), pos1.length(), weight);
+        pos.normalize();
+        pos *= radius;
+
+        (*vertices)[i].set(pos);
+    }
+    geom->setVertexArray(vertices);
+
+    osg::Vec4Array* colors = new osg::Vec4Array;
+    colors->push_back(color);
+    geom->setColorArray(colors);
+    geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+    osg::StateSet* stateSet = geom->getOrCreateStateSet();
+
+    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+    osg::Depth* depth = new osg::Depth;
+    depth->setFunction(osg::Depth::LESS);
+    depth->setRange(0.0, 0.9999999);
+    stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
+
+    osg::LineWidth* lineWidth = new osg::LineWidth;
+    lineWidth->setWidth(width);
+    stateSet->setAttributeAndModes(lineWidth, osg::StateAttribute::ON);
+
+    osg::LineStipple* lineStipple = new osg::LineStipple;
+    lineStipple->setFactor(stippleFactor);
+    lineStipple->setPattern(stipplePattern);
+    stateSet->setAttributeAndModes(lineStipple, osg::StateAttribute::ON);
+
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP, 0, numVerts));
 
     return geom.release();
 }
