@@ -41,6 +41,9 @@ void scene_util::fitCameraPosition(osg::Camera*     camera,
                                    const osg::Vec3& upDirection,
                                    osg::Node*       node)
 {
+    using std::min;
+    using std::abs;
+    
     osg::ComputeBoundsVisitor cbv(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN);
     if (node) {
         node->accept(cbv);
@@ -60,9 +63,6 @@ void scene_util::fitCameraPosition(osg::Camera*     camera,
         distance = minThreshold;
     }
     else if (camera->getProjectionMatrixAsFrustum(left, right, bottom, top, zNear, zFar)) {
-        using std::min;
-        using std::abs;
-
         double minNearPlaneComponent = min(min(abs(left), abs(right)), min(abs(bottom), abs(top)));
         double minFovRadian = std::atan2(minNearPlaneComponent, zNear);
 
