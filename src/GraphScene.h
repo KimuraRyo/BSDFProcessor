@@ -124,7 +124,7 @@ private:
     void initializeInDirLine();
     void updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex);
     osg::Vec3 modifyDirLineLength(const lb::Vec3& lineDir, int wavelengthIndex);
-    void clearInDirLine() { inDirGeode_->removeChildren(0, inDirGeode_->getNumChildren()); }
+    void clearInDirLine() { inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables()); }
 
     void initializeInOutDirLine();
 

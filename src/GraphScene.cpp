@@ -675,7 +675,7 @@ void GraphScene::updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex)
 
     osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir,
                                                          osg::Vec4(1.0, 0.0, 0.0, 1.0));
-    inDirGeode_->removeChildren(0, inDirGeode_->getNumChildren());
+    inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables());
     inDirGeode_->addDrawable(geom);
 }
 
@@ -714,7 +714,7 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
                                     const lb::Vec3& outDir,
                                     int             wavelengthIndex)
 {
-    inOutDirGeode_->removeChildren(0, inOutDirGeode_->getNumChildren());
+    inOutDirGeode_->removeDrawables(0, inOutDirGeode_->getNumDrawables());
 
     if (inDir.isZero() && outDir.isZero()) {
         return;
