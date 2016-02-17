@@ -58,6 +58,8 @@ private:
     void wheelEvent(QWheelEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
 
+    void showContextMenu(const QPoint& pos);
+
     GraphScene* graphScene_;
 
     bool movedMouse_;

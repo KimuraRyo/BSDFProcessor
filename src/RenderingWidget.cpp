@@ -242,6 +242,11 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 
         emit inOutDirPicked(inDir, outDir);
     }
+#ifdef __APPLE__
+    else if (event->button() == Qt::RightButton && !movedMouse_) {
+        showContextMenu(event->globalPos());
+    }
+#endif
 }
 
 void RenderingWidget::mouseDoubleClickEvent(QMouseEvent* event)
@@ -273,8 +278,15 @@ void RenderingWidget::contextMenuEvent(QContextMenuEvent* event)
 {
     osgQt::GLWidget::contextMenuEvent(event);
 
+#ifndef __APPLE__
     if (movedMouse_) return;
+    
+    showContextMenu(event->globalPos());
+#endif
+}
 
+void RenderingWidget::showContextMenu(const QPoint& pos)
+{
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
     
@@ -283,8 +295,8 @@ void RenderingWidget::contextMenuEvent(QContextMenuEvent* event)
     shapeMenu->addAction(actionShapeCylinder_);
     shapeMenu->addAction(actionShapeBox_);
     shapeMenu->addAction(actionShapeOpen_);
-
-    menu.exec(event->globalPos());
+    
+    menu.exec(pos);
 }
 
 void RenderingWidget::openModel(const QString& fileName)

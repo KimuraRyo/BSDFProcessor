@@ -64,6 +64,8 @@ private:
     void wheelEvent(QWheelEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
 
+    void showContextMenu(const QPoint& pos);
+
     void openModel(const QString& fileName);
 
     RenderingScene* renderingScene_;

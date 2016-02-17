@@ -154,6 +154,11 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
             emit clearPickedValue();
         }
     }
+#ifdef __APPLE__
+    else if (event->button() == Qt::RightButton && !movedMouse_) {
+        showContextMenu(event->globalPos());
+    }
+#endif
 }
 
 void GraphWidget::dragEnterEvent(QDragEnterEvent* event)
@@ -181,9 +186,16 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent* event)
 {
     osgQt::GLWidget::contextMenuEvent(event);
 
+#ifndef __APPLE__
     if (movedMouse_) return;
+    
+    showContextMenu(event->globalPos());
+#endif
+}
 
+void GraphWidget::showContextMenu(const QPoint& pos)
+{
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
-    menu.exec(event->globalPos());
+    menu.exec(pos);
 }
