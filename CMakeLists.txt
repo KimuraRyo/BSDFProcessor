@@ -35,7 +35,7 @@ endif()
 include_directories("${EIGEN3_INCLUDE_DIR}")
 
 set(OpenSceneGraph_MARK_AS_ADVANCED ON)
-find_package(OpenSceneGraph 3.0.0 REQUIRED osgDB osgGA osgManipulator osgQt osgText osgUtil osgViewer osgWidget)
+find_package(OpenSceneGraph 3.4.0 REQUIRED osgDB osgGA osgManipulator osgQt osgText osgUtil osgViewer osgWidget)
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
