@@ -325,13 +325,11 @@ osg::Group* RenderingScene::createRenderingGroup(osg::Group*    subgraph,
         fboCamera->attach(osg::Camera::COLOR_BUFFER0, inDirImage, numMultiSamples_, 0);
         fboCamera->attach(osg::Camera::COLOR_BUFFER1, outDirImage, numMultiSamples_, 0);
 
-        if (brdf_ || reflectances_) {
-            drawCallback_ = new RenderingDrawCallback(inDirImage, outDirImage,
-                                                      brdf_, reflectances_, dataType_,
-                                                      lightIntensity_, environmentIntensity_);
-            fboCamera->setPostDrawCallback(drawCallback_.get());
-            texture->setImage(inDirImage);
-        }
+        drawCallback_ = new RenderingDrawCallback(inDirImage, outDirImage,
+                                                  brdf_, reflectances_, dataType_,
+                                                  lightIntensity_, environmentIntensity_);
+        fboCamera->setPostDrawCallback(drawCallback_.get());
+        texture->setImage(inDirImage);
 
         renderingGroup->addChild(fboCamera);
         fboCamera->addChild(subgraph);
