@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -20,27 +20,16 @@
 #include <osg/PolygonOffset>
 #include <osg/PolygonMode>
 
-#include <QtGui/QColor>
-
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
-#include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/SpecularCoordinateSystem.h>
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
 
 #include "SpecularCenteredCoordinateSystem.h"
 
-GraphScene::GraphScene() : brdf_(0),
-                           btdf_(0),
-                           specularReflectances_(0),
-                           specularTransmittances_(0),
-                           reflectances_(0),
-                           numInTheta_(1),
-                           numInPhi_(1),
-                           numWavelengths_(1),
-                           numMultiSamples_(4),
+GraphScene::GraphScene() : numMultiSamples_(4),
                            useOit_(false),
                            numOitPasses_(8),
                            useLogPlot_(false),
@@ -85,18 +74,6 @@ GraphScene::GraphScene() : brdf_(0),
     createAxis(true);
     initializeInDirLine();
     initializeInOutDirLine();
-
-    integrator_ = new lb::Integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
-}
-
-GraphScene::~GraphScene()
-{
-    delete brdf_;
-    delete btdf_;
-    delete specularReflectances_;
-    delete specularTransmittances_;
-    delete reflectances_;
-    delete integrator_;
 }
 
 void GraphScene::updateView(int width, int height)
@@ -216,7 +193,7 @@ void GraphScene::createAxis(bool useTextLabel, bool useLogPlot, float baseOfLoga
 
 void GraphScene::createBrdfGeode()
 {
-    const lb::SampleSet* ss = getSampleSet();
+    const lb::SampleSet* ss = data_->getSampleSet();
     if (!ss) return;
 
     if (bxdfMeshGeode_.valid()) {
@@ -231,7 +208,7 @@ void GraphScene::createBrdfGeode()
         bsdfGroup_->addChild(bxdfMeshGeode_.get());
 
         osg::ClipPlane* clipPlane = new osg::ClipPlane;
-        if (brdf_) {
+        if (data_->getBrdf()) {
             clipPlane->setClipPlane(0.0, 0.0, 1.0, -0.00001);
         }
         else {
@@ -269,225 +246,19 @@ void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavel
 {
     clearGraphGeometry();
 
-    if (brdf_ || btdf_) {
+    if (data_->getBrdf() ||
+        data_->getBtdf()) {
         createAxis(false, useLogPlot_, baseOfLogarithm_);
         updateBrdfGeometry(inThetaIndex, inPhiIndex, wavelengthIndex);
     }
-    else if (specularReflectances_ || specularTransmittances_) {
+    else if (data_->getSpecularReflectances() ||
+             data_->getSpecularTransmittances()) {
         createAxis();
         updateSpecularReflectanceGeometry(inThetaIndex, inPhiIndex, wavelengthIndex);
     }
     else {
         createAxis(true, useLogPlot_, baseOfLogarithm_);
         return;
-    }
-}
-
-void GraphScene::clearData()
-{
-    delete brdf_;
-    delete btdf_;
-    delete specularReflectances_;
-    delete specularTransmittances_;
-
-    brdf_ = 0;
-    btdf_ = 0;
-    specularReflectances_ = 0;
-    specularTransmittances_ = 0;
-
-    displayMode_ = NORMAL_DISPLAY;
-}
-
-float GraphScene::getIncomingPolarAngle(int index) const
-{
-    if (brdf_ || btdf_) {
-        const lb::SampleSet* ss = getSampleSet();
-
-        if (isInDirDependentCoordinateSystem()) {
-            return ss->getAngle0(index);
-        }
-        else {
-            if (numInTheta_ == 1) {
-                return 0.0f;
-            }
-            else {
-                return index * lb::SphericalCoordinateSystem::MAX_ANGLE0 / (numInTheta_ - 1);
-            }
-        }
-    }
-    else if (specularReflectances_) {
-        return specularReflectances_->getTheta(index);
-    }
-    else if (specularTransmittances_) {
-        return specularTransmittances_->getTheta(index);
-    }
-    else {
-        return 0.0f;
-    }
-}
-
-float GraphScene::getIncomingAzimuthalAngle(int index) const
-{
-    if (brdf_ || btdf_) {
-        const lb::SampleSet* ss = getSampleSet();
-
-        if (isInDirDependentCoordinateSystem()) {
-            return ss->getAngle1(index);
-        }
-        else {
-            if (numInPhi_ == 1) {
-                return 0.0f;
-            }
-            else {
-                return index * lb::SphericalCoordinateSystem::MAX_ANGLE1 / (numInPhi_ - 1);
-            }
-        }
-    }
-    else if (specularReflectances_) {
-        return specularReflectances_->getPhi(index);
-    }
-    else if (specularTransmittances_) {
-        return specularTransmittances_->getPhi(index);
-    }
-    else {
-        return 0.0f;
-    }
-}
-
-float GraphScene::getWavelength(int index) const
-{
-    if (brdf_ || btdf_) {
-        return getSampleSet()->getWavelength(index);
-    }
-    else if (specularReflectances_) {
-        return specularReflectances_->getWavelength(index);
-    }
-    else if (specularTransmittances_) {
-        return specularTransmittances_->getWavelength(index);
-    }
-    else {
-        return 0.0f;
-    }
-}
-
-void GraphScene::setBrdf(lb::Brdf* brdf)
-{
-    brdf_ = brdf;
-
-    if (brdf_) {
-        lb::SampleSet* ss = brdf_->getSampleSet();
-
-        ss->updateAngleAttributes();
-
-        if (isInDirDependentCoordinateSystem()) {
-            numInTheta_ = ss->getNumAngles0();
-        }
-        else {
-            numInTheta_ = NUM_INCOMING_POLAR_ANGLES;
-        }
-
-        numInPhi_ = ss->getNumAngles1();
-        numWavelengths_ = ss->getNumWavelengths();
-
-        maxPerWavelength_ = findMaxPerWavelength(*ss);
-        computeReflectances();
-    }
-}
-
-void GraphScene::setBtdf(lb::Btdf* btdf)
-{
-    btdf_ = btdf;
-
-    if (btdf_) {
-        lb::SampleSet* ss = btdf_->getSampleSet();
-
-        ss->updateAngleAttributes();
-
-        if (isInDirDependentCoordinateSystem()) {
-            numInTheta_ = ss->getNumAngles0();
-        }
-        else {
-            numInTheta_ = NUM_INCOMING_POLAR_ANGLES;
-        }
-
-        numInPhi_ = ss->getNumAngles1();
-        numWavelengths_ = ss->getNumWavelengths();
-
-        maxPerWavelength_ = findMaxPerWavelength(*ss);
-        computeReflectances();
-    }
-}
-
-void GraphScene::setSpecularReflectances(lb::SampleSet2D* reflectances)
-{
-    specularReflectances_ = reflectances;
-
-    if (specularReflectances_) {
-        specularReflectances_->updateAngleAttributes();
-
-        numInTheta_     = specularReflectances_->getNumTheta();
-        numInPhi_       = specularReflectances_->getNumPhi();
-        numWavelengths_ = specularReflectances_->getNumWavelengths();
-
-        maxPerWavelength_.resize(0);
-    }
-}
-
-void GraphScene::setSpecularTransmittances(lb::SampleSet2D* reflectances)
-{
-    specularTransmittances_ = reflectances;
-
-    if (specularTransmittances_) {
-        specularTransmittances_->updateAngleAttributes();
-
-        numInTheta_     = specularTransmittances_->getNumTheta();
-        numInPhi_       = specularTransmittances_->getNumPhi();
-        numWavelengths_ = specularTransmittances_->getNumWavelengths();
-
-        maxPerWavelength_.resize(0);
-    }
-}
-
-lb::ColorModel GraphScene::getColorModel() const
-{
-    if (brdf_ || btdf_) {
-        return getSampleSet()->getColorModel();
-    }
-    else if (specularReflectances_) {
-        return specularReflectances_->getColorModel();
-    }
-    else if (specularTransmittances_) {
-        return specularTransmittances_->getColorModel();
-    }
-    else {
-        return lb::SPECTRAL_MODEL;
-    }
-}
-
-const lb::SampleSet* GraphScene::getSampleSet() const
-{
-    const lb::SampleSet* ss;
-    if (brdf_) {
-        ss = brdf_->getSampleSet();
-    }
-    else if (btdf_) {
-        ss = btdf_->getSampleSet();
-    }
-    else {
-        return 0;
-    }
-
-    return ss;
-}
-
-bool GraphScene::isInDirDependentCoordinateSystem() const
-{
-    if ((brdf_ && dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(brdf_)) ||
-        (btdf_ && dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(btdf_->getBrdf()))) {
-        return false;
-    }
-    else {
-        return true;
     }
 }
 
@@ -683,8 +454,8 @@ osg::Vec3 GraphScene::modifyDirLineLength(const lb::Vec3& lineDir, int wavelengt
 {
     osg::Vec3 dir(lineDir[0], lineDir[1], lineDir[2]);
 
-    if (brdf_ || btdf_) {
-        float val = maxPerWavelength_.maxCoeff();
+    if (data_->getBrdf() || data_->getBtdf()) {
+        float val = data_->getMaxValuesPerWavelength().maxCoeff();
         if (useLogPlot_){
             val = scene_util::toLogValue(val, baseOfLogarithm_);
         }
@@ -722,7 +493,6 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
     float lineWidth = 2.0f;
     GLint stippleFactor = 1;
-    GLushort stipplePattern = 0x8fff;
 
     float angleLength = 0.5f;
     if (useLogPlot_){
@@ -731,7 +501,8 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
     // Update the line of an incoming direction.
     {
-        osg::Vec4 color(1.0, 0.4, 0.0, 1.0);
+        osg::Vec4 color(1.0, 0.2, 0.0, 1.0);
+        GLushort stipplePattern = 0x8fff;
 
         osg::Vec3 dir = modifyDirLineLength(inDir, wavelengthIndex);
         osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
@@ -753,14 +524,15 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
     // Update the line of an outgoing direction.
     {
         osg::Vec3 dir= modifyDirLineLength(outDir, wavelengthIndex);
-        if (btdf_) {
+        if (data_->getBtdf()) {
             dir = -dir;
         }
-        else if (specularTransmittances_) {
+        else if (data_->getSpecularTransmittances()) {
             dir.z() = -dir.z();
         }
 
-        osg::Vec4 color(0.0, 0.4, 1.0, 1.0);
+        osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
+        GLushort stipplePattern = 0xff8f;
         
         osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
                                                              lineWidth, stippleFactor, stipplePattern);
@@ -781,31 +553,31 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
 void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
 {
-    const lb::SampleSet* ss = getSampleSet();
+    const lb::SampleSet* ss = data_->getSampleSet();
     if (!ss) return;
 
     bool nodeInvalid = (!bxdfMeshGeode_.valid() ||
                         !bxdfPointGeode_.valid() ||
                         !bxdfTextGeode_.valid());
-    bool paramInvalid = (inThetaIndex  >= numInTheta_ ||
-                         inPhiIndex    >= numInPhi_ ||
+    bool paramInvalid = (inThetaIndex  >= data_->getNumInTheta() ||
+                         inPhiIndex    >= data_->getNumInPhi() ||
                          wavelengthIndex >= ss->getNumWavelengths());
     if (nodeInvalid || paramInvalid) return;
 
     // Update the geometry of incoming direction.
-    float inTheta = getIncomingPolarAngle(inThetaIndex);
-    float inPhi = getIncomingAzimuthalAngle(inPhiIndex);
+    float inTheta = data_->getIncomingPolarAngle(inThetaIndex);
+    float inPhi = data_->getIncomingAzimuthalAngle(inPhiIndex);
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
     updateInDirLine(inDir, wavelengthIndex);
 
     lb::Brdf* brdf;
     lb::DataType dataType;
-    if (brdf_) {
-        brdf = brdf_;
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
         dataType = lb::BRDF_DATA;
     }
-    else if (btdf_) {
-        brdf = btdf_->getBrdf();
+    else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
         dataType = lb::BTDF_DATA;
     }
     else {
@@ -823,18 +595,20 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
             clearInDirLine();
 
-            #pragma omp parallel for
-            for (int i = 0; i < numInTheta_; ++i) {
-                setupBrdfMeshGeometry(brdf, getIncomingPolarAngle(i), inPhi, wavelengthIndex, dataType);
+            float curInTheta;
+            #pragma omp parallel for private(curInTheta)
+            for (int i = 0; i < data_->getNumInTheta(); ++i) {
+                curInTheta = data_->getIncomingPolarAngle(i);
+                setupBrdfMeshGeometry(brdf, curInTheta, inPhi, wavelengthIndex, dataType);
             }
 
-            for (int i = 0; i < numInTheta_; ++i) {
-                float curtInTheta = getIncomingPolarAngle(i);
-                float inThetaRatio = curtInTheta / lb::PI_2_F;
+            for (int i = 0; i < data_->getNumInTheta(); ++i) {
+                float curInTheta = data_->getIncomingPolarAngle(i);
+                float inThetaRatio = curInTheta / lb::PI_2_F;
                 osg::Vec4 color(scene_util::hueToRgb(inThetaRatio), 1.0);
 
-                lb::Vec3 curtInDir = lb::SphericalCoordinateSystem::toXyz(curtInTheta, inPhi);
-                osg::Vec3 dir = modifyDirLineLength(curtInDir, wavelengthIndex);
+                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi);
+                osg::Vec3 dir = modifyDirLineLength(curInDir, wavelengthIndex);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 1.0f);
                 inDirGeode_->addDrawable(geom);
             }
@@ -845,21 +619,24 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
             clearInDirLine();
 
-            float endInPhi = getIncomingAzimuthalAngle(numInPhi_ - 1) - lb::SphericalCoordinateSystem::MAX_ANGLE1;
-            bool duplicate = lb::isEqual(getIncomingAzimuthalAngle(0), endInPhi);
-            int numInPhi = duplicate ? numInPhi_ - 1 : numInPhi_;
-            #pragma omp parallel for
+            float endInPhi = data_->getIncomingAzimuthalAngle(data_->getNumInPhi() - 1)
+                           - lb::SphericalCoordinateSystem::MAX_ANGLE1;
+            bool duplicate = lb::isEqual(data_->getIncomingAzimuthalAngle(0), endInPhi);
+            int numInPhi = duplicate ? data_->getNumInPhi() - 1 : data_->getNumInPhi();
+            float curInPhi;
+            #pragma omp parallel for private(curInPhi)
             for (int i = 0; i < numInPhi; ++i) {
-                setupBrdfMeshGeometry(brdf, inTheta, getIncomingAzimuthalAngle(i), wavelengthIndex, dataType);
+                curInPhi = data_->getIncomingAzimuthalAngle(i);
+                setupBrdfMeshGeometry(brdf, inTheta, curInPhi, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < numInPhi; ++i) {
-                float curtInPhi = getIncomingAzimuthalAngle(i);
-                float inPhiRatio = curtInPhi / (2.0f * lb::PI_F);
+                float curInPhi = data_->getIncomingAzimuthalAngle(i);
+                float inPhiRatio = curInPhi / (2.0f * lb::PI_F);
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
-                lb::Vec3 curtInDir = lb::SphericalCoordinateSystem::toXyz(inTheta, curtInPhi);
-                osg::Vec3 dir = modifyDirLineLength(curtInDir, wavelengthIndex);
+                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta, curInPhi);
+                osg::Vec3 dir = modifyDirLineLength(curInDir, wavelengthIndex);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 1.0f);
                 inDirGeode_->addDrawable(geom);
             }
@@ -869,7 +646,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         }
         case ALL_WAVELENGTHS_DISPLAY: {
             #pragma omp parallel for
-            for (int i = 0; i < numWavelengths_; ++i) {
+            for (int i = 0; i < data_->getNumWavelengths(); ++i) {
                 setupBrdfMeshGeometry(brdf, inTheta, inPhi, i, dataType);
             }
             useOit_ = true;
@@ -879,7 +656,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             setupBrdfMeshGeometry(brdf, inTheta, inPhi, wavelengthIndex, dataType);
             bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
                                                                         osg::StateAttribute::ON);
-            if (!isInDirDependentCoordinateSystem()) break;
+            if (!data_->isInDirDependentCoordinateSystem()) break;
 
             // Update point geometry.
             osg::Geometry* pointGeom = scene_util::createBrdfPointGeometry(*brdf,
@@ -891,7 +668,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             break;
         }
         case SAMPLE_POINT_LABELS_DISPLAY: {
-            if (!isInDirDependentCoordinateSystem()) break;
+            if (!data_->isInDirDependentCoordinateSystem()) break;
 
             scene_util::attachBrdfTextLabels(bxdfTextGeode_.get(),
                                              *brdf,
@@ -909,9 +686,9 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
                                        lb::DataType dataType)
 {
-    bool many = ((displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 10) ||
-                 (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && numInPhi_ > 10) ||
-                 (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 10));
+    bool many = ((displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && data_->getNumInTheta() > 10) ||
+                 (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && data_->getNumInPhi() > 10) ||
+                 (displayMode_ == ALL_WAVELENGTHS_DISPLAY && data_->getNumWavelengths() > 10));
     int numTheta, numPhi;
     if (many) {
         numTheta = 181;
@@ -940,17 +717,18 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
     const float alpha = 0.3f;
     osg::Vec4 color;
     bool colorUpdate = false;
-    if (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && numInTheta_ > 1) {
+    if (displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && data_->getNumInTheta() > 1) {
         float inThetaRatio = inTheta / lb::PI_2_F;
         color = osg::Vec4(scene_util::hueToRgb(inThetaRatio), alpha);
         colorUpdate = true;
     }
-    else if (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && numInPhi_ > 1) {
+    else if (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && data_->getNumInPhi() > 1) {
         float inPhiRatio = inPhi / (2.0f * lb::PI_F);
         color = osg::Vec4(scene_util::hueToRgb(inPhiRatio), alpha);
         colorUpdate = true;
     }
-    else if (displayMode_ == ALL_WAVELENGTHS_DISPLAY && numWavelengths_ > 1) {
+    else if (displayMode_ == ALL_WAVELENGTHS_DISPLAY &&
+             data_->getNumWavelengths() > 1) {
         const lb::SampleSet* ss = brdf->getSampleSet();
 
         if (ss->getColorModel() == lb::RGB_MODEL ||
@@ -986,11 +764,11 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
 void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
 {
     const lb::SampleSet2D* ss2;
-    if (specularReflectances_) {
-        ss2 = specularReflectances_;
+    if (data_->getSpecularReflectances()) {
+        ss2 = data_->getSpecularReflectances();
     }
-    else if (specularTransmittances_) {
-        ss2 = specularTransmittances_;
+    else if (data_->getSpecularTransmittances()) {
+        ss2 = data_->getSpecularTransmittances();
     }
     else {
         return;
@@ -1018,7 +796,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
 
     // Update specular reflectance.
     lb::Vec3 outDir;
-    if (specularReflectances_) {
+    if (data_->getSpecularReflectances()) {
         outDir = lb::reflect(inDir, lb::Vec3(0.0, 0.0, 1.0));
     }
     else {
@@ -1072,80 +850,4 @@ void GraphScene::clearGraphGeometry()
     if (specularReflectanceGeode_.valid()) {
         bsdfGroup_->removeChild(specularReflectanceGeode_.get());
     }
-}
-
-lb::Vec3 GraphScene::getInDir(int inThetaIndex, int inPhiIndex)
-{
-    const lb::SampleSet* ss = getSampleSet();
-    if (!ss) return lb::Vec3::Zero();
-
-    float inTheta = getIncomingPolarAngle(inThetaIndex);
-    float inPhi = getIncomingAzimuthalAngle(inPhiIndex);
-    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
-
-    assert(inDir.z() >= 0.0);
-    return inDir;
-}
-
-lb::Spectrum GraphScene::findMaxPerWavelength(const lb::SampleSet& samples)
-{
-    lb::Spectrum maxSp;
-    maxSp.resize(samples.getNumWavelengths());
-    maxSp = lb::Spectrum::Zero(maxSp.size());
-
-    for (int i0 = 0; i0 < samples.getNumAngles0(); ++i0) {
-    for (int i1 = 0; i1 < samples.getNumAngles1(); ++i1) {
-    for (int i2 = 0; i2 < samples.getNumAngles2(); ++i2) {
-    for (int i3 = 0; i3 < samples.getNumAngles3(); ++i3) {
-        const lb::Spectrum& sp = samples.getSpectrum(i0, i1, i2, i3);
-        maxSp = maxSp.cwiseMax(sp);
-    }}}}
-
-    return maxSp;
-}
-
-void GraphScene::computeReflectances()
-{
-    osg::Timer_t startTick = osg::Timer::instance()->tick();
-
-    const lb::SampleSet* ss = getSampleSet();
-    if (!ss) return;
-
-    const lb::Brdf* brdf;
-    if (brdf_) {
-        brdf = brdf_;
-    }
-    else if (btdf_) {
-        brdf = btdf_->getBrdf();
-    }
-    else {
-        return;
-    }
-
-    // Set up a reflectance and transmittance sample set.
-    delete reflectances_;
-    reflectances_ = new lb::SampleSet2D(numInTheta_, numInPhi_, ss->getColorModel(), ss->getNumWavelengths());
-    reflectances_->getWavelengths() = ss->getWavelengths();
-    
-    for (int inThIndex = 0; inThIndex < numInTheta_; ++inThIndex) {
-        float inTheta = getIncomingPolarAngle(inThIndex);
-        reflectances_->setTheta(inThIndex, inTheta);
-    }
-
-    for (int inPhIndex = 0; inPhIndex < numInPhi_; ++inPhIndex) {
-        float inPhi = getIncomingAzimuthalAngle(inPhIndex);
-        reflectances_->setPhi(inPhIndex, inPhi);
-    }
-
-    // Compute reflectance and transmittance.
-    for (int inPhIndex = 0; inPhIndex < numInPhi_;   ++inPhIndex) {
-    for (int inThIndex = 0; inThIndex < numInTheta_; ++inThIndex) {
-        lb::Vec3 inDir = getInDir(inThIndex, inPhIndex);
-        lb::Spectrum sp = integrator_->computeReflectance(*brdf, inDir);
-        reflectances_->setSpectrum(inThIndex, inPhIndex, sp);
-    }}
-
-    osg::Timer_t endTick = osg::Timer::instance()->tick();
-    double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[GraphScene::computeReflectances] " << delta << "(s)" << std::endl;
 }

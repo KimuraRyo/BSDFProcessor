@@ -96,6 +96,7 @@ void ViewerWidget::initializeViewer(osgQt::GLWidget* qglWidget, osgViewer::View*
     trackball->setHomePosition(osg::Vec3d(0.0, 10.0, 0.0), osg::Vec3d(0.0, 0.0, 0.0), osg::Vec3d(0.0, 0.0, 1.0));
     trackball->home(0.0);
     trackball->setMinimumDistance(0.0001);
+    trackball->setAllowThrow(false);
     view->setCameraManipulator(trackball);
 }
 

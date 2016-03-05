@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -139,7 +139,7 @@ void RenderingScene::fitCameraPosition(osg::Camera*     camera,
 {
     using std::min;
     using std::abs;
-
+    
     osg::ComputeBoundsVisitor cbv(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN);
     if (node) {
         node->accept(cbv);

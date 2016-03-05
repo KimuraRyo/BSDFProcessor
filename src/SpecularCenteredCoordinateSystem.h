@@ -23,7 +23,7 @@
  *   - \a specTheta: the polar angle of a specular direction
  *   - \a specPhi: the azimuthal angle of a specular direction
  *
- * \a spec is an abbreviation for specular. \a inPhi isn't used for isotropic BRDFs.
+ * \a spec is an abbreviation for specular. \a inPhi is not used for isotropic BRDFs.
  */
 struct SpecularCenteredCoordinateSystem
 {

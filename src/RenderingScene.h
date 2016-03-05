@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -48,6 +48,7 @@ public:
 
     lb::Brdf* getBrdf() { return brdf_; }
     lb::SampleSet2D* getReflectance() { return reflectances_; }
+    void setReflectance(lb::SampleSet2D* reflectances) { reflectances_ = reflectances; }
 
     void setLightIntensity(float intensity) { lightIntensity_ = intensity; }
     void setEnvironmentIntensity(float intensity) { environmentIntensity_ = intensity; }

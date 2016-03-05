@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -43,13 +43,6 @@
 #include "SceneUtil.h"
 #include "SpecularCenteredCoordinateSystem.h"
 
-lb::Vec3 qcolorToVec3(const QColor& color)
-{
-    qreal r, g, b;
-    color.getRgbF(&r, &g, &b);
-    return lb::Vec3(r, g, b);
-}
-
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           cosineCorrected_(false),
                                           pickedInDir_(0.0, 0.0, 0.0),
@@ -57,6 +50,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           ui_(new Ui::MainWindowBase)
 {
     ui_->setupUi(this);
+
+    reflectanceModelDockWidget_ = new ReflectanceModelDockWidget(ui_->centralWidget);
 
     osgDB::Registry::instance()->setBuildKdTreesHint(osgDB::ReaderWriter::Options::BUILD_KDTREES);
 
@@ -66,9 +61,19 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     addDockWidget(Qt::RightDockWidgetArea,  ui_->controlDockWidget);
     addDockWidget(Qt::RightDockWidgetArea,  ui_->renderingDockWidget);
     addDockWidget(Qt::RightDockWidgetArea,  ui_->informationDockWidget);
+    
     addDockWidget(Qt::BottomDockWidgetArea, ui_->tableDockWidget);
+    ui_->tableDockWidget->hide();
+
+    addDockWidget(Qt::LeftDockWidgetArea, ui_->editorDockWidget);
+    ui_->editorDockWidget->hide();
+
+    addDockWidget(Qt::LeftDockWidgetArea, reflectanceModelDockWidget_);
+    reflectanceModelDockWidget_->hide();
 
     ui_->statusbar->hide();
+
+    data_ = new MaterialData;
 
     // Initialize a 3D graph view.
     {
@@ -77,11 +82,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
         ui_->mainViewerWidget->addViewWidget(graphWidget_);
 
         graphScene_ = new GraphScene;
+        graphScene_->setMaterialData(data_);
         graphScene_->setCamera(getMainView()->getCamera());
         graphScene_->setCameraManipulator(getMainView()->getCameraManipulator());
         getMainView()->setSceneData(graphScene_->getRoot());
         graphWidget_->setGraphScene(graphScene_);
-        ui_->tableGraphicsView->setGraphScene(graphScene_);
+        
+        ui_->tableGraphicsView->setMaterialData(data_);
     }
 
     // Initialize a rendering view.
@@ -102,21 +109,25 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     std::cout << "libbsdf-" << lb::getVersion() << std::endl;
     std::cout << "OpenSceneGraph-" << osgGetVersion() << std::endl;
     std::cout << "Qt-" << qVersion() << std::endl;
-    std::cout << "Eigen-" << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << std::endl;    
+    std::cout << "Eigen-" << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << std::endl;
 }
 
 MainWindow::~MainWindow()
 {
+    delete data_;
     delete graphScene_;
     delete ui_;
 }
 
 void MainWindow::openFile(const QString& fileName)
 {
-    bool hadData = (graphScene_->getBrdf() ||
-                    graphScene_->getBtdf() ||
-                    graphScene_->getSpecularReflectances() ||
-                    graphScene_->getSpecularTransmittances());
+    QElapsedTimer timer;
+    timer.start();
+
+    bool hadData = (data_->getBrdf() ||
+                    data_->getBtdf() ||
+                    data_->getSpecularReflectances() ||
+                    data_->getSpecularTransmittances());
 
     bool loaded = false;
 
@@ -160,7 +171,7 @@ void MainWindow::openFile(const QString& fileName)
     }
 
     if (!loaded) {
-        QMessageBox::warning(this, tr("BSDF Viewer"),
+        QMessageBox::warning(this, tr("BSDF Processor"),
                              tr("Failed to load \"") + fileName + "\"",
                              QMessageBox::Ok);
         return;
@@ -171,7 +182,39 @@ void MainWindow::openFile(const QString& fileName)
     }
 
     QFileInfo fileInfo(fileName);
-    this->setWindowTitle(fileInfo.fileName() + " - BSDF Viewer");
+    this->setWindowTitle(fileInfo.fileName() + " - BSDF Processor");
+
+    std::cout
+        << "[MainWindow::openFile] fileName: " << fileName.toLocal8Bit().data()
+        << " (" << timer.elapsed() * 0.001f << "(s)" << ")" << std::endl;
+}
+
+void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
+{
+    if (cosineCorrected_) {
+        lb::divideByCosineOutTheta(brdf);
+    }
+
+    data_->clearData();
+    if (dataType == lb::BRDF_DATA) {
+        data_->setBrdf(brdf);
+    }
+    else if (dataType == lb::BTDF_DATA) {
+        data_->setBtdf(new lb::Btdf(brdf));
+    }
+    else {
+        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
+        return;
+    }
+    graphScene_->createBrdfGeode();
+
+    renderingScene_->setData(brdf, data_->getReflectances(), dataType);
+
+    initializeUi();
+
+    ui_->logPlotGroupBox->setEnabled(true);
+    ui_->tableGraphicsView->fitView(0.9);
+    displayReflectance();
 }
 
 void MainWindow::openBxdfUsingDialog()
@@ -209,7 +252,7 @@ void MainWindow::openCcbxdfUsingDialog()
 
 void MainWindow::exportBxdfUsingDialog()
 {
-    if (!graphScene_->getBrdf() && !graphScene_->getBtdf()) return;
+    if (!data_->getBrdf() && !data_->getBtdf()) return;
 
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
                                                     tr("Integra DDR Files (*.ddr);;"
@@ -280,23 +323,36 @@ void MainWindow::about()
     dialog.exec();
 }
 
+void MainWindow::updateViews()
+{
+    updateInOutDirection(pickedInDir_, pickedOutDir_);
+
+    graphScene_->updateView(graphWidget_->width(), graphWidget_->height());
+    getMainView()->requestRedraw();
+
+    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
+    getRenderingView()->requestRedraw();
+
+    displayReflectance();
+}
+
 void MainWindow::updateDisplayMode(QString modeName)
 {
-    if (graphScene_->getNumInTheta() == 1) {
+    if (data_->getNumInTheta() == 1) {
         ui_->incomingPolarAngleSlider->setDisabled(true);
     }
     else {
         ui_->incomingPolarAngleSlider->setEnabled(true);
     }
 
-    if (graphScene_->getNumInPhi() == 1) {
+    if (data_->getNumInPhi() == 1) {
         ui_->incomingAzimuthalAngleSlider->setDisabled(true);
     }
     else {
         ui_->incomingAzimuthalAngleSlider->setEnabled(true);
     }
 
-    if (graphScene_->getNumWavelengths() == 1) {
+    if (data_->getNumWavelengths() == 1) {
         ui_->wavelengthSlider->setDisabled(true);
     }
     else {
@@ -351,7 +407,7 @@ void MainWindow::updateIncomingPolarAngle(int index)
                                      ui_->incomingAzimuthalAngleSlider->value(),
                                      ui_->wavelengthSlider->value());
 
-    float inPolarDegree = lb::toDegree(graphScene_->getIncomingPolarAngle(index));
+    float inPolarDegree = lb::toDegree(data_->getIncomingPolarAngle(index));
     ui_->incomingPolarAngleLineEdit->setText(QString::number(inPolarDegree));
 
     getMainView()->requestRedraw();
@@ -366,7 +422,7 @@ void MainWindow::updateIncomingAzimuthalAngle(int index)
                                      index,
                                      ui_->wavelengthSlider->value());
 
-    float inAzimuthalDegree = lb::toDegree(graphScene_->getIncomingAzimuthalAngle(index));
+    float inAzimuthalDegree = lb::toDegree(data_->getIncomingAzimuthalAngle(index));
     ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inAzimuthalDegree));
 
     getMainView()->requestRedraw();
@@ -384,12 +440,12 @@ void MainWindow::updateWavelength(int index)
                                      index);
     getMainView()->requestRedraw();
 
-    if (graphScene_->getColorModel() == lb::MONOCHROMATIC_MODEL &&
-        graphScene_->getWavelength(index) == 0.0f) {
+    if (data_->getColorModel() == lb::MONOCHROMATIC_MODEL &&
+        data_->getWavelength(index) == 0.0f) {
         ui_->wavelengthLabel->setText("Channel:");
         ui_->wavelengthLineEdit->clear();
     }
-    else if (graphScene_->getColorModel() == lb::RGB_MODEL) {
+    else if (data_->getColorModel() == lb::RGB_MODEL) {
         ui_->wavelengthLabel->setText("Channel:");
         switch (index) {
             case 0:  ui_->wavelengthLineEdit->setText("R"); break;
@@ -398,7 +454,7 @@ void MainWindow::updateWavelength(int index)
             default: assert(false);
         }
     }
-    else if (graphScene_->getColorModel() == lb::XYZ_MODEL) {
+    else if (data_->getColorModel() == lb::XYZ_MODEL) {
         ui_->wavelengthLabel->setText("Channel:");
         switch (index) {
             case 0:  ui_->wavelengthLineEdit->setText("X"); break;
@@ -408,7 +464,7 @@ void MainWindow::updateWavelength(int index)
         }
     }
     else {
-        float wavelength = graphScene_->getWavelength(index);
+        float wavelength = data_->getWavelength(index);
         ui_->wavelengthLabel->setText("Wavelength:");
         ui_->wavelengthLineEdit->setText(QString::number(wavelength) + "nm");
     }
@@ -435,9 +491,7 @@ void MainWindow::updateBaseOfLogarithm(int index)
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
                                      ui_->incomingAzimuthalAngleSlider->value(),
                                      ui_->wavelengthSlider->value());
-    graphScene_->updateInOutDirLine(pickedInDir_,
-                                    pickedOutDir_,
-                                    ui_->wavelengthSlider->value());
+    updateInOutDirection(pickedInDir_, pickedOutDir_);
     getMainView()->requestRedraw();
 
     ui_->logPlotBaseLineEdit->setText(QString::number(index));
@@ -482,11 +536,11 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
     lb::Spectrum sp;
 
     if (position.z() > 0.0f) {
-        lb::Brdf* brdf = graphScene_->getBrdf();
-        lb::SampleSet2D* sr = graphScene_->getSpecularReflectances();
+        lb::Brdf* brdf = data_->getBrdf();
+        lb::SampleSet2D* sr = data_->getSpecularReflectances();
         if (brdf) {
-            lb::Vec3 inDir = graphScene_->getInDir(ui_->incomingPolarAngleSlider->value(),
-                                                   ui_->incomingAzimuthalAngleSlider->value());
+            lb::Vec3 inDir = data_->getInDir(ui_->incomingPolarAngleSlider->value(),
+                                             ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 outDir = lb::toVec3(position).normalized();
             sp = brdf->getSpectrum(inDir, outDir);
         }
@@ -501,11 +555,11 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
         }
     }
     else {
-        lb::Btdf* btdf = graphScene_->getBtdf();
-        lb::SampleSet2D* st = graphScene_->getSpecularTransmittances();
+        lb::Btdf* btdf = data_->getBtdf();
+        lb::SampleSet2D* st = data_->getSpecularTransmittances();
         if (btdf) {
-            lb::Vec3 inDir = graphScene_->getInDir(ui_->incomingPolarAngleSlider->value(),
-                                                   ui_->incomingAzimuthalAngleSlider->value());
+            lb::Vec3 inDir = data_->getInDir(ui_->incomingPolarAngleSlider->value(),
+                                             ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 outDir = lb::toVec3(position).normalized();
             sp = btdf->getSpectrum(inDir, outDir);
         }
@@ -531,32 +585,126 @@ void MainWindow::clearPickedValue()
 
 void MainWindow::displayReflectance()
 {
-    lb::SampleSet2D* ss2;
+    lb::SampleSet2D* ss2 = 0;
 
-    if (graphScene_->getBrdf()) {
-        ss2 = graphScene_->getReflectances();
+    if (data_->getBrdf()) {
+        ss2 = data_->getReflectances();
         ui_->pickedReflectanceLabel->setText(tr("Reflectance:"));
     }
-    else if (graphScene_->getBtdf()) {
-        ss2 = graphScene_->getReflectances();
+    else if (data_->getBtdf()) {
+        ss2 = data_->getReflectances();
         ui_->pickedReflectanceLabel->setText(tr("Transmittance:"));
     }
-    else if (graphScene_->getSpecularReflectances()) {
-        ss2 = graphScene_->getSpecularReflectances();
+    else if (data_->getSpecularReflectances()) {
+        ss2 = data_->getSpecularReflectances();
         ui_->pickedReflectanceLabel->setText(tr("Reflectance:"));
     }
-    else if (graphScene_->getSpecularTransmittances()) {
-        ss2 = graphScene_->getSpecularTransmittances();
+    else if (data_->getSpecularTransmittances()) {
+        ss2 = data_->getSpecularTransmittances();
         ui_->pickedReflectanceLabel->setText(tr("Transmittance:"));
     }
     else {
         return;
     }
 
-    const lb::Spectrum& sp = ss2->getSpectrum(ui_->incomingPolarAngleSlider->value(),
-                                              ui_->incomingAzimuthalAngleSlider->value());
-    float reflectance = sp[ui_->wavelengthSlider->value()];
-    ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
+    if (data_->computedReflectances() ||
+        data_->getSpecularReflectances() ||
+        data_->getSpecularTransmittances()) {
+        const lb::Spectrum& sp = ss2->getSpectrum(ui_->incomingPolarAngleSlider->value(),
+                                                  ui_->incomingAzimuthalAngleSlider->value());
+        float reflectance = sp[ui_->wavelengthSlider->value()];
+        ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
+    }
+    else {
+        ui_->pickedReflectanceLineEdit->setText("Computing");
+    }
+}
+
+void MainWindow::updateGlossyIntensity(int intensity)
+{
+    if (!signalEmittedFromUi_) return;
+
+    double val = static_cast<double>(intensity)
+               / ui_->glossyIntensitySlider->maximum()
+               * maxGlossyIntensity_;
+
+    ui_->glossyIntensitySpinBox->setValue(val);
+}
+
+void MainWindow::updateGlossyShininess(int shininess)
+{
+    if (!signalEmittedFromUi_) return;
+
+    double val = static_cast<double>(shininess)
+               / ui_->glossyShininessSlider->maximum()
+               * maxGlossyShininess_;
+
+    ui_->glossyShininessSpinBox->setValue(val);
+}
+
+void MainWindow::updateDiffuseIntensity(int intensity)
+{
+    if (!signalEmittedFromUi_) return;
+
+    double val = static_cast<double>(intensity)
+               / ui_->diffuseIntensitySlider->maximum()
+               * maxDiffuseIntensity_;
+
+    ui_->diffuseIntensitySpinBox->setValue(val);
+}
+
+void MainWindow::updateGlossyIntensity(double intensity)
+{
+    if (!signalEmittedFromUi_) return;
+
+    if (maxGlossyIntensity_ < intensity) {
+        maxGlossyIntensity_ = intensity;
+    }
+
+    signalEmittedFromUi_ = false;
+    int sliderVal = intensity / maxGlossyIntensity_ * ui_->glossyIntensitySlider->maximum();
+    ui_->glossyIntensitySlider->setValue(sliderVal);
+    signalEmittedFromUi_ = true;
+
+    editBrdf(intensity,
+             ui_->glossyShininessSpinBox->value(),
+             ui_->diffuseIntensitySpinBox->value());
+}
+
+void MainWindow::updateGlossyShininess(double shininess)
+{
+    if (!signalEmittedFromUi_) return;
+
+    if (maxGlossyShininess_ < shininess) {
+        maxGlossyShininess_ = shininess;
+    }
+
+    signalEmittedFromUi_ = false;
+    int sliderVal = shininess / maxGlossyShininess_ * ui_->glossyShininessSlider->maximum();
+    ui_->glossyShininessSlider->setValue(sliderVal);
+    signalEmittedFromUi_ = true;
+
+    editBrdf(ui_->glossyIntensitySpinBox->value(),
+             shininess,
+             ui_->diffuseIntensitySpinBox->value());
+}
+
+void MainWindow::updateDiffuseIntensity(double intensity)
+{
+    if (!signalEmittedFromUi_) return;
+
+    if (maxDiffuseIntensity_ < intensity) {
+        maxDiffuseIntensity_ = intensity;
+    }
+
+    signalEmittedFromUi_ = false;
+    int sliderVal = intensity / maxDiffuseIntensity_ * ui_->diffuseIntensitySlider->maximum();
+    ui_->diffuseIntensitySlider->setValue(sliderVal);
+    signalEmittedFromUi_ = true;
+
+    editBrdf(ui_->glossyIntensitySpinBox->value(),
+             ui_->glossyShininessSpinBox->value(),
+             intensity);
 }
 
 void MainWindow::createActions()
@@ -565,6 +713,8 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(ui_->renderingDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(ui_->informationDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(ui_->tableDockWidget->toggleViewAction());
+    ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
+    ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());
 
     ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL + Qt::Key_T);
 
@@ -589,11 +739,16 @@ void MainWindow::createActions()
 
     connect(renderingWidget_, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
             this, SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
+
+    connect(reflectanceModelDockWidget_, SIGNAL(generated(lb::Brdf*, lb::DataType)),
+            this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
+
+    connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
 }
 
 void MainWindow::initializeUi()
 {
-    this->setWindowTitle("BSDF Viewer");
+    this->setWindowTitle("BSDF Processor");
 
     QComboBox* comboBox = ui_->displayModeComboBox;
 
@@ -605,37 +760,37 @@ void MainWindow::initializeUi()
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
 
-    ui_->incomingPolarAngleSlider->setMaximum(graphScene_->getNumInTheta() - 1);
+    ui_->incomingPolarAngleSlider->setMaximum(data_->getNumInTheta() - 1);
     ui_->incomingPolarAngleSlider->setValue(0);
     updateIncomingPolarAngle(0);
 
-    ui_->incomingAzimuthalAngleSlider->setMaximum(graphScene_->getNumInPhi() - 1);
+    ui_->incomingAzimuthalAngleSlider->setMaximum(data_->getNumInPhi() - 1);
     ui_->incomingAzimuthalAngleSlider->setValue(0);
     updateIncomingAzimuthalAngle(0);
 
-    ui_->wavelengthSlider->setMaximum(graphScene_->getNumWavelengths() - 1);
+    ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
     ui_->wavelengthSlider->setValue(0);
     updateWavelength(0);
 
-    if (graphScene_->getNumWavelengths() == 1) {
+    if (data_->getNumWavelengths() == 1) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
     }
 
-    if (graphScene_->getNumInTheta() == 1) {
+    if (data_->getNumInTheta() == 1) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)));
     }
 
-    if (graphScene_->getNumInPhi() == 1) {
+    if (data_->getNumInPhi() == 1) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)));
     }
 
-    if (!graphScene_->isInDirDependentCoordinateSystem()) {
+    if (!data_->isInDirDependentCoordinateSystem()) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)));
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)));
     }
 
-    if (graphScene_->getSpecularReflectances() ||
-        graphScene_->getSpecularTransmittances()) {
+    if (data_->getSpecularReflectances() ||
+        data_->getSpecularTransmittances()) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)));
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)));
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
@@ -670,7 +825,28 @@ void MainWindow::initializeUi()
         }
     }
 
-    graphScene_->updateInOutDirLine(lb::Vec3::Zero(), lb::Vec3::Zero(), 0);
+    if (data_->getBrdf() || data_->getBtdf()) {
+        ui_->editorDockWidget->setEnabled(true);
+    }
+    else {
+        ui_->editorDockWidget->setDisabled(true);
+    }
+
+    // Avoid to perform functions invoked by emitting signals.
+    signalEmittedFromUi_ = false;
+    ui_->glossyIntensitySlider->setValue(ui_->glossyIntensitySlider->maximum() / 2);
+    ui_->glossyShininessSlider->setValue(ui_->glossyShininessSlider->maximum() / 2);
+    ui_->diffuseIntensitySlider->setValue(ui_->diffuseIntensitySlider->maximum() / 2);
+    ui_->glossyIntensitySpinBox->setValue(1.0);
+    ui_->glossyShininessSpinBox->setValue(1.0);
+    ui_->diffuseIntensitySpinBox->setValue(1.0);
+    signalEmittedFromUi_ = true;
+
+    maxGlossyIntensity_ = 2.0;
+    maxGlossyShininess_ = 2.0;
+    maxDiffuseIntensity_ = 2.0;
+
+    updateInOutDirection(lb::Vec3::Zero(), lb::Vec3::Zero());
 
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
     getRenderingView()->requestRedraw();
@@ -692,7 +868,7 @@ QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
             break;
         }
         case GraphScene::ALL_WAVELENGTHS_DISPLAY: {
-            bool spectral = (graphScene_->getColorModel() == lb::SPECTRAL_MODEL);
+            bool spectral = (data_->getColorModel() == lb::SPECTRAL_MODEL);
             return spectral ? "All wavelengths" : "All channels";
             break;
         }
@@ -725,13 +901,12 @@ bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
     lb::SampleSet2D* ss2 = lb::SdrReader::read(fileName.toLocal8Bit().data());
     if (!ss2) return false;
 
-    graphScene_->clearData();
-
+    data_->clearData();
     if (dataType == lb::SPECULAR_REFLECTANCE_DATA) {
-        graphScene_->setSpecularReflectances(ss2);
+        data_->setSpecularReflectances(ss2);
     }
     else if (dataType == lb::SPECULAR_TRANSMITTANCE_DATA) {
-        graphScene_->setSpecularTransmittances(ss2);
+        data_->setSpecularTransmittances(ss2);
     }
     else {
         std::cerr << "[MainWindow::openSdrSdt] Invalid data type: " << dataType << std::endl;
@@ -789,8 +964,7 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
         return false;
     }
 
-    lb::SphericalCoordinatesBrdf* scBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf);
-    setupBrdf(new lb::SphericalCoordinatesBrdf(*scBrdf), dataType);
+    setupBrdf(brdf->clone(), dataType);
 
     delete material;
 
@@ -844,74 +1018,66 @@ void MainWindow::exportFile(const QString& fileName)
 void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::Brdf* brdf;
-    if (dataType == lb::BRDF_DATA && graphScene_->getBrdf()) {
-        brdf = graphScene_->getBrdf();
+    if (dataType == lb::BRDF_DATA && data_->getBrdf()) {
+        brdf = data_->getBrdf();
     }
-    else if (dataType == lb::BTDF_DATA && graphScene_->getBtdf()) {
-        brdf = graphScene_->getBtdf()->getBrdf();
+    else if (dataType == lb::BTDF_DATA && data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
     }
     else {
         std::cerr << "[MainWindow::exportDdrDdt] Invalid data for export." << std::endl;
         return;
     }
 
-    lb::SpecularCoordinatesBrdf* exportedBrdf;
-    if (dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
-        exportedBrdf = new lb::SpecularCoordinatesBrdf(dynamic_cast<const lb::SpecularCoordinatesBrdf&>(*brdf));
+    typedef lb::SpecularCoordinatesBrdf SpecBrdf;
+    typedef lb::SpecularCoordinateSystem SpecCoordSys;
+
+    SpecBrdf* exportedBrdf;
+    if (dynamic_cast<SpecBrdf*>(brdf)) {
+        exportedBrdf = new SpecBrdf(dynamic_cast<const SpecBrdf&>(*brdf));
     }
-    else if (!graphScene_->isInDirDependentCoordinateSystem()) {
-        exportedBrdf = new lb::SpecularCoordinatesBrdf(*brdf, 10, 1, 181, 37);
+    else if (!data_->isInDirDependentCoordinateSystem()) {
+        exportedBrdf = new SpecBrdf(*brdf, 10, 1, 181, 37);
     }
     else {
         const lb::SampleSet* ss = brdf->getSampleSet();
+
         lb::Arrayf inThetaAngles  = ss->getAngles0();
-        lb::Arrayf inPhiAngles    = lb::Arrayf::LinSpaced(ss->getNumAngles1(), 0.0, lb::SpecularCoordinateSystem::MAX_ANGLE1);
-        lb::Arrayf outThetaAngles = lb::Arrayf::LinSpaced(181,                 0.0, lb::SpecularCoordinateSystem::MAX_ANGLE2);
-        lb::Arrayf outPhiAngles   = lb::Arrayf::LinSpaced(37,                  0.0, lb::SpecularCoordinateSystem::MAX_ANGLE3);
+        lb::Arrayf inPhiAngles    = lb::Arrayf::LinSpaced(ss->getNumAngles1(), 0.0, SpecCoordSys::MAX_ANGLE1);
+        lb::Arrayf outThetaAngles = lb::Arrayf::LinSpaced(181,                 0.0, SpecCoordSys::MAX_ANGLE2);
+        lb::Arrayf outPhiAngles   = lb::Arrayf::LinSpaced(37,                  0.0, SpecCoordSys::MAX_ANGLE3);
 
         if (inPhiAngles.size() == 1) {
             inPhiAngles[0] = 0.0f;
         }
 
-        exportedBrdf = new lb::SpecularCoordinatesBrdf(*brdf, inThetaAngles, inPhiAngles, outThetaAngles, outPhiAngles);
+        exportedBrdf = new SpecBrdf(*brdf, inThetaAngles, inPhiAngles, outThetaAngles, outPhiAngles);
     }
 
     lb::SampleSet* exportedSs = exportedBrdf->getSampleSet();
     if (exportedSs->getColorModel() == lb::XYZ_MODEL) {
         lb::xyzToSrgb(exportedSs);
     }
+
+    if (exportedBrdf->getNumInTheta() == 1) {
+        const lb::SampleSet* ss = exportedBrdf->getSampleSet();
+
+        lb::Arrayf inThetaAngles = lb::Arrayf::LinSpaced(10, 0.0, SpecCoordSys::MAX_ANGLE0);
+
+        SpecBrdf* filledBrdf = new SpecBrdf(*exportedBrdf,
+                                            inThetaAngles,
+                                            ss->getAngles1(),
+                                            ss->getAngles2(),
+                                            ss->getAngles3());
+        delete exportedBrdf;
+        exportedBrdf = filledBrdf;
+    }
+
     exportedBrdf->expandAngles();
     lb::fixEnergyConservation(exportedBrdf);
 
     lb::DdrWriter::write(fileName.toLocal8Bit().data(), *exportedBrdf);
     delete exportedBrdf;
-}
-
-void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
-{
-    if (cosineCorrected_) {
-        lb::divideByCosineOutTheta(brdf);
-    }
-
-    graphScene_->clearData();
-    if (dataType == lb::BRDF_DATA) {
-        graphScene_->setBrdf(brdf);
-    }
-    else if (dataType == lb::BTDF_DATA) {
-        graphScene_->setBtdf(new lb::Btdf(brdf));
-    }
-    else {
-        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
-        return;
-    }
-    graphScene_->createBrdfGeode();
-
-    renderingScene_->setData(brdf, graphScene_->getReflectances(), dataType);
-
-    initializeUi();
-
-    ui_->logPlotGroupBox->setEnabled(true);
-    ui_->tableGraphicsView->fitView(0.9);
 }
 
 void MainWindow::updateCameraPosition()
@@ -931,4 +1097,36 @@ void MainWindow::createTable()
 {
     float gamma = ui_->logPlotGroupBox->isChecked() ? ui_->logPlotBaseSlider->value() : 1.0f;
     ui_->tableGraphicsView->createTable(ui_->wavelengthSlider->value(), gamma);
+}
+
+void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
+                          lb::Spectrum::Scalar  glossyShininess,
+                          lb::Spectrum::Scalar  diffuseIntensity)
+{
+    std::cout << "[MainWindow::editBrdf]" << std::endl;
+
+    lb::Brdf* brdf;
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
+    } else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
+    }
+    else {
+        return;
+    }
+
+    data_->editBrdf(glossyIntensity, glossyShininess, diffuseIntensity);
+
+    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
+                                     ui_->incomingAzimuthalAngleSlider->value(),
+                                     ui_->wavelengthSlider->value());
+
+    getMainView()->requestRedraw();
+    getRenderingView()->requestRedraw();
+
+    createTable();
+
+    clearPickedValue();
+    updateInOutDirection(pickedInDir_, pickedOutDir_);
+    displayReflectance();
 }

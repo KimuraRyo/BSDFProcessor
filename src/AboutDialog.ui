@@ -29,7 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>About BSDF Viewer</string>
+   <string>About BSDF Processor</string>
   </property>
   <widget class="QLabel" name="logoLabel">
    <property name="geometry">
@@ -41,7 +41,7 @@
     </rect>
    </property>
    <property name="pixmap">
-    <pixmap resource="../resource/resource.qrc">:/BSDFViewer.png</pixmap>
+    <pixmap>:/BSDFProcessor.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -52,7 +52,7 @@
     <rect>
      <x>270</x>
      <y>20</y>
-     <width>131</width>
+     <width>211</width>
      <height>31</height>
     </rect>
    </property>
@@ -65,7 +65,7 @@
     </font>
    </property>
    <property name="text">
-    <string>BSDF Viewer</string>
+    <string>BSDF Processor</string>
    </property>
   </widget>
   <widget class="QLabel" name="versionLabel">
@@ -105,7 +105,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Copyright © 2014-2015 Kimura Ryo.</string>
+    <string>Copyright © 2014-2016 Kimura Ryo.</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">

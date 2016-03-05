@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -11,7 +11,7 @@
 
 #include <QtWidgets/QGraphicsView>
 
-class GraphScene;
+#include "MaterialData.h"
 
 namespace lb
 {
@@ -31,7 +31,7 @@ public:
 
     void createTable(int wavelengthIndex, float gamma = 1.0f);
 
-    void setGraphScene(GraphScene* scene) { graphScene_ = scene; }
+    void setMaterialData(MaterialData* data) { data_ = data; }
 
 public slots:
     void fitView(qreal scaleFactor = 1.0)
@@ -62,7 +62,7 @@ private:
 
     QAction* actionFitView_;
 
-    GraphScene* graphScene_;
+    MaterialData* data_;
 };
 
 #endif // TABLE_VIEW_H

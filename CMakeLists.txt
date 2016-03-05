@@ -12,7 +12,7 @@ set(LIBBSDF_DIR ../libbsdf)
 add_subdirectory(${LIBBSDF_DIR} LibbsdfBin)
 include_directories(${LIBBSDF_DIR}/include)
 
-project(BSDFViewer)
+project(BSDFProcessor)
 
 set(SOURCE_PATH src)
 

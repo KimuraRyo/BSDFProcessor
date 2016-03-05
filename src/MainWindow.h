@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -13,7 +13,9 @@
 
 #include "GraphScene.h"
 #include "GraphWidget.h"
+#include "MaterialData.h"
 #include "QtOsgUtil.h"
+#include "ReflectanceModelDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
 
@@ -33,6 +35,8 @@ public slots:
     void openFile(const QString& fileName);
 
 private slots:
+    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
+
     void openBxdfUsingDialog();
     void openCcbxdfUsingDialog();
 
@@ -46,6 +50,8 @@ private slots:
     void viewBottom();
 
     void about();
+
+    void updateViews();
 
     void updateDisplayMode(QString modeName);
     void updateIncomingPolarAngle(int index);
@@ -61,6 +67,14 @@ private slots:
     void displayPickedValue(const osg::Vec3& position);
     void clearPickedValue();
     void displayReflectance();
+
+    void updateGlossyIntensity(int intensity);
+    void updateGlossyShininess(int shininess);
+    void updateDiffuseIntensity(int intensity);
+
+    void updateGlossyIntensity(double intensity);
+    void updateGlossyShininess(double shininess);
+    void updateDiffuseIntensity(double intensity);
 
 private:
     Q_DISABLE_COPY(MainWindow)
@@ -80,8 +94,6 @@ private:
     void exportFile(const QString& fileName);
     void exportDdrDdt(const QString& fileName, lb::DataType dataType);
 
-    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
-
     osgViewer::View* getMainView() const { return ui_->mainViewerWidget->getView(0); }
     osgViewer::View* getRenderingView() const { return ui_->renderingViewerWidget->getView(0); }
 
@@ -89,6 +101,11 @@ private:
 
     void createTable();
 
+    void editBrdf(lb::Spectrum::Scalar  glossyIntensity,
+                  lb::Spectrum::Scalar  glossyShininess,
+                  lb::Spectrum::Scalar  diffuseIntensity);
+
+    MaterialData*   data_;
     GraphScene*     graphScene_;
     RenderingScene* renderingScene_;
 
@@ -99,7 +116,15 @@ private:
 
     lb::Vec3 pickedInDir_, pickedOutDir_;
 
+    double maxGlossyIntensity_;
+    double maxGlossyShininess_;
+    double maxDiffuseIntensity_;
+
+    /*! This attribute holds whether a slot function is invoked by the signal from UI. */
+    bool signalEmittedFromUi_;
+
     Ui::MainWindowBase* ui_;
+    ReflectanceModelDockWidget* reflectanceModelDockWidget_;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

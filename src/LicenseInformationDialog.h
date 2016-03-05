@@ -9,7 +9,7 @@
 #ifndef LICENSE_INFORMATION_DIALOG_H
 #define LICENSE_INFORMATION_DIALOG_H
 
-#include "ui_LicenseInformation.h"
+#include "ui_LicenseInformationDialog.h"
 
 /*!
  * \class   LicenseInformationDialog

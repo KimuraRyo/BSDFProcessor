@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>BSDF Viewer</string>
+   <string>BSDF Processor</string>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>false</bool>
@@ -326,7 +326,7 @@
       <x>40</x>
       <y>10</y>
       <width>271</width>
-      <height>250</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -338,7 +338,7 @@
     <property name="minimumSize">
      <size>
       <width>200</width>
-      <height>250</height>
+      <height>200</height>
      </size>
     </property>
     <property name="baseSize">
@@ -423,7 +423,7 @@
     <property name="geometry">
      <rect>
       <x>320</x>
-      <y>290</y>
+      <y>250</y>
       <width>271</width>
       <height>101</height>
      </rect>
@@ -514,7 +514,7 @@
       <x>39</x>
       <y>280</y>
       <width>271</width>
-      <height>341</height>
+      <height>221</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -526,7 +526,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>250</height>
+      <height>200</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -598,7 +598,7 @@
            <double>999.999000000000024</double>
           </property>
           <property name="singleStep">
-           <double>0.100000000000000</double>
+           <double>0.001000000000000</double>
           </property>
           <property name="value">
            <double>0.000000000000000</double>
@@ -627,11 +627,199 @@
            <double>999.999000000000024</double>
           </property>
           <property name="singleStep">
-           <double>0.100000000000000</double>
+           <double>0.001000000000000</double>
           </property>
          </widget>
         </item>
        </layout>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QDockWidget" name="editorDockWidget">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>390</y>
+      <width>271</width>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="floating">
+     <bool>false</bool>
+    </property>
+    <property name="windowTitle">
+     <string>Editor</string>
+    </property>
+    <widget class="QWidget" name="dockWidgetContents_6">
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QLabel" name="label_34">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Glossy Component</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayout_14">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_32">
+          <property name="text">
+           <string>Intensity:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QSlider" name="glossyIntensitySlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="glossyIntensitySpinBox">
+            <property name="decimals">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <double>99.989999999999995</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_33">
+          <property name="text">
+           <string>Shininess:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QSlider" name="glossyShininessSlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="glossyShininessSpinBox">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>9.999000000000001</double>
+            </property>
+            <property name="singleStep">
+             <double>0.001000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_35">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Diffuse Component</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayout_15">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_36">
+          <property name="text">
+           <string>Intensity:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QSlider" name="diffuseIntensitySlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="diffuseIntensitySpinBox">
+            <property name="decimals">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <double>99.989999999999995</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -829,8 +1017,8 @@
      <y>226</y>
     </hint>
     <hint type="destinationlabel">
-     <x>416</x>
-     <y>417</y>
+     <x>605</x>
+     <y>215</y>
     </hint>
    </hints>
   </connection>
@@ -845,8 +1033,8 @@
      <y>207</y>
     </hint>
     <hint type="destinationlabel">
-     <x>435</x>
-     <y>454</y>
+     <x>621</x>
+     <y>233</y>
     </hint>
    </hints>
   </connection>
@@ -861,8 +1049,8 @@
      <y>74</y>
     </hint>
     <hint type="destinationlabel">
-     <x>604</x>
-     <y>519</y>
+     <x>619</x>
+     <y>71</y>
     </hint>
    </hints>
   </connection>
@@ -874,7 +1062,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>236</x>
-     <y>606</y>
+     <y>486</y>
     </hint>
     <hint type="destinationlabel">
      <x>63</x>
@@ -890,7 +1078,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>236</x>
-     <y>632</y>
+     <y>512</y>
     </hint>
     <hint type="destinationlabel">
      <x>182</x>
@@ -914,6 +1102,102 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>glossyIntensitySpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyIntensity(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>548</x>
+     <y>472</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>616</x>
+     <y>472</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyShininessSpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyShininess(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>548</x>
+     <y>501</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>615</x>
+     <y>503</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>diffuseIntensitySpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateDiffuseIntensity(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>541</x>
+     <y>560</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>623</x>
+     <y>561</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyIntensitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyIntensity(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>422</x>
+     <y>471</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>640</x>
+     <y>441</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyShininessSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyShininess(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>453</x>
+     <y>502</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>671</x>
+     <y>521</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>diffuseIntensitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateDiffuseIntensity(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>441</x>
+     <y>560</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>675</x>
+     <y>580</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>updateIncomingPolarAngle(int)</slot>
@@ -933,5 +1217,11 @@
   <slot>changePhongButtonColor()</slot>
   <slot>changeWardAnisotropicButtonColor()</slot>
   <slot>changeWardIsotropicButtonColor()</slot>
+  <slot>updateGlossyIntensity(double)</slot>
+  <slot>updateGlossyShininess(double)</slot>
+  <slot>updateDiffuseIntensity(double)</slot>
+  <slot>updateGlossyIntensity(int)</slot>
+  <slot>updateGlossyShininess(int)</slot>
+  <slot>updateDiffuseIntensity(int)</slot>
  </slots>
 </ui>

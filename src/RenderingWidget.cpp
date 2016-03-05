@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -26,7 +26,7 @@ RenderingWidget::RenderingWidget(const QGLFormat&   format,
                                  bool               forwardKeyEvents)
                                  : osgQt::GLWidget(format, parent, shareWidget, f, forwardKeyEvents),
                                    renderingScene_(0),
-                                   movedMouse_(false)
+                                   mouseMoved_(false)
 {
     //setAcceptDrops(true);
     setMinimumSize(1, 1);
@@ -194,20 +194,20 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
 void RenderingWidget::mouseMoveEvent(QMouseEvent* event)
 {
     osgQt::GLWidget::mouseMoveEvent(event);
-    movedMouse_ = true;
+    mouseMoved_ = true;
 }
 
 void RenderingWidget::mousePressEvent(QMouseEvent* event)
 {
     osgQt::GLWidget::mousePressEvent(event);
-    movedMouse_ = false;
+    mouseMoved_ = false;
 }
 
 void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 {
     osgQt::GLWidget::mouseReleaseEvent(event);
 
-    if (event->button() == Qt::LeftButton && !movedMouse_) {
+    if (event->button() == Qt::LeftButton && !mouseMoved_) {
         if (!renderingScene_) return;
 
         int x = event->pos().x();
@@ -243,7 +243,7 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
         emit inOutDirPicked(inDir, outDir);
     }
 #ifdef __APPLE__
-    else if (event->button() == Qt::RightButton && !movedMouse_) {
+    else if (event->button() == Qt::RightButton && !mouseMoved_) {
         showContextMenu(event->globalPos());
     }
 #endif
@@ -271,7 +271,7 @@ void RenderingWidget::dropEvent(QDropEvent* event)
 void RenderingWidget::wheelEvent(QWheelEvent* event)
 {
     osgQt::GLWidget::wheelEvent(event);
-    movedMouse_ = true;
+    mouseMoved_ = true;
 }
 
 void RenderingWidget::contextMenuEvent(QContextMenuEvent* event)
@@ -279,7 +279,7 @@ void RenderingWidget::contextMenuEvent(QContextMenuEvent* event)
     osgQt::GLWidget::contextMenuEvent(event);
 
 #ifndef __APPLE__
-    if (movedMouse_) return;
+    if (mouseMoved_) return;
     
     showContextMenu(event->globalPos());
 #endif
@@ -303,7 +303,7 @@ void RenderingWidget::openModel(const QString& fileName)
 {
     osg::Node* loadedModel = osgDB::readNodeFile(fileName.toLocal8Bit().data());
     if (!loadedModel) {
-        QMessageBox::warning(this, tr("BSDF Viewer"),
+        QMessageBox::warning(this, tr("BSDF Processor"),
                              tr("Failed to load \"") + fileName + "\"",
                              QMessageBox::Ok);
         return;

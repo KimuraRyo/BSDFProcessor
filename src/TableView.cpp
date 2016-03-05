@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -17,10 +17,9 @@
 
 #include "GraphicsAngleItem.h"
 #include "GraphicsSampleItem.h"
-#include "GraphScene.h"
 
 TableView::TableView(QWidget* parent) : QGraphicsView(parent),
-                                        graphScene_(0)
+                                        data_(0)
 {
     actionFitView_ = new QAction(this);
     actionFitView_->setText(QApplication::translate("TableView", "Fit in view", 0));
@@ -32,24 +31,24 @@ TableView::TableView(QWidget* parent) : QGraphicsView(parent),
 
 void TableView::createTable(int wavelengthIndex, float gamma)
 {
-    if (!graphScene_) return;
+    if (!data_) return;
 
     graphicsScene_->clear();
 
     const qreal sceneSize = 10000000.0;
     scene()->setSceneRect(-sceneSize / 2.0, -sceneSize / 2.0, sceneSize, sceneSize);
 
-    if (graphScene_->getBrdf() || graphScene_->getBtdf()) {
+    if (data_->getBrdf() || data_->getBtdf()) {
         createBrdfTable(wavelengthIndex, gamma);
     }
-    else if (graphScene_->getSpecularReflectances() || graphScene_->getSpecularTransmittances()) {
+    else if (data_->getSpecularReflectances() || data_->getSpecularTransmittances()) {
         createReflectanceTable(wavelengthIndex);
     }
 }
 
 void TableView::createBrdfTable(int wavelengthIndex, float gamma)
 {
-    const lb::SampleSet* ss = graphScene_->getSampleSet();
+    const lb::SampleSet* ss = data_->getSampleSet();
     if (!ss) return;
 
     int numSamples = ss->getNumAngles0() * ss->getNumAngles1() * ss->getNumAngles2() * ss->getNumAngles3();
@@ -79,7 +78,7 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex
     for (int i3 = 0; i3 < num3; ++i3) {
         float sampleValue = ss->getSpectrum(i0, i1, i2, i3)[wavelengthIndex];
         sampleValue = std::max(sampleValue, 0.0f);
-        float maxValue = graphScene_->getMaxValuesPerWavelength()[wavelengthIndex];
+        float maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex];
         
         int color;
         if (maxValue == 0.0f) {
@@ -128,7 +127,7 @@ void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelength
         for (int i3 = 0; i3 < num3; ++i3) {
             sampleValue = ss->getSpectrum(i0, i1, i2, i3)[wavelengthIndex];
             sampleValue = std::max(sampleValue, 0.0f);
-            maxValue = graphScene_->getMaxValuesPerWavelength()[wavelengthIndex];
+            maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex];
 
             if (maxValue == 0.0f) {
                 color = 0;
@@ -192,11 +191,11 @@ void TableView::createBrdfAngleItems(const lb::SampleSet* ss)
 void TableView::createReflectanceTable(int wavelengthIndex, float gamma)
 {
     const lb::SampleSet2D* ss2;
-    if (graphScene_->getSpecularReflectances()) {
-        ss2 = graphScene_->getSpecularReflectances();
+    if (data_->getSpecularReflectances()) {
+        ss2 = data_->getSpecularReflectances();
     }
-    else if  (graphScene_->getSpecularTransmittances()) {
-        ss2 = graphScene_->getSpecularTransmittances();
+    else if  (data_->getSpecularTransmittances()) {
+        ss2 = data_->getSpecularTransmittances();
     }
     else {
         return;
@@ -274,17 +273,17 @@ void TableView::paintEvent(QPaintEvent* event)
 
     const lb::Brdf* brdf = 0;
     const lb::SampleSet2D* ss2 = 0;
-    if (graphScene_->getBrdf()) {
-        brdf = graphScene_->getBrdf();
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
     }
-    else if (graphScene_->getBtdf()) {
-        brdf = graphScene_->getBtdf()->getBrdf();
+    else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
     }
-    else if (graphScene_->getSpecularReflectances()) {
-        ss2 = graphScene_->getSpecularReflectances();
+    else if (data_->getSpecularReflectances()) {
+        ss2 = data_->getSpecularReflectances();
     }
-    else if (graphScene_->getSpecularTransmittances()) {
-        ss2 = graphScene_->getSpecularTransmittances();
+    else if (data_->getSpecularTransmittances()) {
+        ss2 = data_->getSpecularTransmittances();
     }
     else {
         return;

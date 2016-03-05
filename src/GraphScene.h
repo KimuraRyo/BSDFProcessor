@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -16,11 +16,9 @@
 #include <osgGA/CameraManipulator>
 
 #include <libbsdf/Brdf/Brdf.h>
-#include <libbsdf/Brdf/Btdf.h>
-#include <libbsdf/Brdf/Integrator.h>
-#include <libbsdf/Brdf/SampleSet2D.h>
 #include <libbsdf/Common/Vector.h>
 
+#include "MaterialData.h"
 #include "SceneUtil.h"
 
 /*!
@@ -31,7 +29,7 @@ class GraphScene
 {
 public:
     GraphScene();
-    ~GraphScene();
+    ~GraphScene() {}
 
     enum DisplayMode {
         NORMAL_DISPLAY,
@@ -57,38 +55,7 @@ public:
 
     void updateInOutDirLine(const lb::Vec3& inDir, const lb::Vec3& outDir, int wavelengthIndex);
 
-    void clearData();
-
-    float getIncomingPolarAngle(int index) const;
-    float getIncomingAzimuthalAngle(int index) const;
-
-    lb::Vec3 getInDir(int inThetaIndex, int inPhiIndex);
-
-    float getWavelength(int index) const;
-
-    lb::Brdf* getBrdf() { return brdf_; }
-    void setBrdf(lb::Brdf* brdf);
-
-    lb::Btdf* getBtdf() { return btdf_; }
-    void setBtdf(lb::Btdf* btdf);
-
-    lb::SampleSet2D* getSpecularReflectances() { return specularReflectances_; }
-    void setSpecularReflectances(lb::SampleSet2D* reflectances);
-
-    lb::SampleSet2D* getSpecularTransmittances() { return specularTransmittances_; }
-    void setSpecularTransmittances(lb::SampleSet2D* transmittances);
-
-    lb::SampleSet2D* getReflectances() { return reflectances_; }
-
-    inline int getNumInTheta() { return numInTheta_; }
-    inline int getNumInPhi()   { return numInPhi_; }
-
-    inline int getNumWavelengths() { return numWavelengths_; }
-
-    /*! Gets the color model of used data. */
-    lb::ColorModel getColorModel() const;
-
-    inline lb::Spectrum& getMaxValuesPerWavelength() { return maxPerWavelength_; }
+    void setMaterialData(MaterialData* data) { data_ = data; }
 
     void useOit(bool on) { useOit_ = on; }
 
@@ -102,11 +69,6 @@ public:
 
     inline osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
     inline void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
-
-    const lb::SampleSet* getSampleSet() const;
-
-    /*! Returns true if a coordinate system has the angles of an incoming direction. */
-    bool isInDirDependentCoordinateSystem() const;
 
 private:
     GraphScene(const GraphScene&);
@@ -136,25 +98,7 @@ private:
 
     void clearGraphGeometry();
 
-    lb::Spectrum findMaxPerWavelength(const lb::SampleSet& samples);
-
-    void computeReflectances();
-
-    lb::Brdf*           brdf_;
-    lb::Btdf*           btdf_;
-    lb::SampleSet2D*    specularReflectances_;
-    lb::SampleSet2D*    specularTransmittances_;
-
-    lb::SampleSet2D* reflectances_; /*!< Reflectance samples at each incoming direction. */
-
-    lb::Spectrum maxPerWavelength_;
-
-    int numInTheta_;
-    int numInPhi_;
-
-    int numWavelengths_;
-
-    lb::Integrator* integrator_;
+    MaterialData* data_;
 
     osg::ref_ptr<osg::Group> root_;
 
@@ -193,7 +137,7 @@ private:
     osgGA::CameraManipulator*   cameraManipulator_;
 
     /*!
-     * The number of incoming directions. This is used if a coordinate system doesn't have
+     * The number of incoming directions. This is used if a coordinate system does not have
      * the angles of an incoming direction.
      */
     static const int NUM_INCOMING_POLAR_ANGLES = 19;
