@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2016 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -39,7 +39,7 @@ void RenderingDrawCallback::render() const
     float* renderedData;
     lb::Vec3 inDir, outDir;
     int numPixels = inDirImage_->s() * inDirImage_->t();
-    #pragma omp parallel for private(inDir, outDir)
+    #pragma omp parallel for private(inDirPtr, renderedData, inDir, outDir)
     for (int i = 0; i < numPixels; ++i) {
         inDirPtr = &inDirData[i * 4];
         renderedData = inDirPtr;
