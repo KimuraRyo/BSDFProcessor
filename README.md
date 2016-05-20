@@ -39,7 +39,7 @@ See the LICENSE file.
 
 ### Download
 Windows (32bit):  
-[BSDFProcessor-1.1.2-windows-x86.zip][6]
+[BSDFProcessor-1.1.4-windows-x86.zip][6]
 
 ## Building BSDF Processor
 BSDF Processor uses the following open source libraries:
@@ -64,7 +64,7 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 [3]: http://www.openscenegraph.org "OpenSceneGraph"
 [4]: http://www.qt.io "Qt"
 [5]: http://www.integra.jp/en "Integra"
-[6]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFProcessor/binaries/BSDFProcessor-1.1.2-windows-x86.zip
+[6]: https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFProcessor/binaries/BSDFProcessor-1.1.4-windows-x86.zip
 [7]: http://www.graphics.cornell.edu/online/measurements/reflectance/
 [8]: http://www.merl.com/brdf
 [9]: http://www.rpcphotonics.com/bsdf-data-optical-diffusers/
