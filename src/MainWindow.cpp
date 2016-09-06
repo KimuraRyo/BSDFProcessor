@@ -254,9 +254,15 @@ void MainWindow::exportBxdfUsingDialog()
 {
     if (!data_->getBrdf() && !data_->getBtdf()) return;
 
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
-                                                    tr("Integra DDR Files (*.ddr);;"
-                                                       "Integra DDT Files (*.ddt)"));
+    QString fileName;
+    if (data_->getBrdf()) {
+        fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
+                                                tr("Integra DDR Files (*.ddr)"));
+    }
+    else {
+        fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
+                                                tr("Integra DDT Files (*.ddt)"));
+    }
     
     if (fileName.isEmpty()) return;
 
@@ -476,7 +482,7 @@ void MainWindow::updateWavelength(int index)
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[scene_util::updateWavelength] " << delta << "(s)" << std::endl;
+    std::cout << "[MainWindow::updateWavelength] " << delta << "(s)" << std::endl;
 }
 
 void MainWindow::useLogPlot(bool on)

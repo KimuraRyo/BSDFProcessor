@@ -259,8 +259,18 @@ const lb::SampleSet* MaterialData::getSampleSet() const
 
 bool MaterialData::isInDirDependentCoordinateSystem() const
 {
-    if ((brdf_ && dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(brdf_.get())) ||
-        (btdf_ && dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(btdf_->getBrdf()))) {
+    lb::Brdf* brdf;
+    if (brdf_) {
+        brdf = brdf_.get();
+    }
+    else if (btdf_) {
+        brdf = btdf_->getBrdf();
+    }
+    else {
+        brdf = 0;
+    }
+
+    if (brdf && dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(brdf)) {
         return false;
     }
     else {

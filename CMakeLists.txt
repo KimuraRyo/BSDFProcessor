@@ -32,7 +32,7 @@ include_directories(${SOURCE_PATH})
 #add_definitions(-Wall)
 
 if(NOT EIGEN3_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Please set the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
+    message(FATAL_ERROR "Please set the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
 endif()
 include_directories("${EIGEN3_INCLUDE_DIR}")
 
