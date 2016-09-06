@@ -425,11 +425,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>276</x>
-     <y>244</y>
+     <y>145</y>
     </hint>
     <hint type="destinationlabel">
      <x>275</x>
-     <y>275</y>
+     <y>267</y>
     </hint>
    </hints>
   </connection>

@@ -20,8 +20,10 @@
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
 #include <libbsdf/ReflectanceModel/ModifiedPhong.h>
+#include <libbsdf/ReflectanceModel/OrenNayar.h>
 #include <libbsdf/ReflectanceModel/Phong.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
+#include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
 #include <libbsdf/ReflectanceModel/WardAnisotropic.h>
 #include <libbsdf/ReflectanceModel/WardIsotropic.h>
 
@@ -180,7 +182,9 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::CookTorrance(0.2f, 5.0f));
     models.push_back(new lb::Lambertian);
     models.push_back(new lb::ModifiedPhong(10.0f));
+    models.push_back(new lb::OrenNayar(1.0f, 30.0f));
     models.push_back(new lb::Phong(10.0f));
+    models.push_back(new lb::SimplifiedOrenNayar(1.0f, 30.0f));
     models.push_back(new lb::WardAnisotropic(0.05f, 0.2f));
     models.push_back(new lb::WardIsotropic(0.2f));
 
