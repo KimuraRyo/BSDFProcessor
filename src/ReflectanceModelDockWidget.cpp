@@ -16,6 +16,7 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
+#include <libbsdf/ReflectanceModel/AshikhminShirley.h>
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
@@ -27,7 +28,8 @@
 #include <libbsdf/ReflectanceModel/WardAnisotropic.h>
 #include <libbsdf/ReflectanceModel/WardIsotropic.h>
 
-#include "QtOsgUtil.h"
+#include "ColorButton.h"
+#include "Utility.h"
 
 ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
                                                        : QDockWidget(parent),
@@ -36,7 +38,6 @@ ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
     ui_->setupUi(this);
 
     initializeReflectanceModels();
-    initializeColorButton();
     updateParameterWidget(0);
 
     int lambertIndex = ui_->reflectanceModelComboBox->findText("Lambertian");
@@ -61,11 +62,9 @@ ReflectanceModelDockWidget::~ReflectanceModelDockWidget()
 
 void ReflectanceModelDockWidget::updateParameterWidget(int index)
 {
-    qt_osg_util::setBackgroundColor(colorPushButton_, colors_.at(index));    
-    
-    // Remove items without the label and field of color.
-    while (ui_->parameterFormLayout->count() >= 3) {
-        QLayoutItem* item = ui_->parameterFormLayout->takeAt(2);
+    // Remove items.
+    while (ui_->parameterFormLayout->count() > 0) {
+        QLayoutItem* item = ui_->parameterFormLayout->takeAt(0);
         delete item->widget();
         delete item;
     }
@@ -77,21 +76,38 @@ void ReflectanceModelDockWidget::updateParameterWidget(int index)
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
     lb::ReflectanceModel::Parameters& params = model->getParameters();
     for (auto it = params.begin(); it != params.end(); ++it) {
-        QDoubleSpinBox* valueSpinBox = new QDoubleSpinBox(ui_->parameterWidget);
-        valueSpinBox->setDecimals(3);
-        valueSpinBox->setMinimum(0.001);
-        valueSpinBox->setMaximum(999.999);
-        valueSpinBox->setSingleStep(0.01);
-        valueSpinBox->setValue(*it->second);
-        valueSpinBox->setMaximumWidth(70);
+        if (it->getType() == lb::ReflectanceModel::Parameter::FLOAT_PARAMETER) {
+            QDoubleSpinBox* spinBox = new QDoubleSpinBox(ui_->parameterWidget);
+            spinBox->setDecimals(2);
+            spinBox->setMinimum(0.01);
+            spinBox->setMaximum(999.99);
+            spinBox->setSingleStep(0.1);
+            spinBox->setValue(*it->getFloat());
+            spinBox->setMaximumWidth(75);
 
-        std::string label = it->first + ":";
-        ui_->parameterFormLayout->addRow(label.c_str(), valueSpinBox);
+            std::string label = it->getName() + ":";
+            ui_->parameterFormLayout->addRow(label.c_str(), spinBox);
 
-        currentParameters_[valueSpinBox] = it->second;
+            currentParameters_[spinBox] = &(*it);
 
-        connect(valueSpinBox, SIGNAL(valueChanged(double)),
-                this, SLOT(updateParameter(double)));
+            connect(spinBox, SIGNAL(editingFinished()),
+                    this, SLOT(updateParameter()));
+        }
+        else if (it->getType() == lb::ReflectanceModel::Parameter::VEC3_PARAMETER) {
+            ColorButton* colorButton = new ColorButton(ui_->parameterWidget);
+            colorButton->setAutoFillBackground(true);
+            colorButton->setFlat(false);
+            colorButton->setMaximumWidth(40);
+            colorButton->setColor(util::lbToQt(*it->getVec3()));
+
+            std::string label = it->getName() + ":";
+            ui_->parameterFormLayout->addRow(label.c_str(), colorButton);
+
+            currentParameters_[colorButton] = &(*it);
+
+            connect(colorButton, SIGNAL(colorChanged(QColor)),
+                    this, SLOT(updateParameter()));
+        }
     }
 }
 
@@ -139,19 +155,15 @@ void ReflectanceModelDockWidget::updateCoordSysWidget(int index)
     }
 }
 
-void ReflectanceModelDockWidget::changeButtonColor()
-{
-    QColor color = qt_osg_util::setBackgroundColor(colorPushButton_);
-    if (!color.isValid()) return;
-
-    int index = ui_->reflectanceModelComboBox->currentIndex();
-    colors_.at(index) = color;
-}
-
-void ReflectanceModelDockWidget::updateParameter(double value)
+void ReflectanceModelDockWidget::updateParameter()
 {
     for (auto it = currentParameters_.begin(); it != currentParameters_.end(); ++it) {
-        *it->second = it->first->value();
+        if (QDoubleSpinBox* spinBox = dynamic_cast<QDoubleSpinBox*>(it->first)) {
+            *it->second->getFloat() = spinBox->value();
+        }
+        else if (ColorButton* colorButton = dynamic_cast<ColorButton*>(it->first)) {
+            *it->second->getVec3() = util::qtToLb(colorButton->getColor());
+        }
     }
 }
 
@@ -163,10 +175,9 @@ void ReflectanceModelDockWidget::generateBrdf()
 
     QString name = ui_->reflectanceModelComboBox->currentText();
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
-    QColor color = colors_.at(ui_->reflectanceModelComboBox->currentIndex());
 
     lb::Brdf* brdf = initializeBrdf(model->isIsotropic());
-    lb::setupBrdf(*model, brdf, qt_osg_util::qtToLb(color));
+    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf);
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
@@ -178,15 +189,19 @@ void ReflectanceModelDockWidget::generateBrdf()
 void ReflectanceModelDockWidget::initializeReflectanceModels()
 {
     std::vector<lb::ReflectanceModel*> models;
-    models.push_back(new lb::BlinnPhong(40.0f));
-    models.push_back(new lb::CookTorrance(0.2f, 5.0f));
-    models.push_back(new lb::Lambertian);
-    models.push_back(new lb::ModifiedPhong(10.0f));
-    models.push_back(new lb::OrenNayar(1.0f, 30.0f));
-    models.push_back(new lb::Phong(10.0f));
-    models.push_back(new lb::SimplifiedOrenNayar(1.0f, 30.0f));
-    models.push_back(new lb::WardAnisotropic(0.05f, 0.2f));
-    models.push_back(new lb::WardIsotropic(0.2f));
+    
+    lb::Vec3 white(1.0, 1.0, 1.0);
+    lb::Vec3 black(0.0, 0.0, 0.0);
+    models.push_back(new lb::AshikhminShirley(white, black, 100.0f, 20.0f));
+    models.push_back(new lb::BlinnPhong(white, 40.0f));
+    models.push_back(new lb::CookTorrance(white, 0.2f, 5.0f));
+    models.push_back(new lb::Lambertian(white));
+    models.push_back(new lb::ModifiedPhong(white, 10.0f));
+    models.push_back(new lb::OrenNayar(white, 30.0f));
+    models.push_back(new lb::Phong(white, 10.0f));
+    models.push_back(new lb::SimplifiedOrenNayar(white, 30.0f));
+    models.push_back(new lb::WardAnisotropic(white, 0.05f, 0.2f));
+    models.push_back(new lb::WardIsotropic(white, 0.2f));
 
     for (auto it = models.begin(); it != models.end(); ++it) {
         reflectanceModels_[(*it)->getName()] = *it;
@@ -194,7 +209,6 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
 
     for (auto it = reflectanceModels_.begin(); it != reflectanceModels_.end(); ++it) {
         ui_->reflectanceModelComboBox->addItem(it->first.c_str());
-        colors_.push_back(Qt::white);
     }
 
     connect(ui_->reflectanceModelComboBox, SIGNAL(activated(int)),
@@ -202,19 +216,6 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
 
     connect(ui_->reflectanceModelComboBox, SIGNAL(activated(int)),
             this, SLOT(updateCoordSysWidget(int)));
-}
-
-void ReflectanceModelDockWidget::initializeColorButton()
-{
-    colorPushButton_ = new QPushButton(ui_->parameterWidget);
-    colorPushButton_->setAutoFillBackground(true);
-    colorPushButton_->setFlat(false);
-    colorPushButton_->setMaximumWidth(40);
-    qt_osg_util::setBackgroundColor(colorPushButton_, QColor(Qt::white));
-
-    ui_->parameterFormLayout->addRow("Color:", colorPushButton_);
-
-    connect(colorPushButton_, SIGNAL(clicked()), this, SLOT(changeButtonColor()));
 }
 
 lb::Brdf* ReflectanceModelDockWidget::initializeBrdf(bool isotropic)

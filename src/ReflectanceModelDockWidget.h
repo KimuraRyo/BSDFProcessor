@@ -33,26 +33,21 @@ signals:
 private slots:
     void updateParameterWidget(int index);
     void updateCoordSysWidget(int index);
-    void changeButtonColor();
-    void updateParameter(double value);
+    void updateParameter();
     void generateBrdf();
 
 private:
     Q_DISABLE_COPY(ReflectanceModelDockWidget)
 
     void initializeReflectanceModels();
-    void initializeColorButton();
     lb::Brdf* initializeBrdf(bool isotropic);
 
     std::map<std::string, lb::ReflectanceModel*> reflectanceModels_;
 
-    std::vector<QColor> colors_; /*!< Color coefficients for reflectance models. */
-
-    /*! UI components and vlues for parameters of the current reflectance model. */
-    std::map<QDoubleSpinBox*, float*> currentParameters_;
+    /*! UI components and values for parameters of the current reflectance model. */
+    std::map<QWidget*, lb::ReflectanceModel::Parameter*> currentParameters_;
 
     Ui::ReflectanceModelDockWidgetBase* ui_;
-    QPushButton* colorPushButton_;
 };
 
 #endif // REFLECTANCE_MODEL_DOCKWIDGET_H
