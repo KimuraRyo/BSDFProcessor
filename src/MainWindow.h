@@ -14,10 +14,10 @@
 #include "GraphScene.h"
 #include "GraphWidget.h"
 #include "MaterialData.h"
-#include "QtOsgUtil.h"
 #include "ReflectanceModelDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
+#include "Utility.h"
 
 /*!
  * \class   MainWindow
@@ -28,6 +28,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     explicit MainWindow(QWidget* parent);
     ~MainWindow();
 
@@ -125,9 +127,6 @@ private:
 
     Ui::MainWindowBase* ui_;
     ReflectanceModelDockWidget* reflectanceModelDockWidget_;
-
-public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 #endif // MAIN_WINDOW_H

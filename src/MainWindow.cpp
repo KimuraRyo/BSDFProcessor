@@ -1035,55 +1035,7 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
         return;
     }
 
-    typedef lb::SpecularCoordinatesBrdf SpecBrdf;
-    typedef lb::SpecularCoordinateSystem SpecCoordSys;
-
-    SpecBrdf* exportedBrdf;
-    if (dynamic_cast<SpecBrdf*>(brdf)) {
-        exportedBrdf = new SpecBrdf(dynamic_cast<const SpecBrdf&>(*brdf));
-    }
-    else if (!data_->isInDirDependentCoordinateSystem()) {
-        exportedBrdf = new SpecBrdf(*brdf, 10, 1, 181, 37);
-    }
-    else {
-        const lb::SampleSet* ss = brdf->getSampleSet();
-
-        lb::Arrayf inThetaAngles  = ss->getAngles0();
-        lb::Arrayf inPhiAngles    = lb::Arrayf::LinSpaced(ss->getNumAngles1(), 0.0, SpecCoordSys::MAX_ANGLE1);
-        lb::Arrayf outThetaAngles = lb::Arrayf::LinSpaced(181,                 0.0, SpecCoordSys::MAX_ANGLE2);
-        lb::Arrayf outPhiAngles   = lb::Arrayf::LinSpaced(37,                  0.0, SpecCoordSys::MAX_ANGLE3);
-
-        if (inPhiAngles.size() == 1) {
-            inPhiAngles[0] = 0.0f;
-        }
-
-        exportedBrdf = new SpecBrdf(*brdf, inThetaAngles, inPhiAngles, outThetaAngles, outPhiAngles);
-    }
-
-    lb::SampleSet* exportedSs = exportedBrdf->getSampleSet();
-    if (exportedSs->getColorModel() == lb::XYZ_MODEL) {
-        lb::xyzToSrgb(exportedSs);
-    }
-
-    if (exportedBrdf->getNumInTheta() == 1) {
-        const lb::SampleSet* ss = exportedBrdf->getSampleSet();
-
-        lb::Arrayf inThetaAngles = lb::Arrayf::LinSpaced(10, 0.0, SpecCoordSys::MAX_ANGLE0);
-
-        SpecBrdf* filledBrdf = new SpecBrdf(*exportedBrdf,
-                                            inThetaAngles,
-                                            ss->getAngles1(),
-                                            ss->getAngles2(),
-                                            ss->getAngles3());
-        delete exportedBrdf;
-        exportedBrdf = filledBrdf;
-    }
-
-    exportedBrdf->expandAngles();
-    lb::fixEnergyConservation(exportedBrdf);
-
-    lb::DdrWriter::write(fileName.toLocal8Bit().data(), *exportedBrdf);
-    delete exportedBrdf;
+    lb::DdrWriter::write(fileName.toLocal8Bit().data(), *brdf, data_->isInDirDependentCoordinateSystem());
 }
 
 void MainWindow::updateCameraPosition()
