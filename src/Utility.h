@@ -7,14 +7,13 @@
 // =================================================================== //
 
 /*!
- * \file    QtOsgUtil.h
- * \brief   Utility functions for Qt or OpenSceneGraph.
+ * \file    Utility.h
+ * \brief   Utility functions.
  */
 
-#ifndef QTOSG_UTIL_H
-#define QTOSG_UTIL_H
+#ifndef UTILITY_H
+#define UTILITY_H
 
-#include <QtWidgets/QColorDialog>
 #include <QtWidgets/QPushButton>
 
 #include <osg/Vec3>
@@ -22,7 +21,7 @@
 
 #include <libbsdf/Common/Vector.h>
 
-namespace qt_osg_util {
+namespace util {
 
 /*! Converts from osg::Vec3 to QColor. */
 inline QColor osgToQt(const osg::Vec3& vec)
@@ -50,6 +49,12 @@ inline lb::Vec3 qtToLb(const QColor& color)
     return lb::Vec3(r, g, b);
 }
 
+/*! Converts from lb::Vec3 to QColor. */
+inline QColor lbToQt(const lb::Vec3& color)
+{
+    return QColor::fromRgbF(color[0], color[1], color[2]);
+}
+
 /*!
  * Gets the background color of QPushButton in a style sheet.
  * If a color is not found, QColor::isValid() is false.
@@ -65,6 +70,6 @@ void setBackgroundColor(QPushButton* button, const QColor& color);
  */
 QColor setBackgroundColor(QPushButton* button);
 
-} // namespace qt_osg_util
+} // namespace util
 
-#endif // QTOSG_UTIL_H
+#endif // UTILITY_H
