@@ -20,6 +20,7 @@
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
+#include <libbsdf/ReflectanceModel/Minnaert.h>
 #include <libbsdf/ReflectanceModel/ModifiedPhong.h>
 #include <libbsdf/ReflectanceModel/OrenNayar.h>
 #include <libbsdf/ReflectanceModel/Phong.h>
@@ -196,6 +197,7 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::BlinnPhong(white, 40.0f));
     models.push_back(new lb::CookTorrance(white, 0.2f, 5.0f));
     models.push_back(new lb::Lambertian(white));
+    models.push_back(new lb::Minnaert(white, 1.5f));
     models.push_back(new lb::ModifiedPhong(white, 10.0f));
     models.push_back(new lb::OrenNayar(white, 30.0f));
     models.push_back(new lb::Phong(white, 10.0f));
