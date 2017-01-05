@@ -11,7 +11,6 @@
 #include <iostream>
 
 #include <osg/ClipPlane>
-#include <osg/CullFace>
 #include <osg/Depth>
 #include <osg/Geometry>
 #include <osg/LineStipple>
@@ -375,7 +374,7 @@ void GraphScene::attachColorShader(osg::Node* node)
     program->addShader(colorVertexShader);
     program->addShader(colorFragmentShader);
     node->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON);
-    node->getOrCreateStateSet()->setName("colorShader");
+    node->getOrCreateStateSet()->setName("oitColorDepthShader");
 }
 
 osg::Group* GraphScene::createPostProcessing(osg::Node* subgraph, int width, int height, int numFboSamples)

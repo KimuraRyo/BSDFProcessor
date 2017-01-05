@@ -17,7 +17,6 @@
 #include <osg/ClipPlane>
 #include <osg/ClusterCullingCallback>
 #include <osg/ComputeBoundsVisitor>
-#include <osg/CullFace>
 #include <osg/Depth>
 #include <osg/LineStipple>
 #include <osg/LineWidth>
@@ -203,7 +202,7 @@ osg::Group* scene_util::createPostProcessingGroup(osg::Node*    subgraph,
             osg::Program* program = new osg::Program;
             program->addShader(fragmentShader);
             ppsGroup->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON);
-            ppsGroup->getOrCreateStateSet()->setName("colorShader");
+            ppsGroup->getOrCreateStateSet()->setName("postProcessingShader");
         }
 
         osg::Camera* hudCamera = new osg::Camera;
