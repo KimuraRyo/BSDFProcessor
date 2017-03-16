@@ -41,7 +41,7 @@
     </rect>
    </property>
    <property name="pixmap">
-    <pixmap>:/BSDFProcessor.png</pixmap>
+    <pixmap resource="../resource/resource.qrc">:/BSDFProcessor.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -105,7 +105,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Copyright © 2014-2016 Kimura Ryo.</string>
+    <string>Copyright © 2014-2017 Kimura Ryo.</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
