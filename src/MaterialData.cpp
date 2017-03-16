@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -21,6 +21,7 @@
 MaterialData::MaterialData() : origBrdf_(0),
                                specularReflectances_(0),
                                specularTransmittances_(0),
+                               fileType_(lb::UNKNOWN_FILE),
                                reflectances_(0),
                                numInTheta_(1),
                                numInPhi_(1),
@@ -358,6 +359,8 @@ void MaterialData::editBrdf(const lb::Brdf&         origBrdf,
                  diffuseThresholds,
                  glossyIntensity, glossyShininess, diffuseIntensity);
     }}}}
+
+    brdf->setSourceType(lb::EDITED_SOURCE);
 }
 
 void MaterialData::editBrdf(int i0, int i1, int i2, int i3,

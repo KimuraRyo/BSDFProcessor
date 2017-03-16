@@ -75,7 +75,7 @@ inline osg::Vec3 hueToRgb(float hue)
  * \param camera            Camera to draw a view.
  * \param cameraDirection   Direction from the origin to a camera.
  * \param upDirection       Upward direction of a camera.
- * \param node              Scene node. If this is 0, this function uses the scene of camera.
+ * \param node              Scene node. If this is 0, this function uses the scene of a camera.
  */
 void fitCameraPosition(osg::Camera*     camera,
                        const osg::Vec3& cameraDirection,

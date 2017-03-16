@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -42,6 +42,9 @@ public:
 
     lb::SampleSet2D* getSpecularTransmittances() { return specularTransmittances_; }
     void setSpecularTransmittances(lb::SampleSet2D* transmittances);
+
+    lb::FileType getFileType() { return fileType_; }
+    void setFileType(lb::FileType type) { fileType_ = type; }
 
     lb::SampleSet2D* getReflectances() { return reflectances_; }
 
@@ -111,6 +114,8 @@ private:
 
     lb::SampleSet2D* specularReflectances_;     /*!< The array of specular reflectance. */
     lb::SampleSet2D* specularTransmittances_;   /*!< The array of specular transmittance. */
+
+    lb::FileType fileType_; /*! File format. */
     
     lb::SampleSet2D* reflectances_; /*!< Reflectances at each incoming direction. */
 

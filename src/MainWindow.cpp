@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -176,6 +176,8 @@ void MainWindow::openFile(const QString& fileName)
                              QMessageBox::Ok);
         return;
     }
+
+    data_->setFileType(fileType);
 
     if (!hadData) {
         viewFront();
@@ -713,6 +715,11 @@ void MainWindow::updateDiffuseIntensity(double intensity)
              intensity);
 }
 
+void MainWindow::clearFileType()
+{
+    data_->setFileType(lb::UNKNOWN_FILE);
+}
+
 void MainWindow::createActions()
 {
     ui_->viewMenu->addAction(ui_->controlDockWidget->toggleViewAction());
@@ -748,6 +755,8 @@ void MainWindow::createActions()
 
     connect(reflectanceModelDockWidget_, SIGNAL(generated(lb::Brdf*, lb::DataType)),
             this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
+    connect(reflectanceModelDockWidget_, SIGNAL(generated()),
+            this, SLOT(clearFileType()));
 
     connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
 }

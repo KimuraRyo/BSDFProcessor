@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -29,6 +29,7 @@ public:
 
 signals:
     void generated(lb::Brdf* brdf, lb::DataType dataType);
+    void generated();
 
 private slots:
     void updateParameterWidget(int index);
