@@ -15,6 +15,7 @@
 #include "GraphWidget.h"
 #include "MaterialData.h"
 #include "ReflectanceModelDockWidget.h"
+#include "SmoothDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
 #include "Utility.h"
@@ -38,6 +39,7 @@ public slots:
 
 private slots:
     void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
+    void updateBrdf();
 
     void openBxdfUsingDialog();
     void openCcbxdfUsingDialog();
@@ -127,8 +129,10 @@ private:
     /*! This attribute holds whether a slot function is invoked by the signal from UI. */
     bool signalEmittedFromUi_;
 
-    Ui::MainWindowBase* ui_;
     ReflectanceModelDockWidget* reflectanceModelDockWidget_;
+    SmoothDockWidget*           smoothDockWidget_;
+
+    Ui::MainWindowBase* ui_;
 };
 
 #endif // MAIN_WINDOW_H

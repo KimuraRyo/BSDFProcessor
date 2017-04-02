@@ -870,8 +870,14 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="processorsMenu">
+    <property name="title">
+     <string>&amp;Processors</string>
+    </property>
+   </widget>
    <addaction name="fileMenu"/>
    <addaction name="viewMenu"/>
+   <addaction name="processorsMenu"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

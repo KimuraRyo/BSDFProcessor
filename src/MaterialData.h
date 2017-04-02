@@ -55,6 +55,9 @@ public:
 
     void clearData();
 
+    void updateBrdf();
+    void updateBtdf();
+
     float getIncomingPolarAngle(int index) const;
     float getIncomingAzimuthalAngle(int index) const;
 
@@ -87,6 +90,10 @@ signals:
 
 private:
     static lb::Spectrum findMaxPerWavelength(const lb::SampleSet& samples);
+
+    void clearComputedData();
+
+    void updateSampleSet(lb::SampleSet* ss);
 
     void computeReflectances();
 

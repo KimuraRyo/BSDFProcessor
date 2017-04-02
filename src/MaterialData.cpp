@@ -41,49 +41,13 @@ MaterialData::~MaterialData()
 void MaterialData::setBrdf(lb::Brdf* brdf)
 {
     brdf_.reset(brdf);
-
-    if (brdf_) {
-        lb::SampleSet* ss = brdf_->getSampleSet();
-
-        ss->updateAngleAttributes();
-
-        if (isInDirDependentCoordinateSystem()) {
-            numInTheta_ = ss->getNumAngles0();
-        }
-        else {
-            numInTheta_ = NUM_INCOMING_POLAR_ANGLES;
-        }
-
-        numInPhi_ = ss->getNumAngles1();
-        numWavelengths_ = ss->getNumWavelengths();
-
-        maxPerWavelength_ = findMaxPerWavelength(*ss);
-        computeReflectances();
-    }
+    updateBrdf();
 }
 
 void MaterialData::setBtdf(lb::Btdf* btdf)
 {
     btdf_.reset(btdf);
-
-    if (btdf_) {
-        lb::SampleSet* ss = btdf_->getSampleSet();
-
-        ss->updateAngleAttributes();
-
-        if (isInDirDependentCoordinateSystem()) {
-            numInTheta_ = ss->getNumAngles0();
-        }
-        else {
-            numInTheta_ = NUM_INCOMING_POLAR_ANGLES;
-        }
-
-        numInPhi_ = ss->getNumAngles1();
-        numWavelengths_ = ss->getNumWavelengths();
-
-        maxPerWavelength_ = findMaxPerWavelength(*ss);
-        computeReflectances();
-    }
+    updateBtdf();
 }
 
 void MaterialData::setSpecularReflectances(lb::SampleSet2D* reflectances)
@@ -125,20 +89,21 @@ void MaterialData::clearData()
     brdf_.reset();
     btdf_.reset();
 
-    delete origBrdf_;
-    origBrdf_ = 0;
+    clearComputedData();
+}
 
-    delete specularReflectances_;
-    specularReflectances_ = 0;
+void MaterialData::updateBrdf()
+{
+    if (!brdf_) return;
 
-    delete specularTransmittances_;
-    specularTransmittances_ = 0;
+    updateSampleSet(brdf_->getSampleSet());
+}
 
-    delete reflectances_;
-    reflectances_ = 0;
+void MaterialData::updateBtdf()
+{
+    if (!btdf_) return;
 
-    maxPerWavelength_.resize(0);
-    diffuseThresholds_.resize(0);
+    updateSampleSet(btdf_->getSampleSet());
 }
 
 float MaterialData::getIncomingPolarAngle(int index) const
@@ -423,6 +388,44 @@ lb::Spectrum MaterialData::findMaxPerWavelength(const lb::SampleSet& samples)
     }}}}
 
     return maxSp;
+}
+
+void MaterialData::clearComputedData()
+{
+    delete origBrdf_;
+    origBrdf_ = 0;
+
+    delete specularReflectances_;
+    specularReflectances_ = 0;
+
+    delete specularTransmittances_;
+    specularTransmittances_ = 0;
+
+    delete reflectances_;
+    reflectances_ = 0;
+
+    maxPerWavelength_.resize(0);
+    diffuseThresholds_.resize(0);
+}
+
+void MaterialData::updateSampleSet(lb::SampleSet* ss)
+{
+    clearComputedData();
+
+    ss->updateAngleAttributes();
+
+    if (isInDirDependentCoordinateSystem()) {
+        numInTheta_ = ss->getNumAngles0();
+    }
+    else {
+        numInTheta_ = NUM_INCOMING_POLAR_ANGLES;
+    }
+
+    numInPhi_ = ss->getNumAngles1();
+    numWavelengths_ = ss->getNumWavelengths();
+
+    maxPerWavelength_ = findMaxPerWavelength(*ss);
+    computeReflectances();
 }
 
 void MaterialData::computeReflectances()

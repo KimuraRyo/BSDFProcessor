@@ -52,6 +52,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     ui_->setupUi(this);
 
     reflectanceModelDockWidget_ = new ReflectanceModelDockWidget(ui_->centralWidget);
+    smoothDockWidget_           = new SmoothDockWidget(ui_->centralWidget);
 
     osgDB::Registry::instance()->setBuildKdTreesHint(osgDB::ReaderWriter::Options::BUILD_KDTREES);
 
@@ -70,6 +71,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     addDockWidget(Qt::LeftDockWidgetArea, reflectanceModelDockWidget_);
     reflectanceModelDockWidget_->hide();
+
+    addDockWidget(Qt::LeftDockWidgetArea, smoothDockWidget_);
+    smoothDockWidget_->hide();
 
     ui_->statusbar->hide();
 
@@ -217,6 +221,20 @@ void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
     ui_->logPlotGroupBox->setEnabled(true);
     ui_->tableGraphicsView->fitView(0.9);
     displayReflectance();
+}
+
+void MainWindow::updateBrdf()
+{
+    if (data_->getBrdf()) {
+        data_->updateBrdf();
+    }
+    else if (data_->getBtdf()) {
+        data_->updateBtdf();
+    }
+
+    graphScene_->createBrdfGeode();
+
+    initializeUi();
 }
 
 void MainWindow::openBxdfUsingDialog()
@@ -729,6 +747,8 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());
 
+    ui_->processorsMenu->addAction(smoothDockWidget_->toggleViewAction());
+
     ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL + Qt::Key_T);
 
     connect(ui_->actionOpenBrdf,    SIGNAL(triggered()), this, SLOT(openBxdfUsingDialog()));
@@ -757,6 +777,9 @@ void MainWindow::createActions()
             this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
     connect(reflectanceModelDockWidget_, SIGNAL(generated()),
             this, SLOT(clearFileType()));
+
+    connect(smoothDockWidget_, SIGNAL(processed()),
+            this, SLOT(updateBrdf()));
 
     connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
 }
@@ -842,9 +865,11 @@ void MainWindow::initializeUi()
 
     if (data_->getBrdf() || data_->getBtdf()) {
         ui_->editorDockWidget->setEnabled(true);
+        smoothDockWidget_->setEnabled(true);
     }
     else {
         ui_->editorDockWidget->setDisabled(true);
+        smoothDockWidget_->setDisabled(true);
     }
 
     // Avoid to perform functions invoked by emitting signals.
@@ -865,6 +890,18 @@ void MainWindow::initializeUi()
 
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
     getRenderingView()->requestRedraw();
+
+    lb::Brdf* brdf = 0;
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
+    }
+    else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
+    }
+
+    if (brdf) {
+        smoothDockWidget_->setBrdf(brdf);
+    }
 }
 
 QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
