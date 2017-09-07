@@ -19,6 +19,8 @@
 #include <libbsdf/ReflectanceModel/AshikhminShirley.h>
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
+#include <libbsdf/ReflectanceModel/GGX.h>
+#include <libbsdf/ReflectanceModel/GgxAnisotropic.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
 #include <libbsdf/ReflectanceModel/Minnaert.h>
 #include <libbsdf/ReflectanceModel/ModifiedPhong.h>
@@ -79,9 +81,9 @@ void ReflectanceModelDockWidget::updateParameterWidget(int index)
     for (auto it = params.begin(); it != params.end(); ++it) {
         if (it->getType() == lb::ReflectanceModel::Parameter::FLOAT_PARAMETER) {
             QDoubleSpinBox* spinBox = new QDoubleSpinBox(ui_->parameterWidget);
-            spinBox->setDecimals(2);
-            spinBox->setMinimum(0.01);
-            spinBox->setMaximum(999.99);
+            spinBox->setDecimals(3);
+            spinBox->setMinimum(0.001);
+            spinBox->setMaximum(999.999);
             spinBox->setSingleStep(0.1);
             spinBox->setValue(*it->getFloat());
             spinBox->setMaximumWidth(75);
@@ -196,7 +198,9 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     lb::Vec3 black(0.0, 0.0, 0.0);
     models.push_back(new lb::AshikhminShirley(white, black, 100.0f, 20.0f));
     models.push_back(new lb::BlinnPhong(white, 40.0f));
-    models.push_back(new lb::CookTorrance(white, 0.2f, 5.0f));
+    models.push_back(new lb::CookTorrance(white, 0.2f));
+    models.push_back(new lb::Ggx(white, 0.3f));
+    models.push_back(new lb::GgxAnisotropic(white, black, 0.2f, 0.4f));
     models.push_back(new lb::Lambertian(white));
     models.push_back(new lb::Minnaert(white, 1.5f));
     models.push_back(new lb::ModifiedPhong(white, 10.0f));
