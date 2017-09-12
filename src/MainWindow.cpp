@@ -1081,7 +1081,10 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
         return;
     }
 
-    lb::DdrWriter::write(fileName.toLocal8Bit().data(), *brdf, data_->isInDirDependentCoordinateSystem());
+    lb::DdrWriter::write(fileName.toLocal8Bit().data(),
+                         *brdf,
+                         data_->isInDirDependentCoordinateSystem(),
+                         dataType);
 }
 
 void MainWindow::updateCameraPosition()
