@@ -16,7 +16,7 @@
 
 #define BSDFPROCESSOR_MAJOR_VERSION 1
 #define BSDFPROCESSOR_MINOR_VERSION 1
-#define BSDFPROCESSOR_PATCH_VERSION 8
+#define BSDFPROCESSOR_PATCH_VERSION 11
 
 /*! Returns the version number of BSDF Processor. */
 const char* getVersion();
