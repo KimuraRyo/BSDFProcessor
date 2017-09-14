@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -586,6 +586,11 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     bxdfMeshGeode_->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::POLYGONOFFSET);
 
     switch (displayMode_) {
+        case PHOTOMETRY_DISPLAY: {
+            setupBrdfMeshGeometry(brdf, inTheta, inPhi, wavelengthIndex, dataType, true);
+            useOit_ = false;
+            break;
+        }
         case NORMAL_DISPLAY: {
             setupBrdfMeshGeometry(brdf, inTheta, inPhi, wavelengthIndex, dataType);
             useOit_ = false;
@@ -683,7 +688,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 }
 
 void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
-                                       lb::DataType dataType)
+                                       lb::DataType dataType, bool photometric)
 {
     bool many = ((displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && data_->getNumInTheta() > 10) ||
                  (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && data_->getNumInPhi() > 10) ||
@@ -701,15 +706,21 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
     osg::Geometry* meshGeom;
     if (dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
-            *brdf, inTheta, inPhi, wavelengthIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
+            *brdf, inTheta, inPhi, wavelengthIndex,
+            useLogPlot_, baseOfLogarithm_, dataType, photometric,
+            numTheta, numPhi);
     }
     else if (dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
-            *brdf, inTheta, inPhi, wavelengthIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
+            *brdf, inTheta, inPhi, wavelengthIndex,
+            useLogPlot_, baseOfLogarithm_, dataType, photometric,
+            numTheta, numPhi);
     }
     else {
         meshGeom = scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
-            *brdf, inTheta, inPhi, wavelengthIndex, useLogPlot_, baseOfLogarithm_, dataType, numTheta, numPhi);
+            *brdf, inTheta, inPhi, wavelengthIndex,
+            useLogPlot_, baseOfLogarithm_, dataType, photometric,
+            numTheta, numPhi);
     }
 
     // Set the color of graph.
@@ -793,6 +804,15 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
     updateInDirLine(inDir, wavelengthIndex);
 
+    const lb::Spectrum& sp = ss2->getSpectrum(inThetaIndex, inPhiIndex);
+    float value;
+    if (displayMode_ == PHOTOMETRY_DISPLAY) {
+        value = scene_util::spectrumToY(sp, ss2->getColorModel(), ss2->getWavelengths());
+    }
+    else {
+        value = sp[wavelengthIndex];
+    }
+
     // Update specular reflectance.
     lb::Vec3 outDir;
     if (data_->getSpecularReflectances()) {
@@ -801,7 +821,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     else {
         outDir = -inDir;
     }
-    lb::Vec3 outPos = outDir * ss2->getSpectrum(inThetaIndex, inPhiIndex)[wavelengthIndex];
+    lb::Vec3 outPos = outDir * value;
     osg::Vec3Array* vertices = new osg::Vec3Array;
     vertices->push_back(osg::Vec3());
     vertices->push_back(osg::Vec3(outPos[0], outPos[1], outPos[2]));

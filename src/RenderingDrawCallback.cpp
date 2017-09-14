@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -96,7 +96,7 @@ void RenderingDrawCallback::renderBrdf(const lb::Vec3& inDir, const lb::Vec3& ou
     }
     else {
         const lb::SampleSet* ss = brdf_->getSampleSet();
-        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, ss->getWavelengths(), ss->getNumWavelengths());
+        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, ss->getWavelengths());
     }
 
     rgb *= lb::PI_F * inDir[2] * lightIntensity_;
@@ -120,9 +120,7 @@ void RenderingDrawCallback::renderReflectance(const lb::Vec3& outDir, float* pix
         rgb[0] = rgb[1] = rgb[2] = sp[0];
     }
     else {
-        rgb = lb::SpectrumUtility::spectrumToSrgb(sp,
-                                                  reflectances_->getWavelengths(),
-                                                  reflectances_->getNumWavelengths());
+        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, reflectances_->getWavelengths());
     }
 
     rgb *= environmentIntensity_;

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -15,8 +15,12 @@
 #include <libbsdf/Brdf/Btdf.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
 
+#include <libbsdf/Common/Utility.h>
+#include <libbsdf/Common/SpectrumUtility.h>
+
 #include "GraphicsAngleItem.h"
 #include "GraphicsSampleItem.h"
+#include "SceneUtil.h"
 
 TableView::TableView(QWidget* parent) : QGraphicsView(parent),
                                         data_(0)
@@ -29,9 +33,12 @@ TableView::TableView(QWidget* parent) : QGraphicsView(parent),
     setScene(graphicsScene_);
 }
 
-void TableView::createTable(int wavelengthIndex, float gamma)
+void TableView::createTable(int wavelengthIndex, float gamma, bool photometric)
 {
     if (!data_) return;
+
+    gamma_ = gamma;
+    photometric_ = photometric;
 
     graphicsScene_->clear();
 
@@ -39,30 +46,30 @@ void TableView::createTable(int wavelengthIndex, float gamma)
     scene()->setSceneRect(-sceneSize / 2.0, -sceneSize / 2.0, sceneSize, sceneSize);
 
     if (data_->getBrdf() || data_->getBtdf()) {
-        createBrdfTable(wavelengthIndex, gamma);
+        createBrdfTable(wavelengthIndex);
     }
     else if (data_->getSpecularReflectances() || data_->getSpecularTransmittances()) {
         createReflectanceTable(wavelengthIndex);
     }
 }
 
-void TableView::createBrdfTable(int wavelengthIndex, float gamma)
+void TableView::createBrdfTable(int wavelengthIndex)
 {
     const lb::SampleSet* ss = data_->getSampleSet();
     if (!ss) return;
 
     int numSamples = ss->getNumAngles0() * ss->getNumAngles1() * ss->getNumAngles2() * ss->getNumAngles3();
     if (numSamples < 100000) {
-        createBrdfDataItems(ss, wavelengthIndex, gamma);
+        createBrdfDataItems(ss, wavelengthIndex);
     }
     else {
-        createBrdfDataPixmapItem(ss, wavelengthIndex, gamma);
+        createBrdfDataPixmapItem(ss, wavelengthIndex);
     }
 
     createBrdfAngleItems(ss);
 }
 
-void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex, float gamma)
+void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex)
 {
     int num0 = ss->getNumAngles0();
     int num1 = ss->getNumAngles1();
@@ -76,21 +83,25 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex
     for (int i1 = 0; i1 < num1; ++i1) {
     for (int i2 = 0; i2 < num2; ++i2) {
     for (int i3 = 0; i3 < num3; ++i3) {
-        float sampleValue = ss->getSpectrum(i0, i1, i2, i3)[wavelengthIndex];
-        sampleValue = std::max(sampleValue, 0.0f);
+        float sampleValue = getSampleValue(ss->getSpectrum(i0, i1, i2, i3),
+                                           ss->getColorModel(),
+                                           ss->getWavelengths(),
+                                           wavelengthIndex);
+
         float maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex];
-        
         int color;
         if (maxValue == 0.0f) {
             color = 0;
         }
         else {
-            color = std::pow(sampleValue / maxValue, 1.0f / gamma) * 255.0f;
+            color = static_cast<int>(std::pow(sampleValue / maxValue, 1.0f / gamma_) * 255.0f);
+            color = std::min(color, 255);
         }
 
         GraphicsSampleItem* item = new GraphicsSampleItem(QColor(color, color, color), sampleValue);
         item->setPos(i2 + num2 * i0, i3 + num3 * i1);
 
+        // Classify items for the display order.
         if (item->isWhitish()) {
             whiteItems.push_back(item);
         }
@@ -108,7 +119,7 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex
     }
 }
 
-void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex, float gamma)
+void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex)
 {
     int num0 = ss->getNumAngles0();
     int num1 = ss->getNumAngles1();
@@ -125,15 +136,18 @@ void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelength
         int color;
         #pragma omp parallel for private(sampleValue, maxValue, color)
         for (int i3 = 0; i3 < num3; ++i3) {
-            sampleValue = ss->getSpectrum(i0, i1, i2, i3)[wavelengthIndex];
-            sampleValue = std::max(sampleValue, 0.0f);
+            sampleValue = getSampleValue(ss->getSpectrum(i0, i1, i2, i3),
+                                         ss->getColorModel(),
+                                         ss->getWavelengths(),
+                                         wavelengthIndex);
+            
             maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex];
-
             if (maxValue == 0.0f) {
                 color = 0;
             }
             else {
-                color = static_cast<int>(std::pow(sampleValue / maxValue, 1.0f / gamma) * 255.0f);
+                color = static_cast<int>(std::pow(sampleValue / maxValue, 1.0f / gamma_) * 255.0f);
+                color = std::min(color, 255);
             }
 
             image->setPixel(i2 + num2 * i0, i3 + num3 * i1, QColor(color, color, color).rgb());
@@ -188,7 +202,7 @@ void TableView::createBrdfAngleItems(const lb::SampleSet* ss)
     }}
 }
 
-void TableView::createReflectanceTable(int wavelengthIndex, float gamma)
+void TableView::createReflectanceTable(int wavelengthIndex)
 {
     const lb::SampleSet2D* ss2;
     if (data_->getSpecularReflectances()) {
@@ -211,9 +225,12 @@ void TableView::createReflectanceTable(int wavelengthIndex, float gamma)
     // data table
     for (int i0 = 0; i0 < num0; ++i0) {
     for (int i1 = 0; i1 < num1; ++i1) {
-        float sampleValue = ss2->getSpectrum(i0, i1)[wavelengthIndex];
-        sampleValue = std::max(sampleValue, 0.0f);
-        float value = std::pow(sampleValue, 1.0f / gamma) * 255.0f;
+        float sampleValue = getSampleValue(ss2->getSpectrum(i0, i1),
+                                           ss2->getColorModel(),
+                                           ss2->getWavelengths(),
+                                           wavelengthIndex);
+
+        float value = std::pow(sampleValue, 1.0f / gamma_) * 255.0f;
 
         GraphicsSampleItem* item = new GraphicsSampleItem(QColor(value, value, value), sampleValue);
         item->setPos(i0, i1);
@@ -254,6 +271,22 @@ void TableView::createReflectanceTable(int wavelengthIndex, float gamma)
             addAngleItem(color1, angle1, num0 * itemSize, i1);
         }
     }
+}
+
+float TableView::getSampleValue(const lb::Spectrum& sp,
+                                lb::ColorModel      colorModel,
+                                const lb::Arrayf&   wavelengths,
+                                int                 wavelengthIndex)
+{
+    float value;
+    if (photometric_) {
+        value = scene_util::spectrumToY(sp, colorModel, wavelengths);
+    }
+    else {
+        value = sp[wavelengthIndex];
+    }
+
+    return std::max(value, 0.0f);
 }
 
 void TableView::addAngleItem(const QColor& color, float angle,

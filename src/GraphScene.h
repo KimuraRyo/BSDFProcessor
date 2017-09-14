@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -32,6 +32,7 @@ public:
     ~GraphScene() {}
 
     enum DisplayMode {
+        PHOTOMETRY_DISPLAY,
         NORMAL_DISPLAY,
         ALL_INCOMING_POLAR_ANGLES_DISPLAY,
         ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY,
@@ -62,6 +63,7 @@ public:
     void useLogPlot(bool on) { useLogPlot_ = on; }
     void setBaseOfLogarithm(float base) { baseOfLogarithm_ = base; }
 
+    DisplayMode getDisplayMode() const { return displayMode_; }
     void setDisplayMode(DisplayMode mode) { displayMode_ = mode; }
 
     inline osg::Camera* getCamera() { return camera_; }
@@ -92,7 +94,7 @@ private:
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
     void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
-                               lb::DataType dataType);
+                               lb::DataType dataType, bool photometric = false);
 
     void updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
 

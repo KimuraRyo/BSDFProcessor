@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -29,7 +29,7 @@ class TableView : public QGraphicsView
 public:
     explicit TableView(QWidget* parent = 0);
 
-    void createTable(int wavelengthIndex, float gamma = 1.0f);
+    void createTable(int wavelengthIndex, float gamma = 1.0f, bool photometric = false);
 
     void setMaterialData(MaterialData* data) { data_ = data; }
 
@@ -43,12 +43,19 @@ public slots:
 private:
     Q_DISABLE_COPY(TableView)
 
-    void createBrdfTable(int wavelengthIndex, float gamma = 1.0f);
-    void createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex, float gamma = 1.0f);
-    void createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex, float gamma = 1.0f);
+    void createBrdfTable(int wavelengthIndex);
+    void createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex);
+    void createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex);
+
     void createBrdfAngleItems(const lb::SampleSet* ss);
 
-    void createReflectanceTable(int wavelengthIndex, float gamma = 1.0f);
+    void createReflectanceTable(int wavelengthIndex);
+
+    /*! Gets the value of a sample point for a item. */
+    float getSampleValue(const lb::Spectrum&    sp,
+                         lb::ColorModel         colorModel,
+                         const lb::Arrayf&      wavelengths,
+                         int                    wavelengthIndex);
 
     void addAngleItem(const QColor& color, float angle,
                       qreal posX, qreal posY,
@@ -63,6 +70,9 @@ private:
     QAction* actionFitView_;
 
     MaterialData* data_;
+
+    float gamma_;
+    bool photometric_;
 };
 
 #endif // TABLE_VIEW_H

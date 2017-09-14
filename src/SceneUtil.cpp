@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -30,10 +30,32 @@
 #include <osgText/FadeText>
 #include <osgText/Font>
 
+#include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/SpecularCoordinateSystem.h>
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
 
 #include "SpecularCenteredCoordinateSystem.h"
+
+float scene_util::spectrumToY(const lb::Spectrum&   spectrum,
+                              lb::ColorModel        colorModel,
+                              const lb::Arrayf&     wavelengths)
+{
+    if (colorModel == lb::RGB_MODEL) {
+        lb::Vec3f xyz = lb::srgbToXyz(spectrum);
+        return xyz[1];
+    }
+    else if (colorModel == lb::SPECTRAL_MODEL) {
+        return lb::SpectrumUtility::spectrumToY(spectrum, wavelengths);
+    }
+    else {
+        std::cerr
+            << "[scene_util::spectrumToY] Invalid color model for photometric values: "
+            << colorModel
+            << std::endl;
+
+        return 0.0f;
+    }
+}
 
 void scene_util::fitCameraPosition(osg::Camera*     camera,
                                    const osg::Vec3& cameraDirection,
@@ -524,6 +546,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                                   bool              useLogPlot,
                                                   float             baseOfLogarithm,
                                                   lb::DataType      dataType,
+                                                  bool              photometric,
                                                   int               numTheta,
                                                   int               numPhi)
 {
@@ -564,7 +587,16 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         inDir.normalize();
         outDir.normalize();
 
-        float brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
+        float brdfValue;
+        if (photometric) {
+            const lb::SampleSet* ss = brdf.getSampleSet();
+            lb::Spectrum sp = brdf.getSpectrum(inDir, outDir);
+            brdfValue = spectrumToY(sp, ss->getColorModel(), ss->getWavelengths());
+        }
+        else {
+            brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
+        }
+
         if (brdfValue <= 0.0f) {
             positions.push_back(lb::Vec3::Zero());
             continue;
@@ -663,15 +695,18 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
-    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
+    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, bool photometric,
+    int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
-    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
+    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, bool photometric,
+    int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
-    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, int numTheta, int numPhi);
+    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, bool photometric,
+    int numTheta, int numPhi);
 
 osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
                                                    int              inThetaIndex,

@@ -25,6 +25,7 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/TwoSidedMaterial.h>
 
+#include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/Version.h>
 
 #include <libbsdf/Reader/AstmReader.h>
@@ -387,7 +388,11 @@ void MainWindow::updateDisplayMode(QString modeName)
     
     ui_->pickedValueLineEdit->setEnabled(true);
 
-    if (modeName == getDisplayModeName(GraphScene::NORMAL_DISPLAY)) {
+    if (modeName == getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::PHOTOMETRY_DISPLAY);
+        ui_->wavelengthSlider->setDisabled(true);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::NORMAL_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::NORMAL_DISPLAY);
     }
     else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)) {
@@ -425,6 +430,9 @@ void MainWindow::updateDisplayMode(QString modeName)
     getMainView()->requestRedraw();
 
     clearPickedValue();
+    displayReflectance();
+
+    createTable();
 }
 
 void MainWindow::updateIncomingPolarAngle(int index)
@@ -560,6 +568,8 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
     }
 
     lb::Spectrum sp;
+    lb::Arrayf wls;
+    lb::ColorModel cm;
 
     if (position.z() > 0.0f) {
         lb::Brdf* brdf = data_->getBrdf();
@@ -569,12 +579,18 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
                                              ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 outDir = lb::toVec3(position).normalized();
             sp = brdf->getSpectrum(inDir, outDir);
+
+            wls = brdf->getSampleSet()->getWavelengths();
+            cm = brdf->getSampleSet()->getColorModel();
         }
         else if (sr) {
             float inTheta = sr->getTheta(ui_->incomingPolarAngleSlider->value());
             float inPhi = sr->getPhi(ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
             sp = sr->getSpectrum(inDir);
+
+            wls = sr->getWavelengths();
+            cm = sr->getColorModel();
         }
         else {
             return;
@@ -588,19 +604,32 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
                                              ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 outDir = lb::toVec3(position).normalized();
             sp = btdf->getSpectrum(inDir, outDir);
+
+            wls = btdf->getSampleSet()->getWavelengths();
+            cm = btdf->getSampleSet()->getColorModel();
         }
         else if (st) {
             float inTheta = st->getTheta(ui_->incomingPolarAngleSlider->value());
             float inPhi = st->getPhi(ui_->incomingAzimuthalAngleSlider->value());
             lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
             sp = st->getSpectrum(inDir);
+
+            wls = st->getWavelengths();
+            cm = st->getColorModel();
         }
         else {
             return;
         }
     }
 
-    float pickedValue = sp[ui_->wavelengthSlider->value()];
+    float pickedValue;
+    if (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY) {
+        pickedValue = scene_util::spectrumToY(sp, cm, wls);
+    }
+    else {
+        pickedValue = sp[ui_->wavelengthSlider->value()];
+    }
+
     ui_->pickedValueLineEdit->setText(QString::number(pickedValue));
 }
 
@@ -636,9 +665,17 @@ void MainWindow::displayReflectance()
     if (data_->computedReflectances() ||
         data_->getSpecularReflectances() ||
         data_->getSpecularTransmittances()) {
+        float reflectance;
+
         const lb::Spectrum& sp = ss2->getSpectrum(ui_->incomingPolarAngleSlider->value(),
                                                   ui_->incomingAzimuthalAngleSlider->value());
-        float reflectance = sp[ui_->wavelengthSlider->value()];
+        if (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY) {
+            reflectance = scene_util::spectrumToY(sp, ss2->getColorModel(), ss2->getWavelengths());
+        }
+        else {
+            reflectance = sp[ui_->wavelengthSlider->value()];
+        }
+
         ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
     }
     else {
@@ -791,6 +828,7 @@ void MainWindow::initializeUi()
     QComboBox* comboBox = ui_->displayModeComboBox;
 
     comboBox->clear();
+    comboBox->addItem(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY));
@@ -809,6 +847,11 @@ void MainWindow::initializeUi()
     ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
     ui_->wavelengthSlider->setValue(0);
     updateWavelength(0);
+
+    if (data_->getColorModel() != lb::RGB_MODEL &&
+        data_->getColorModel() != lb::SPECTRAL_MODEL) {
+        comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)));
+    }
 
     if (data_->getNumWavelengths() == 1) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)));
@@ -836,7 +879,13 @@ void MainWindow::initializeUi()
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)));
     }
 
-    updateDisplayMode(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
+    if (data_->getColorModel() == lb::RGB_MODEL ||
+        data_->getColorModel() == lb::SPECTRAL_MODEL) {
+        updateDisplayMode(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY));
+    }
+    else {
+        updateDisplayMode(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
+    }
 
     osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
     if (trackball) {
@@ -907,6 +956,10 @@ void MainWindow::initializeUi()
 QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
 {
     switch (mode) {
+        case GraphScene::PHOTOMETRY_DISPLAY: {
+            return "Photometry";
+            break;
+        }
         case GraphScene::NORMAL_DISPLAY: {
             return "Normal";
             break;
@@ -1103,7 +1156,10 @@ void MainWindow::updateCameraPosition()
 void MainWindow::createTable()
 {
     float gamma = ui_->logPlotGroupBox->isChecked() ? ui_->logPlotBaseSlider->value() : 1.0f;
-    ui_->tableGraphicsView->createTable(ui_->wavelengthSlider->value(), gamma);
+
+    bool photometric = (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY);
+
+    ui_->tableGraphicsView->createTable(ui_->wavelengthSlider->value(), gamma, photometric);
 }
 
 void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,

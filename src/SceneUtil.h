@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2017 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -23,6 +23,7 @@
 #include <QtGui/QColor>
 
 #include <libbsdf/Brdf/Brdf.h>
+#include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/Utility.h>
 
 /*! Node mask types. */
@@ -59,6 +60,11 @@ inline osg::Vec4d correctGamma(const osg::Vec4d& color, double gamma)
                       std::pow(color.y(), 1.0 / gamma),
                       std::pow(color.z(), 1.0 / gamma), color.w());
 }
+
+/*! Converts from a spectrum or RGB to Y of CIE-XYZ. */
+float spectrumToY(const lb::Spectrum&   spectrum,
+                  lb::ColorModel        colorModel,
+                  const lb::Arrayf&     wavelengths);
 
 /*! Calculates RGB using hue rotation. */
 inline osg::Vec3 hueToRgb(float hue)
@@ -168,6 +174,7 @@ osg::Geometry* createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                       bool              useLogPlot,
                                       float             baseOfLogarithm,
                                       lb::DataType      dataType,
+                                      bool              photometric,
                                       int               numTheta = 361,
                                       int               numPhi = 361);
 
