@@ -836,18 +836,6 @@ void MainWindow::initializeUi()
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
 
-    ui_->incomingPolarAngleSlider->setMaximum(data_->getNumInTheta() - 1);
-    ui_->incomingPolarAngleSlider->setValue(0);
-    updateIncomingPolarAngle(0);
-
-    ui_->incomingAzimuthalAngleSlider->setMaximum(data_->getNumInPhi() - 1);
-    ui_->incomingAzimuthalAngleSlider->setValue(0);
-    updateIncomingAzimuthalAngle(0);
-
-    ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
-    ui_->wavelengthSlider->setValue(0);
-    updateWavelength(0);
-
     if (data_->getColorModel() != lb::RGB_MODEL &&
         data_->getColorModel() != lb::SPECTRAL_MODEL) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)));
@@ -886,6 +874,18 @@ void MainWindow::initializeUi()
     else {
         updateDisplayMode(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
     }
+
+    ui_->incomingPolarAngleSlider->setMaximum(data_->getNumInTheta() - 1);
+    ui_->incomingPolarAngleSlider->setValue(0);
+    updateIncomingPolarAngle(0);
+
+    ui_->incomingAzimuthalAngleSlider->setMaximum(data_->getNumInPhi() - 1);
+    ui_->incomingAzimuthalAngleSlider->setValue(0);
+    updateIncomingAzimuthalAngle(0);
+
+    ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
+    ui_->wavelengthSlider->setValue(0);
+    updateWavelength(0);
 
     osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
     if (trackball) {
