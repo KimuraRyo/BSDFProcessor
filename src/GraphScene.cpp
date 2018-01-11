@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -490,8 +490,8 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
         return;
     }
 
-    float lineWidth = 2.0f;
-    GLint stippleFactor = 1;
+    const float lineWidth = 2.0f;
+    const GLint stippleFactor = 1;
 
     float angleLength = 0.5f;
     if (useLogPlot_){
@@ -522,11 +522,9 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
     // Update the line of an outgoing direction.
     {
-        osg::Vec3 dir= modifyDirLineLength(outDir, wavelengthIndex);
-        if (data_->getBtdf()) {
-            dir = -dir;
-        }
-        else if (data_->getSpecularTransmittances()) {
+        osg::Vec3 dir = modifyDirLineLength(outDir, wavelengthIndex);
+        if (data_->getBtdf() ||
+            data_->getSpecularTransmittances()) {
             dir.z() = -dir.z();
         }
 
