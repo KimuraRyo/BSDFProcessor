@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -836,8 +836,11 @@ void MainWindow::initializeUi()
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
 
-    if (data_->getColorModel() != lb::RGB_MODEL &&
-        data_->getColorModel() != lb::SPECTRAL_MODEL) {
+    bool photometryDisabled = (data_->getColorModel() != lb::RGB_MODEL &&
+                               data_->getColorModel() != lb::SPECTRAL_MODEL) ||
+                              data_->getNumWavelengths() == 1;
+
+    if (photometryDisabled) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)));
     }
 
@@ -867,8 +870,7 @@ void MainWindow::initializeUi()
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)));
     }
 
-    if (data_->getColorModel() == lb::RGB_MODEL ||
-        data_->getColorModel() == lb::SPECTRAL_MODEL) {
+    if (!photometryDisabled) {
         updateDisplayMode(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY));
     }
     else {
