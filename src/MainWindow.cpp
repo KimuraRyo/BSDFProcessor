@@ -54,6 +54,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     reflectanceModelDockWidget_ = new ReflectanceModelDockWidget(ui_->centralWidget);
     smoothDockWidget_           = new SmoothDockWidget(ui_->centralWidget);
+    insertAngleDockWidget_      = new InsertIncomingAzimuthalAngleDockWidget(ui_->centralWidget);
 
     osgDB::Registry::instance()->setBuildKdTreesHint(osgDB::ReaderWriter::Options::BUILD_KDTREES);
 
@@ -75,6 +76,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     addDockWidget(Qt::LeftDockWidgetArea, smoothDockWidget_);
     smoothDockWidget_->hide();
+
+    addDockWidget(Qt::LeftDockWidgetArea, insertAngleDockWidget_);
+    insertAngleDockWidget_->hide();
 
     ui_->statusbar->hide();
 
@@ -222,6 +226,23 @@ void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
     ui_->logPlotGroupBox->setEnabled(true);
     ui_->tableGraphicsView->fitView(0.9);
     displayReflectance();
+}
+
+void MainWindow::setupBrdf(lb::Brdf* brdf)
+{
+    lb::DataType dataType;
+    if (data_->getBrdf()) {
+        dataType = lb::BRDF_DATA;
+    }
+    else if (data_->getBtdf()) {
+        dataType = lb::BTDF_DATA;
+    }
+    else {
+        std::cerr << "[MainWindow::setupBrdf] Invalid data type." << std::endl;
+        return;
+    }
+    
+    setupBrdf(brdf, dataType);
 }
 
 void MainWindow::updateBrdf()
@@ -785,6 +806,7 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());
 
     ui_->processorsMenu->addAction(smoothDockWidget_->toggleViewAction());
+    ui_->processorsMenu->addAction(insertAngleDockWidget_->toggleViewAction());
 
     ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL + Qt::Key_T);
 
@@ -817,6 +839,9 @@ void MainWindow::createActions()
 
     connect(smoothDockWidget_, SIGNAL(processed()),
             this, SLOT(updateBrdf()));
+
+    connect(insertAngleDockWidget_, SIGNAL(processed(lb::Brdf*)),
+            this, SLOT(setupBrdf(lb::Brdf*)));
 
     connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
 }
@@ -923,6 +948,15 @@ void MainWindow::initializeUi()
         smoothDockWidget_->setDisabled(true);
     }
 
+    if ((data_->getBrdf() || data_->getBtdf()) && data_->isInDirDependentCoordinateSystem()) {
+        ui_->editorDockWidget->setEnabled(true);
+        insertAngleDockWidget_->setEnabled(true);
+    }
+    else {
+        ui_->editorDockWidget->setDisabled(true);
+        insertAngleDockWidget_->setDisabled(true);
+    }
+
     // Avoid to perform functions invoked by emitting signals.
     signalEmittedFromUi_ = false;
     ui_->glossyIntensitySlider->setValue(ui_->glossyIntensitySlider->maximum() / 2);
@@ -952,6 +986,7 @@ void MainWindow::initializeUi()
 
     if (brdf) {
         smoothDockWidget_->setBrdf(brdf);
+        insertAngleDockWidget_->setBrdf(brdf);
     }
 }
 

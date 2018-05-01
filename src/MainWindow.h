@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -13,6 +13,7 @@
 
 #include "GraphScene.h"
 #include "GraphWidget.h"
+#include "InsertIncomingAzimuthalAngleDockWidget.h"
 #include "MaterialData.h"
 #include "ReflectanceModelDockWidget.h"
 #include "SmoothDockWidget.h"
@@ -38,7 +39,8 @@ public slots:
     void openFile(const QString& fileName);
 
 private slots:
-    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType = lb::BRDF_DATA);
+    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType);
+    void setupBrdf(lb::Brdf* brdf);
     void updateBrdf();
 
     void openBxdfUsingDialog();
@@ -129,8 +131,9 @@ private:
     /*! This attribute holds whether a slot function is invoked by the signal from UI. */
     bool signalEmittedFromUi_;
 
-    ReflectanceModelDockWidget* reflectanceModelDockWidget_;
-    SmoothDockWidget*           smoothDockWidget_;
+    ReflectanceModelDockWidget*             reflectanceModelDockWidget_;
+    SmoothDockWidget*                       smoothDockWidget_;
+    InsertIncomingAzimuthalAngleDockWidget* insertAngleDockWidget_;
 
     Ui::MainWindowBase* ui_;
 };
