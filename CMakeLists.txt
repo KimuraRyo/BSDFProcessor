@@ -1,14 +1,20 @@
 ## =================================================================== ##
-## Copyright (C) 2014-2016 Kimura Ryo                                  ##
+## Copyright (C) 2014-2018 Kimura Ryo                                  ##
 ##                                                                     ##
 ## This Source Code Form is subject to the terms of the Mozilla Public ##
 ## License, v. 2.0. If a copy of the MPL was not distributed with this ##
 ## file, You can obtain one at http://mozilla.org/MPL/2.0/.            ##
 ## =================================================================== ##
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.0.0)
+
+# Let AUTOMOC and AUTOUIC process GENERATED files.
+cmake_policy(SET CMP0071 NEW)
 
 if(NOT LIBBSDF_DIR)
+    set(LIBBSDF_CORE_FOLDER_NAME "libbsdf Core")
+    set(LIBBSDF_APPLICATION_FOLDER_NAME "libbsdf Applications")
+
     set(LIBBSDF_DIR ../libbsdf)
     add_subdirectory(${LIBBSDF_DIR} LibbsdfBin)
 endif()
