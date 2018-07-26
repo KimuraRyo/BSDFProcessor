@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -29,7 +29,9 @@
 #include <osgQt/QFontImplementation>
 #include <osgText/FadeText>
 #include <osgText/Font>
+#include <osgUtil/SmoothingVisitor>
 
+#include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/SpecularCoordinateSystem.h>
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
@@ -555,8 +557,21 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setName("meshGeom");
 
-    float thetaInterval = CoordSysT::MAX_ANGLE2 / (numTheta - 1);
-    float phiInterval   = CoordSysT::MAX_ANGLE3 / (numPhi - 1);
+    lb::Arrayf thetaAngles  = lb::Arrayf::LinSpaced(numTheta,   0.0, CoordSysT::MAX_ANGLE2);
+    lb::Arrayf phiAngles    = lb::Arrayf::LinSpaced(numPhi,     0.0, CoordSysT::MAX_ANGLE3);
+
+    // Create narrow intervals near specular directions.
+    // Generated meshes are noisy a little.
+    const lb::SpecularCoordinatesBrdf* spBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf);
+    if (spBrdf &&
+        spBrdf->getNumSpecTheta() >= 2 &&
+        lb::toDegree(spBrdf->getSpecTheta(1) - spBrdf->getSpecTheta(0)) < 0.1f) {
+        for (int i = 1; i < thetaAngles.size() - 1; ++i) {
+            lb::Arrayf::Scalar ratio = thetaAngles[i] / CoordSysT::MAX_ANGLE2;
+            ratio = std::pow(ratio, static_cast<lb::Arrayf::Scalar>(1.2));
+            thetaAngles[i] = ratio * CoordSysT::MAX_ANGLE2;
+        }
+    }
 
     std::vector<lb::Vec3, Eigen::aligned_allocator<lb::Vec3> > positions;
     positions.reserve(numTheta * numPhi);
@@ -566,14 +581,8 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     // Create outgoing directions.
     for (int phIndex = 0; phIndex < numPhi;   ++phIndex) {
     for (int thIndex = 0; thIndex < numTheta; ++thIndex) {
-        float theta = thetaInterval * thIndex;
-        float phi   = phiInterval   * phIndex;
-
-        theta = lb::clamp(theta, 0.0f, CoordSysT::MAX_ANGLE2);
-        phi   = lb::clamp(phi,   0.0f, CoordSysT::MAX_ANGLE3);
-
         lb::Vec3 inDir, outDir;
-        CoordSysT::toXyz(inTheta, inPhi, theta, phi, &inDir, &outDir);
+        CoordSysT::toXyz(inTheta, inPhi, thetaAngles[thIndex], phiAngles[phIndex], &inDir, &outDir);
 
         if (outDir[2] < 0.0) {
             outDir[2] = 0.0;
@@ -690,6 +699,9 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         geom->setColorArray(colors, osg::Array::BIND_OVERALL);
     }
 
+    //osgUtil::SmoothingVisitor sv;
+    //sv.smooth(*geom);
+
     return geom.release();
 }
 
@@ -727,7 +739,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
 
         if (outDir[2] < -lb::EPSILON_F) continue;
 
-        float brdfValue = brdf.getSpectrum(inDir, outDir)[wavelengthIndex];
+        float brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
         if (brdfValue <= 0.0f) continue;
 
         if (useLogPlot) {
@@ -742,7 +754,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
     }}
 
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
-    geom->setName("pointGeom");
+    //geom->setName("pointGeom");
 
     osg::StateSet* stateSet = geom->getOrCreateStateSet();
 
@@ -840,7 +852,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
     // Add points.
     {
         osg::Geometry* pointGeom = new osg::Geometry;
-        pointGeom->setName("pointGeom");
+        //pointGeom->setName("pointGeom");
 
         pointGeom->setVertexArray(pointVertices);
         pointGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, pointVertices->size()));
@@ -909,7 +921,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
         }
 
         osg::Geometry* lineGeom = new osg::Geometry;
-        lineGeom->setName("lineGeom");
+        //lineGeom->setName("lineGeom");
 
         lineGeom->setVertexArray(lineVertices);
         lineGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP, 0, lineVertices->size()));
