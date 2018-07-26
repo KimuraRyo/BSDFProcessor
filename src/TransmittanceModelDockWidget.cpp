@@ -1,12 +1,12 @@
 // =================================================================== //
-// Copyright (C) 2016-2018 Kimura Ryo                                  //
+// Copyright (C) 2018 Kimura Ryo                                       //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.            //
 // =================================================================== //
 
-#include "ReflectanceModelDockWidget.h"
+#include "TransmittanceModelDockWidget.h"
 
 #include <iostream>
 
@@ -16,25 +16,14 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
-#include <libbsdf/ReflectanceModel/AshikhminShirley.h>
-#include <libbsdf/ReflectanceModel/BlinnPhong.h>
-#include <libbsdf/ReflectanceModel/CookTorrance.h>
-#include <libbsdf/ReflectanceModel/Disney.h>
 #include <libbsdf/ReflectanceModel/GGX.h>
 #include <libbsdf/ReflectanceModel/GgxAnisotropic.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
-#include <libbsdf/ReflectanceModel/Minnaert.h>
-#include <libbsdf/ReflectanceModel/ModifiedPhong.h>
 #include <libbsdf/ReflectanceModel/MultipleScatteringSmith.h>
-#include <libbsdf/ReflectanceModel/OrenNayar.h>
-#include <libbsdf/ReflectanceModel/Phong.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
-#include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
-#include <libbsdf/ReflectanceModel/WardAnisotropic.h>
-#include <libbsdf/ReflectanceModel/WardIsotropic.h>
 
-ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
-                                                       : AnalyticBsdfDockWidget(parent)
+TransmittanceModelDockWidget::TransmittanceModelDockWidget(QWidget* parent)
+                                                           : AnalyticBsdfDockWidget(parent)
 {
     initializeReflectanceModels();
     updateParameterWidget(0);
@@ -50,9 +39,9 @@ ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
     connect(ui_->generateBrdfPushButton, SIGNAL(clicked()), this, SLOT(generateBrdf()));
 }
 
-void ReflectanceModelDockWidget::generateBrdf()
+void TransmittanceModelDockWidget::generateBrdf()
 {
-    std::cout << "[ReflectanceModelDockWidget::generateBrdf]" << std::endl;
+    std::cout << "[TransmittanceModelDockWidget::generateBrdf]" << std::endl;
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
@@ -60,41 +49,66 @@ void ReflectanceModelDockWidget::generateBrdf()
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
 
     lb::Brdf* brdf = initializeBrdf(model->isIsotropic());
-    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf);
+
+    bool iorUsed = (dynamic_cast<lb::Ggx*>(model) ||
+                    dynamic_cast<lb::GgxAnisotropic*>(model) ||
+                    dynamic_cast<lb::MultipleScatteringSmith*>(model));
+
+    lb::SpecularCoordinatesBrdf* specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf);
+
+    // Offset specular directions for refraction.
+    if (iorUsed && specBrdf) {
+        bool found = false;
+
+        lb::ReflectanceModel::Parameters& params = model->getParameters();
+        for (auto it = params.begin(); it != params.end(); ++it) {
+            if (it->getName() == "Refractive index") {
+                float ior = *it->getFloat();
+                for (int i = 0; i < specBrdf->getNumInTheta(); ++i) {
+                    float inTheta = specBrdf->getInTheta(i);
+                    float sinT = std::min(std::sin(inTheta) / ior, 1.0f);
+                    float refractedTheta = std::asin(sinT);
+                    specBrdf->setSpecularOffset(i, refractedTheta - inTheta);
+                }
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            std::cerr
+                << "[TransmittanceModelDockWidget::generateBrdf] \"Refractive index\" is not found."
+                << std::endl;
+        }
+    }
+
+    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf, lb::BTDF_DATA);
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[ReflectanceModelDockWidget::generateBrdf] " << delta << "(s)" << std::endl;
+    std::cout << "[TransmittanceModelDockWidget::generateBrdf] " << delta << "(s)" << std::endl;
 
-    emit generated(brdf, lb::BRDF_DATA);
+    emit generated(brdf, lb::BTDF_DATA);
     emit generated();
 }
 
-void ReflectanceModelDockWidget::initializeReflectanceModels()
+void TransmittanceModelDockWidget::initializeReflectanceModels()
 {
     std::vector<lb::ReflectanceModel*> models;
 
     lb::Vec3 white(1.0, 1.0, 1.0);
     lb::Vec3 black(0.0, 0.0, 0.0);
-    models.push_back(new lb::AshikhminShirley(white, black, 100.0f, 20.0f));
-    models.push_back(new lb::BlinnPhong(white, 40.0f));
-    models.push_back(new lb::CookTorrance(white, 0.3f));
-    models.push_back(new lb::Disney(white, black, 0.2f, 0.4f));
+#if !defined(LIBBSDF_USE_COLOR_INSTEAD_OF_REFRACTIVE_INDEX)
     models.push_back(new lb::Ggx(white, 0.3f));
-    models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f));
+    models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f, 1.5f, 0.0f));
+#endif
     models.push_back(new lb::Lambertian(white));
-    models.push_back(new lb::Minnaert(white, 1.5f));
-    models.push_back(new lb::ModifiedPhong(white, 10.0f));
     models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
                                                      static_cast<int>(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
                                                      static_cast<int>(lb::MultipleScatteringSmith::GAUSSIAN_HEIGHT),
                                                      static_cast<int>(lb::MultipleScatteringSmith::BECKMANN_SLOPE),
                                                      10));
-    models.push_back(new lb::OrenNayar(white, 0.3f));
-    models.push_back(new lb::Phong(white, 10.0f));
-    models.push_back(new lb::SimplifiedOrenNayar(white, 0.3f));
-    models.push_back(new lb::WardAnisotropic(white, 0.05f, 0.2f));
-    models.push_back(new lb::WardIsotropic(white, 0.2f));
 
     for (auto it = models.begin(); it != models.end(); ++it) {
         reflectanceModels_[(*it)->getName()] = *it;

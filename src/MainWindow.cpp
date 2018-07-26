@@ -38,6 +38,8 @@
 
 #include <libbsdf/Writer/DdrWriter.h>
 
+#include <libbsdf/ReflectanceModel/Fresnel.h>
+
 #include "AboutDialog.h"
 #include "OpenAstmDialog.h"
 #include "OpenLightToolsBsdfDialog.h"
@@ -52,9 +54,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 {
     ui_->setupUi(this);
 
-    reflectanceModelDockWidget_ = new ReflectanceModelDockWidget(ui_->centralWidget);
-    smoothDockWidget_           = new SmoothDockWidget(ui_->centralWidget);
-    insertAngleDockWidget_      = new InsertIncomingAzimuthalAngleDockWidget(ui_->centralWidget);
+    reflectanceModelDockWidget_     = new ReflectanceModelDockWidget(ui_->centralWidget);
+    transmittanceModelDockWidget_   = new TransmittanceModelDockWidget(ui_->centralWidget);
+    smoothDockWidget_               = new SmoothDockWidget(ui_->centralWidget);
+    insertAngleDockWidget_          = new InsertIncomingAzimuthalAngleDockWidget(ui_->centralWidget);
+
+    transmittanceModelDockWidget_->setWindowTitle("Transmittance model");
 
     osgDB::Registry::instance()->setBuildKdTreesHint(osgDB::ReaderWriter::Options::BUILD_KDTREES);
 
@@ -73,6 +78,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     addDockWidget(Qt::LeftDockWidgetArea, reflectanceModelDockWidget_);
     reflectanceModelDockWidget_->hide();
+
+    addDockWidget(Qt::LeftDockWidgetArea, transmittanceModelDockWidget_);
+    transmittanceModelDockWidget_->hide();
 
     addDockWidget(Qt::LeftDockWidgetArea, smoothDockWidget_);
     smoothDockWidget_->hide();
@@ -96,7 +104,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
         graphScene_->setCameraManipulator(getMainView()->getCameraManipulator());
         getMainView()->setSceneData(graphScene_->getRoot());
         graphWidget_->setGraphScene(graphScene_);
-        
+
         ui_->tableGraphicsView->setMaterialData(data_);
     }
 
@@ -804,6 +812,7 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(ui_->tableDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());
+    ui_->viewMenu->addAction(transmittanceModelDockWidget_->toggleViewAction());
 
     ui_->processorsMenu->addAction(smoothDockWidget_->toggleViewAction());
     ui_->processorsMenu->addAction(insertAngleDockWidget_->toggleViewAction());
@@ -835,6 +844,11 @@ void MainWindow::createActions()
     connect(reflectanceModelDockWidget_, SIGNAL(generated(lb::Brdf*, lb::DataType)),
             this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
     connect(reflectanceModelDockWidget_, SIGNAL(generated()),
+            this, SLOT(clearFileType()));
+
+    connect(transmittanceModelDockWidget_, SIGNAL(generated(lb::Brdf*, lb::DataType)),
+            this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
+    connect(transmittanceModelDockWidget_, SIGNAL(generated()),
             this, SLOT(clearFileType()));
 
     connect(smoothDockWidget_, SIGNAL(processed()),
@@ -1142,7 +1156,7 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     lb::HalfDifferenceCoordinatesBrdf* brdf = lb::MerlBinaryReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    setupBrdf(brdf);
+    setupBrdf(brdf, lb::BRDF_DATA);
 
     return true;
 }

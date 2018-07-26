@@ -16,6 +16,7 @@
 #include "InsertIncomingAzimuthalAngleDockWidget.h"
 #include "MaterialData.h"
 #include "ReflectanceModelDockWidget.h"
+#include "TransmittanceModelDockWidget.h"
 #include "SmoothDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
@@ -132,6 +133,7 @@ private:
     bool signalEmittedFromUi_;
 
     ReflectanceModelDockWidget*             reflectanceModelDockWidget_;
+    TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;
     InsertIncomingAzimuthalAngleDockWidget* insertAngleDockWidget_;
 
