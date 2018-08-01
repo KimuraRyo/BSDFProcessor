@@ -425,8 +425,16 @@ osgText::Text* scene_util::createTextLabel(const std::string&           textStri
     text->setAlignment(alignment);
     text->setColor(color);
     text->setFont(font);
+
+#if OSG_VERSION_GREATER_OR_EQUAL(3, 6, 0)
+    text->setCharacterSize(18.0f);
+    text->setFontResolution(32, 32);
+#else
     text->setCharacterSize(28.0f);
     text->setFontResolution(28, 28);
+#endif
+
+    text->setAxisAlignment(osgText::Text::SCREEN);
     text->setCharacterSizeMode(osgText::Text::SCREEN_COORDS);
     text->setAutoRotateToScreen(true);
 
