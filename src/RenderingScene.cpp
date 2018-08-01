@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -222,7 +222,7 @@ void RenderingScene::attachRenderingShader(osg::Node* node)
         "    vec3 c0 = cross(N, vec3(0.0, 0.0, 1.0));\n"
         "    vec3 c1 = cross(N, vec3(0.0, 1.0, 0.0));\n"
         //"    vec3 T = (length(c0) > length(c1)) ? c0 : c1;\n"
-        "    vec3 T = (abs(N) != vec3(0.0, 0.0, 1.0)) ? c0 : c1;\n"
+        "    vec3 T = (abs(N.z) < 0.9999999) ? c0 : c1;\n"
         "    T = normalize(T);\n"
         "    vec3 B = normalize(cross(T, N));\n"
         "\n"
