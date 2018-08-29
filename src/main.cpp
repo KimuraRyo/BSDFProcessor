@@ -14,6 +14,7 @@
 int main(int argc, char** argv)
 {
     QLocale::setDefault(QLocale::system());
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QApplication app(argc, argv);
     MainWindow* mainWindow = new MainWindow(0);
