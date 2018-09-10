@@ -83,7 +83,7 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::Ggx(white, 0.3f));
     models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f));
     models.push_back(new lb::Lambertian(white));
-    models.push_back(new lb::Minnaert(white, 1.5f));
+    models.push_back(new lb::Minnaert(white, 0.83f));
     models.push_back(new lb::ModifiedPhong(white, 10.0f));
     models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
                                                      static_cast<int>(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
