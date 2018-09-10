@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -25,7 +25,7 @@ namespace lb
 class TableView : public QGraphicsView
 {
     Q_OBJECT
-    
+
 public:
     explicit TableView(QWidget* parent = 0);
 
@@ -44,8 +44,8 @@ private:
     Q_DISABLE_COPY(TableView)
 
     void createBrdfTable(int wavelengthIndex);
-    void createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex);
-    void createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex);
+    void createBrdfDataItems(int wavelengthIndex);
+    void createBrdfDataPixmapItem(int wavelengthIndex);
 
     void createBrdfAngleItems(const lb::SampleSet* ss);
 
@@ -68,11 +68,21 @@ private:
     QGraphicsScene* graphicsScene_;
 
     QAction* actionFitView_;
+    QAction* actionShowBackSide_;
 
     MaterialData* data_;
 
-    float gamma_;
-    bool photometric_;
+    int     wavelengthIndex_;
+    float   gamma_;
+    bool    photometric_;
+    bool    backSideShown_;
+
+private slots:
+    void changeBackSideVisibility()
+    {
+        backSideShown_ = !backSideShown_;
+        createTable(wavelengthIndex_, gamma_, photometric_);
+    }
 };
 
 #endif // TABLE_VIEW_H

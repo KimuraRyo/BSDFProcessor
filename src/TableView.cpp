@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -14,6 +14,7 @@
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/Btdf.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
+#include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
 #include <libbsdf/Common/Utility.h>
 #include <libbsdf/Common/SpectrumUtility.h>
@@ -23,11 +24,16 @@
 #include "SceneUtil.h"
 
 TableView::TableView(QWidget* parent) : QGraphicsView(parent),
-                                        data_(0)
+                                        data_(0),
+                                        backSideShown_(true)
 {
     actionFitView_ = new QAction(this);
     actionFitView_->setText(QApplication::translate("TableView", "Fit in view", 0));
     connect(actionFitView_, SIGNAL(triggered()), this, SLOT(fitView()));
+
+    actionShowBackSide_ = new QAction(this);
+    actionShowBackSide_->setText(QApplication::translate("TableView", "Show/Hide back side samples", 0));
+    connect(actionShowBackSide_, SIGNAL(triggered()), this, SLOT(changeBackSideVisibility()));
 
     graphicsScene_ = new QGraphicsScene;
     setScene(graphicsScene_);
@@ -37,8 +43,25 @@ void TableView::createTable(int wavelengthIndex, float gamma, bool photometric)
 {
     if (!data_) return;
 
+    wavelengthIndex_ = wavelengthIndex;
     gamma_ = gamma;
     photometric_ = photometric;
+
+    const lb::Brdf* brdf = 0;
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
+    }
+    else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
+    }
+
+    if (!brdf ||
+        (brdf && dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf))) {
+        actionShowBackSide_->setDisabled(true);
+    }
+    else {
+        actionShowBackSide_->setEnabled(true);
+    }
 
     graphicsScene_->clear();
 
@@ -60,17 +83,31 @@ void TableView::createBrdfTable(int wavelengthIndex)
 
     int numSamples = ss->getNumAngles0() * ss->getNumAngles1() * ss->getNumAngles2() * ss->getNumAngles3();
     if (numSamples < 100000) {
-        createBrdfDataItems(ss, wavelengthIndex);
+        createBrdfDataItems(wavelengthIndex);
     }
     else {
-        createBrdfDataPixmapItem(ss, wavelengthIndex);
+        createBrdfDataPixmapItem(wavelengthIndex);
     }
 
     createBrdfAngleItems(ss);
 }
 
-void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex)
+void TableView::createBrdfDataItems(int wavelengthIndex)
 {
+    const lb::Brdf* brdf = 0;
+    const lb::SampleSet2D* ss2 = 0;
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
+    }
+    else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
+    }
+    else {
+        return;
+    }
+
+    const lb::SampleSet* ss = brdf->getSampleSet();
+
     int num0 = ss->getNumAngles0();
     int num1 = ss->getNumAngles1();
     int num2 = ss->getNumAngles2();
@@ -83,6 +120,14 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex
     for (int i1 = 0; i1 < num1; ++i1) {
     for (int i2 = 0; i2 < num2; ++i2) {
     for (int i3 = 0; i3 < num3; ++i3) {
+        if (!backSideShown_) {
+            lb::Vec3 inDir, outDir;
+            brdf->getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
+            if (lb::isDownwardDir(inDir) || lb::isDownwardDir(outDir)) {
+                continue;
+            }
+        }
+
         float sampleValue = getSampleValue(ss->getSpectrum(i0, i1, i2, i3),
                                            ss->getColorModel(),
                                            ss->getWavelengths(),
@@ -119,8 +164,22 @@ void TableView::createBrdfDataItems(const lb::SampleSet* ss, int wavelengthIndex
     }
 }
 
-void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelengthIndex)
+void TableView::createBrdfDataPixmapItem(int wavelengthIndex)
 {
+    const lb::Brdf* brdf = 0;
+    const lb::SampleSet2D* ss2 = 0;
+    if (data_->getBrdf()) {
+        brdf = data_->getBrdf();
+    }
+    else if (data_->getBtdf()) {
+        brdf = data_->getBtdf()->getBrdf();
+    }
+    else {
+        return;
+    }
+
+    const lb::SampleSet* ss = brdf->getSampleSet();
+
     int num0 = ss->getNumAngles0();
     int num1 = ss->getNumAngles1();
     int num2 = ss->getNumAngles2();
@@ -132,10 +191,19 @@ void TableView::createBrdfDataPixmapItem(const lb::SampleSet* ss, int wavelength
     for (int i0 = 0; i0 < num0; ++i0) {
     for (int i1 = 0; i1 < num1; ++i1) {
     for (int i2 = 0; i2 < num2; ++i2) {
+        lb::Vec3 inDir, outDir;
         float sampleValue, maxValue;
         int color;
-        #pragma omp parallel for private(sampleValue, maxValue, color)
+        #pragma omp parallel for private(sampleValue, maxValue, color, inDir, outDir)
         for (int i3 = 0; i3 < num3; ++i3) {
+            if (!backSideShown_) {
+                brdf->getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
+                if (lb::isDownwardDir(inDir) || lb::isDownwardDir(outDir)) {
+                    image->setPixel(i2 + num2 * i0, i3 + num3 * i1, backgroundBrush().color().rgb());
+                    continue;
+                }
+            }
+
             sampleValue = getSampleValue(ss->getSpectrum(i0, i1, i2, i3),
                                          ss->getColorModel(),
                                          ss->getWavelengths(),
@@ -335,9 +403,9 @@ void TableView::paintEvent(QPaintEvent* event)
     if (brdf) {
         const lb::SampleSet* ss = brdf->getSampleSet();
 
-        int numAngle0 = ss->getNumAngles1();
+        int numAngle1 = ss->getNumAngles1();
 
-        if (numAngle0 == 1) {
+        if (numAngle1 == 1) {
             painter.translate(angleNameRect.height() + 1, 1);
         }
         else {
@@ -356,7 +424,7 @@ void TableView::paintEvent(QPaintEvent* event)
         painter.resetTransform();
         painter.rotate(-90.0);
 
-        if (numAngle0 == 1) {
+        if (numAngle1 == 1) {
             painter.translate(-angleNameRect.width() - angleNameRect.height() * 2 - 1, -angleNameRect.height() + 1);
         }
         else {
@@ -414,5 +482,6 @@ void TableView::contextMenuEvent(QContextMenuEvent* event)
 {
     QMenu menu(this);
     menu.addAction(actionFitView_);
+    menu.addAction(actionShowBackSide_);
     menu.exec(event->globalPos());
 }
