@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2017 Kimura Ryo                                  //
+// Copyright (C) 2016-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -12,6 +12,8 @@
 
 #include <QThread>
 
+
+#include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Processor.h>
 #include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
@@ -29,6 +31,7 @@ MaterialData::MaterialData() : origBrdf_(0),
                                reflectancesComputed_(false)
 {
     integrator_ = new lb::Integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
+    //integrator_ = new lb::Integrator(10000000, false);
 }
 
 MaterialData::~MaterialData()
@@ -260,11 +263,11 @@ void MaterialData::editBrdf(lb::Spectrum::Scalar    glossyIntensity,
 
     if (!origBrdf_) {
         origBrdf_ = brdf->clone();
-        diffuseThresholds_ = findDiffuseThresholds(*origBrdf_, lb::toRadian(60.0f));
+        diffuseThresholds_ = lb::findDiffuseThresholds(*origBrdf_, lb::toRadian(60.0f));
     }
 
-    editBrdf(*origBrdf_, brdf, diffuseThresholds_,
-             glossyIntensity, glossyShininess, diffuseIntensity);
+    lb::editComponents(*origBrdf_, brdf, diffuseThresholds_,
+                       glossyIntensity, glossyShininess, diffuseIntensity);
 
     computeReflectances();
 
@@ -275,104 +278,6 @@ void MaterialData::handleReflectances()
 {
     reflectancesComputed_ = true;
     emit computed();
-}
-
-lb::Spectrum MaterialData::findDiffuseThresholds(const lb::Brdf&    brdf,
-                                                 float              maxPolarAngle)
-{
-    const lb::SampleSet* ss = brdf.getSampleSet();
-
-    lb::Spectrum thresholds(ss->getNumWavelengths());
-    thresholds.fill(std::numeric_limits<lb::Spectrum::Scalar>::max());
-
-    for (int i0 = 0; i0 < ss->getNumAngles0(); ++i0) {
-    for (int i1 = 0; i1 < ss->getNumAngles1(); ++i1) {
-    for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
-    for (int i3 = 0; i3 < ss->getNumAngles3(); ++i3) {
-        lb::Vec3 inDir, outDir;
-        brdf.getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
-
-        float inTheta = std::acos(inDir[2]);
-        float outTheta = std::acos(outDir[2]);
-
-        if (inTheta <= maxPolarAngle && outTheta <= maxPolarAngle) {
-            thresholds = thresholds.cwiseMin(ss->getSpectrum(i0, i1, i2, i3));
-        }
-    }}}}
-
-    thresholds = thresholds.cwiseMax(0.0);
-
-    return thresholds;
-}
-
-void MaterialData::editBrdf(const lb::Brdf&         origBrdf,
-                            lb::Brdf*               brdf,
-                            const lb::Spectrum&     diffuseThresholds,
-                            lb::Spectrum::Scalar    glossyIntensity,
-                            lb::Spectrum::Scalar    glossyShininess,
-                            lb::Spectrum::Scalar    diffuseIntensity)
-{
-    const lb::SampleSet* ss = brdf->getSampleSet();
-
-    for (int i0 = 0; i0 < ss->getNumAngles0(); ++i0) {
-    for (int i1 = 0; i1 < ss->getNumAngles1(); ++i1) {
-    for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
-    #pragma omp parallel for
-    for (int i3 = 0; i3 < ss->getNumAngles3(); ++i3) {
-        editBrdf(i0, i1, i2, i3,
-                 origBrdf, brdf,
-                 diffuseThresholds,
-                 glossyIntensity, glossyShininess, diffuseIntensity);
-    }}}}
-
-    brdf->setSourceType(lb::EDITED_SOURCE);
-}
-
-void MaterialData::editBrdf(int i0, int i1, int i2, int i3,
-                            const lb::Brdf&         origBrdf,
-                            lb::Brdf*               brdf,
-                            const lb::Spectrum&     diffuseThresholds,
-                            lb::Spectrum::Scalar    glossyIntensity,
-                            lb::Spectrum::Scalar    glossyShininess,
-                            lb::Spectrum::Scalar    diffuseIntensity)
-{
-    lb::SampleSet* ss = brdf->getSampleSet();
-
-    lb::Vec3 inDir, outDir;
-    brdf->getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
-
-    // Edit a BRDF with glossy shininess.
-    if (glossyShininess != 1.0) {
-        float inTh, inPh, specTh, specPh;
-        lb::SpecularCoordinateSystem::fromXyz(inDir, outDir, &inTh, &inPh, &specTh, &specPh);
-        float specThWeight = specTh / lb::SpecularCoordinateSystem::MAX_ANGLE2;
-        specThWeight = std::pow(specThWeight, 1.0f / std::max(glossyShininess, lb::EPSILON_F));
-        float newSpecTh = specThWeight * lb::SpecularCoordinateSystem::MAX_ANGLE2;
-        lb::SpecularCoordinateSystem::toXyz(inTh, inPh, newSpecTh, specPh, &inDir, &outDir);
-        
-        if (outDir[2] <= 0.0) {
-            outDir[2] = 0.0;
-        }
-        outDir.normalize();
-    }
-
-    lb::Spectrum origSp = origBrdf.getSpectrum(inDir, outDir);
-    lb::Spectrum sp(origSp.size());
-
-    // Edit a BRDF with glossy and diffuse intensity.
-    for (int i = 0; i < sp.size(); ++i) {
-        lb::Spectrum::Scalar origVal = origSp[i];
-        lb::Spectrum::Scalar threshold = diffuseThresholds[i];
-        if (origVal <= threshold) {
-            sp[i] = origVal * diffuseIntensity;
-        }
-        else {
-            lb::Spectrum::Scalar glossy = origVal - threshold;
-            sp[i] = glossy * glossyIntensity + threshold * diffuseIntensity;
-        }
-    }
-
-    ss->setSpectrum(i0, i1, i2, i3, sp);
 }
 
 lb::Spectrum MaterialData::findMaxPerWavelength(const lb::SampleSet& samples)

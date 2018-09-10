@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2017 Kimura Ryo                                  //
+// Copyright (C) 2016-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -96,24 +96,6 @@ private:
     void updateSampleSet(lb::SampleSet* ss);
 
     void computeReflectances();
-
-    static lb::Spectrum findDiffuseThresholds(const lb::Brdf&   brdf,
-                                              float             maxPolarAngle = lb::PI_2_F);
-
-    static void editBrdf(const lb::Brdf&        origBrdf,
-                         lb::Brdf*              brdf,
-                         const lb::Spectrum&    diffuseThresholds,
-                         lb::Spectrum::Scalar   glossyIntensity,
-                         lb::Spectrum::Scalar   glossyShininess,
-                         lb::Spectrum::Scalar   diffuseIntensity);
-
-    static void editBrdf(int i0, int i1, int i2, int i3,
-                         const lb::Brdf&        origBrdf,
-                         lb::Brdf*              brdf,
-                         const lb::Spectrum&    diffuseThresholds,
-                         lb::Spectrum::Scalar   glossyIntensity,
-                         lb::Spectrum::Scalar   glossyShininess,
-                         lb::Spectrum::Scalar   diffuseIntensity);
 
     std::shared_ptr<lb::Brdf> brdf_;
     std::shared_ptr<lb::Btdf> btdf_;

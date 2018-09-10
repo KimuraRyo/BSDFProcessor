@@ -745,7 +745,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
         lb::Vec3 inDir, outDir;
         brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
-        if (outDir[2] < -lb::EPSILON_F) continue;
+        if (lb::isDownwardDir(outDir)) continue;
 
         float brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
         if (brdfValue <= 0.0f) continue;
@@ -820,7 +820,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
             lb::Vec3 inDir, outDir;
             brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
-            if (outDir[2] < -lb::EPSILON_F) {
+            if (lb::isDownwardDir(outDir)) {
                 continue;
             }
 
@@ -902,7 +902,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
             lb::Vec3 inDir, outDir;
             brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
 
-            if (outDir[2] < -lb::EPSILON_F) {
+            if (lb::isDownwardDir(outDir)) {
                 if (zNegative) {
                     continue;
                 }
