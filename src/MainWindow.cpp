@@ -16,6 +16,7 @@
 #include <osg/Version>
 #include <osgDB/WriteFile>
 
+#include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/Btdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
@@ -127,6 +128,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     std::cout << "OpenSceneGraph-" << osgGetVersion() << std::endl;
     std::cout << "Qt-" << qVersion() << std::endl;
     std::cout << "Eigen-" << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << std::endl;
+    std::cout << "Eigen SIMD: " << Eigen::SimdInstructionSetsInUse() << std::endl;
 }
 
 MainWindow::~MainWindow()
@@ -394,62 +396,7 @@ void MainWindow::updateViews()
 
 void MainWindow::updateDisplayMode(QString modeName)
 {
-    if (data_->getNumInTheta() == 1) {
-        ui_->incomingPolarAngleSlider->setDisabled(true);
-    }
-    else {
-        ui_->incomingPolarAngleSlider->setEnabled(true);
-    }
-
-    if (data_->getNumInPhi() == 1) {
-        ui_->incomingAzimuthalAngleSlider->setDisabled(true);
-    }
-    else {
-        ui_->incomingAzimuthalAngleSlider->setEnabled(true);
-    }
-
-    if (data_->getNumWavelengths() == 1) {
-        ui_->wavelengthSlider->setDisabled(true);
-    }
-    else {
-        ui_->wavelengthSlider->setEnabled(true);
-    }
-    
-    ui_->pickedValueLineEdit->setEnabled(true);
-
-    if (modeName == getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::PHOTOMETRY_DISPLAY);
-        ui_->wavelengthSlider->setDisabled(true);
-    }
-    else if (modeName == getDisplayModeName(GraphScene::NORMAL_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::NORMAL_DISPLAY);
-    }
-    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY);
-        ui_->incomingPolarAngleSlider->setDisabled(true);
-        ui_->pickedValueLineEdit->setDisabled(true);
-    }
-    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY);
-        ui_->incomingAzimuthalAngleSlider->setDisabled(true);
-        ui_->pickedValueLineEdit->setDisabled(true);
-    }
-    else if (modeName == getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::ALL_WAVELENGTHS_DISPLAY);
-        ui_->wavelengthSlider->setDisabled(true);
-        ui_->pickedValueLineEdit->setDisabled(true);
-    }
-    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINTS_DISPLAY);
-    }
-    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)) {
-        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINT_LABELS_DISPLAY);
-        ui_->pickedValueLineEdit->setDisabled(true);
-    }
-    else {
-        std::cerr << "[MainWindow::updateDisplayMode] Undefined mode: " << modeName.toStdString() << std::endl;
-        return;
-    }
+    initializeDisplayModeUi(modeName);
 
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
                                      ui_->incomingAzimuthalAngleSlider->value(),
@@ -503,34 +450,7 @@ void MainWindow::updateWavelength(int index)
                                      index);
     getMainView()->requestRedraw();
 
-    if (data_->getColorModel() == lb::MONOCHROMATIC_MODEL &&
-        data_->getWavelength(index) == 0.0f) {
-        ui_->wavelengthLabel->setText("Channel:");
-        ui_->wavelengthLineEdit->clear();
-    }
-    else if (data_->getColorModel() == lb::RGB_MODEL) {
-        ui_->wavelengthLabel->setText("Channel:");
-        switch (index) {
-            case 0:  ui_->wavelengthLineEdit->setText("R"); break;
-            case 1:  ui_->wavelengthLineEdit->setText("G"); break;
-            case 2:  ui_->wavelengthLineEdit->setText("B"); break;
-            default: assert(false);
-        }
-    }
-    else if (data_->getColorModel() == lb::XYZ_MODEL) {
-        ui_->wavelengthLabel->setText("Channel:");
-        switch (index) {
-            case 0:  ui_->wavelengthLineEdit->setText("X"); break;
-            case 1:  ui_->wavelengthLineEdit->setText("Y"); break;
-            case 2:  ui_->wavelengthLineEdit->setText("Z"); break;
-            default: assert(false);
-        }
-    }
-    else {
-        float wavelength = data_->getWavelength(index);
-        ui_->wavelengthLabel->setText("Wavelength:");
-        ui_->wavelengthLineEdit->setText(QString::number(wavelength) + "nm");
-    }
+    initializeWavelengthUi(index);
 
     clearPickedValue();
     displayReflectance();
@@ -877,7 +797,7 @@ void MainWindow::initializeUi()
 
     bool photometryDisabled = (data_->getColorModel() != lb::RGB_MODEL &&
                                data_->getColorModel() != lb::SPECTRAL_MODEL) ||
-                              data_->getNumWavelengths() == 1;
+                               data_->getNumWavelengths() == 1;
 
     if (photometryDisabled) {
         comboBox->removeItem(comboBox->findText(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)));
@@ -910,23 +830,27 @@ void MainWindow::initializeUi()
     }
 
     if (!photometryDisabled) {
-        updateDisplayMode(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY));
+        initializeDisplayModeUi(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY));
     }
     else {
-        updateDisplayMode(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
+        initializeDisplayModeUi(getDisplayModeName(GraphScene::NORMAL_DISPLAY));
     }
 
     ui_->incomingPolarAngleSlider->setMaximum(data_->getNumInTheta() - 1);
     ui_->incomingPolarAngleSlider->setValue(0);
-    updateIncomingPolarAngle(0);
+    ui_->incomingPolarAngleLineEdit->setText(QString::number(0));
 
     ui_->incomingAzimuthalAngleSlider->setMaximum(data_->getNumInPhi() - 1);
     ui_->incomingAzimuthalAngleSlider->setValue(0);
-    updateIncomingAzimuthalAngle(0);
+    ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(0));
 
     ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
     ui_->wavelengthSlider->setValue(0);
-    updateWavelength(0);
+    initializeWavelengthUi(0);
+
+    graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
+                                     ui_->incomingAzimuthalAngleSlider->value(),
+                                     ui_->wavelengthSlider->value());
 
     osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
     if (trackball) {
@@ -1001,6 +925,103 @@ void MainWindow::initializeUi()
     if (brdf) {
         smoothDockWidget_->setBrdf(brdf);
         insertAngleDockWidget_->setBrdf(brdf);
+    }
+
+    clearPickedValue();
+    displayReflectance();
+
+    createTable();
+}
+
+void MainWindow::initializeDisplayModeUi(QString modeName)
+{
+    if (data_->getNumInTheta() == 1) {
+        ui_->incomingPolarAngleSlider->setDisabled(true);
+    }
+    else {
+        ui_->incomingPolarAngleSlider->setEnabled(true);
+    }
+
+    if (data_->getNumInPhi() == 1) {
+        ui_->incomingAzimuthalAngleSlider->setDisabled(true);
+    }
+    else {
+        ui_->incomingAzimuthalAngleSlider->setEnabled(true);
+    }
+
+    if (data_->getNumWavelengths() == 1) {
+        ui_->wavelengthSlider->setDisabled(true);
+    }
+    else {
+        ui_->wavelengthSlider->setEnabled(true);
+    }
+
+    ui_->pickedValueLineEdit->setEnabled(true);
+
+    if (modeName == getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::PHOTOMETRY_DISPLAY);
+        ui_->wavelengthSlider->setDisabled(true);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::NORMAL_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::NORMAL_DISPLAY);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY);
+        ui_->incomingPolarAngleSlider->setDisabled(true);
+        ui_->pickedValueLineEdit->setDisabled(true);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY);
+        ui_->incomingAzimuthalAngleSlider->setDisabled(true);
+        ui_->pickedValueLineEdit->setDisabled(true);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::ALL_WAVELENGTHS_DISPLAY);
+        ui_->wavelengthSlider->setDisabled(true);
+        ui_->pickedValueLineEdit->setDisabled(true);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINTS_DISPLAY);
+    }
+    else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)) {
+        graphScene_->setDisplayMode(GraphScene::SAMPLE_POINT_LABELS_DISPLAY);
+        ui_->pickedValueLineEdit->setDisabled(true);
+    }
+    else {
+        std::cerr << "[MainWindow::initializeDisplayModeUi] Undefined mode: " << modeName.toStdString() << std::endl;
+        return;
+    }
+}
+
+void MainWindow::initializeWavelengthUi(int index)
+{
+    if (data_->getColorModel() == lb::MONOCHROMATIC_MODEL &&
+        data_->getWavelength(index) == 0.0f) {
+        ui_->wavelengthLabel->setText("Channel:");
+        ui_->wavelengthLineEdit->clear();
+    }
+    else if (data_->getColorModel() == lb::RGB_MODEL) {
+        ui_->wavelengthLabel->setText("Channel:");
+        switch (index) {
+            case 0:  ui_->wavelengthLineEdit->setText("R"); break;
+            case 1:  ui_->wavelengthLineEdit->setText("G"); break;
+            case 2:  ui_->wavelengthLineEdit->setText("B"); break;
+            default: assert(false);
+        }
+    }
+    else if (data_->getColorModel() == lb::XYZ_MODEL) {
+        ui_->wavelengthLabel->setText("Channel:");
+        switch (index) {
+            case 0:  ui_->wavelengthLineEdit->setText("X"); break;
+            case 1:  ui_->wavelengthLineEdit->setText("Y"); break;
+            case 2:  ui_->wavelengthLineEdit->setText("Z"); break;
+            default: assert(false);
+        }
+    }
+    else {
+        float wavelength = data_->getWavelength(index);
+        ui_->wavelengthLabel->setText("Wavelength:");
+        ui_->wavelengthLineEdit->setText(QString::number(wavelength) + "nm");
     }
 }
 

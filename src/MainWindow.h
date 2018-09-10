@@ -91,6 +91,9 @@ private:
     void createActions();
 
     void initializeUi();
+    void initializeDisplayModeUi(QString modeName);
+    void initializeWavelengthUi(int index);
+
     QString getDisplayModeName(GraphScene::DisplayMode mode);
 
     bool openDdrDdt(const QString& fileName, lb::DataType dataType);
