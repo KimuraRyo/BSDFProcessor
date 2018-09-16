@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -8,6 +8,8 @@
 
 #ifndef RENDERING_WIDGET_H
 #define RENDERING_WIDGET_H
+
+#include <QOpenGLContext>
 
 #include <QtGui/QResizeEvent>
 #include <QtGui/QKeyEvent>
