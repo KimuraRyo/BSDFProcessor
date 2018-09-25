@@ -66,6 +66,8 @@ void MaterialData::setSpecularReflectances(lb::SampleSet2D* reflectances)
 
         maxPerWavelength_.resize(0);
         diffuseThresholds_.resize(0);
+
+        reflectances_ = specularReflectances_;
     }
 }
 
@@ -82,6 +84,8 @@ void MaterialData::setSpecularTransmittances(lb::SampleSet2D* reflectances)
 
         maxPerWavelength_.resize(0);
         diffuseThresholds_.resize(0);
+
+        reflectances_ = specularTransmittances_;
     }
 }
 
@@ -297,6 +301,11 @@ lb::Spectrum MaterialData::findMaxPerWavelength(const lb::SampleSet& samples)
 
 void MaterialData::clearComputedData()
 {
+    if (origBrdf_) {
+        delete reflectances_;
+    }
+    reflectances_ = 0;
+
     delete origBrdf_;
     origBrdf_ = 0;
 
@@ -305,9 +314,6 @@ void MaterialData::clearComputedData()
 
     delete specularTransmittances_;
     specularTransmittances_ = 0;
-
-    delete reflectances_;
-    reflectances_ = 0;
 
     maxPerWavelength_.resize(0);
     diffuseThresholds_.resize(0);

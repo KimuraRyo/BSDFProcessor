@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -53,6 +53,7 @@ public:
     void createAxis(bool useTextLabel = false, bool useLogPlot = false, float baseOfLogarithm = 10.0f);
 
     void updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
+    void updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex);
 
     void updateInOutDirLine(const lb::Vec3& inDir, const lb::Vec3& outDir, int wavelengthIndex);
 
@@ -71,6 +72,9 @@ public:
 
     inline osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
     inline void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
+
+    float getInTheta() { return inTheta_; }
+    float getInPhi() { return inPhi_; }
 
 private:
     GraphScene(const GraphScene&);
@@ -93,6 +97,7 @@ private:
     void initializeInOutDirLine();
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
+
     void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
                                lb::DataType dataType, bool photometric = false);
 
@@ -126,6 +131,9 @@ private:
     osg::ref_ptr<osg::Geode> inDirGeode_;
     osg::ref_ptr<osg::Geode> inOutDirGeode_;
 
+    osg::Camera*                camera_;
+    osgGA::CameraManipulator*   cameraManipulator_;
+
     int     numMultiSamples_;
     bool    useOit_;
     int     numOitPasses_;
@@ -135,14 +143,8 @@ private:
 
     DisplayMode displayMode_;
 
-    osg::Camera*                camera_;
-    osgGA::CameraManipulator*   cameraManipulator_;
-
-    /*!
-     * The number of incoming directions. This is used if a coordinate system does not have
-     * the angles of an incoming direction.
-     */
-    static const int NUM_INCOMING_POLAR_ANGLES = 19;
+    float inTheta_; /*!< Incoming polar angle. This attribute is valid when an angle index is not used. */
+    float inPhi_;   /*!< Incoming azimuthal angle. This attribute is valid when an angle index is not used. */
 };
 
 #endif // GRAPH_SCENE_H

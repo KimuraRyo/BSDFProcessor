@@ -35,7 +35,9 @@ GraphScene::GraphScene() : numMultiSamples_(4),
                            baseOfLogarithm_(10.0),
                            displayMode_(NORMAL_DISPLAY),
                            camera_(0),
-                           cameraManipulator_(0)
+                           cameraManipulator_(0),
+                           inTheta_(0.0f),
+                           inPhi_(0.0f)
 {
     const int windowResolution = 512;
 
@@ -259,6 +261,14 @@ void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavel
         createAxis(true, useLogPlot_, baseOfLogarithm_);
         return;
     }
+}
+
+void GraphScene::updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex)
+{
+    inTheta_ = inTheta;
+    inPhi_ = inPhi;
+
+    updateGraphGeometry(-1, -1, wavelengthIndex);
 }
 
 void GraphScene::attachGraphShader(osg::Node* node)
@@ -553,18 +563,24 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     const lb::SampleSet* ss = data_->getSampleSet();
     if (!ss) return;
 
-    bool nodeInvalid = (!bxdfMeshGeode_.valid() ||
-                        !bxdfPointGeode_.valid() ||
-                        !bxdfTextGeode_.valid());
-    bool paramInvalid = (inThetaIndex  >= data_->getNumInTheta() ||
-                         inPhiIndex    >= data_->getNumInPhi() ||
-                         wavelengthIndex >= ss->getNumWavelengths());
-    if (nodeInvalid || paramInvalid) return;
+    bool nodeValid = (bxdfMeshGeode_.valid() &&
+                      bxdfPointGeode_.valid() &&
+                      bxdfTextGeode_.valid());
+    bool paramValid = (inThetaIndex < data_->getNumInTheta() &&
+                       inPhiIndex   < data_->getNumInPhi() &&
+                       wavelengthIndex < ss->getNumWavelengths());
+    if (!nodeValid || !paramValid) return;
 
-    // Update the geometry of incoming direction.
-    float inTheta = data_->getIncomingPolarAngle(inThetaIndex);
-    float inPhi = data_->getIncomingAzimuthalAngle(inPhiIndex);
-    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
+    if (inThetaIndex != -1) {
+        inTheta_ = data_->getIncomingPolarAngle(inThetaIndex);
+    }
+
+    if (inPhiIndex != -1) {
+        inPhi_ = data_->getIncomingAzimuthalAngle(inPhiIndex);
+    }
+
+    // Update the line of incoming direction.
+    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
     updateInDirLine(inDir, wavelengthIndex);
 
     lb::Brdf* brdf;
@@ -585,12 +601,12 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 
     switch (displayMode_) {
         case PHOTOMETRY_DISPLAY: {
-            setupBrdfMeshGeometry(brdf, inTheta, inPhi, wavelengthIndex, dataType, true);
+            setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType, true);
             useOit_ = false;
             break;
         }
         case NORMAL_DISPLAY: {
-            setupBrdfMeshGeometry(brdf, inTheta, inPhi, wavelengthIndex, dataType);
+            setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
             useOit_ = false;
             break;
         }
@@ -601,7 +617,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             #pragma omp parallel for private(curInTheta)
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
                 curInTheta = data_->getIncomingPolarAngle(i);
-                setupBrdfMeshGeometry(brdf, curInTheta, inPhi, wavelengthIndex, dataType);
+                setupBrdfMeshGeometry(brdf, curInTheta, inPhi_, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
@@ -609,7 +625,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 float inThetaRatio = curInTheta / lb::PI_2_F;
                 osg::Vec4 color(scene_util::hueToRgb(inThetaRatio), 1.0);
 
-                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi);
+                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi_);
                 osg::Vec3 dir = modifyDirLineLength(curInDir, wavelengthIndex);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 1.0f);
                 inDirGeode_->addDrawable(geom);
@@ -629,7 +645,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             #pragma omp parallel for private(curInPhi)
             for (int i = 0; i < numInPhi; ++i) {
                 curInPhi = data_->getIncomingAzimuthalAngle(i);
-                setupBrdfMeshGeometry(brdf, inTheta, curInPhi, wavelengthIndex, dataType);
+                setupBrdfMeshGeometry(brdf, inTheta_, curInPhi, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < numInPhi; ++i) {
@@ -637,7 +653,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 float inPhiRatio = curInPhi / (2.0f * lb::PI_F);
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
-                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta, curInPhi);
+                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, curInPhi);
                 osg::Vec3 dir = modifyDirLineLength(curInDir, wavelengthIndex);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 1.0f);
                 inDirGeode_->addDrawable(geom);
@@ -649,13 +665,13 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_WAVELENGTHS_DISPLAY: {
             #pragma omp parallel for
             for (int i = 0; i < data_->getNumWavelengths(); ++i) {
-                setupBrdfMeshGeometry(brdf, inTheta, inPhi, i, dataType);
+                setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, i, dataType);
             }
             useOit_ = true;
             break;
         }
         case SAMPLE_POINTS_DISPLAY: {
-            setupBrdfMeshGeometry(brdf, inTheta, inPhi, wavelengthIndex, dataType);
+            setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
             bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
                                                                         osg::StateAttribute::ON);
             if (!data_->isInDirDependentCoordinateSystem()) break;
@@ -782,10 +798,18 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
         return;
     }
 
-    bool paramInvalid = (inThetaIndex  >= ss2->getNumTheta() ||
-                         inPhiIndex    >= ss2->getNumPhi() ||
-                         wavelengthIndex >= ss2->getNumWavelengths());
-    if (paramInvalid) return;
+    bool paramValid = (inThetaIndex < ss2->getNumTheta() &&
+                       inPhiIndex   < ss2->getNumPhi() &&
+                       wavelengthIndex < ss2->getNumWavelengths());
+    if (!paramValid) return;
+
+    if (inThetaIndex != -1) {
+        inTheta_ = ss2->getTheta(inThetaIndex);
+    }
+
+    if (inPhiIndex != -1) {
+        inPhi_ = ss2->getPhi(inPhiIndex);
+    }
 
     if (specularReflectanceGeode_.valid()) {
         bsdfGroup_->removeChild(specularReflectanceGeode_.get());
@@ -796,13 +820,11 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     specularReflectanceGeode_->setNodeMask(SPECULAR_REFLECTANCE_MASK);
     bsdfGroup_->addChild(specularReflectanceGeode_.get());
 
-    // Update the geometry of incoming direction.
-    float inTheta = ss2->getTheta(inThetaIndex);
-    float inPhi   = ss2->getPhi(inPhiIndex);
-    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
+    // Update the line of incoming direction.
+    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
     updateInDirLine(inDir, wavelengthIndex);
 
-    const lb::Spectrum& sp = ss2->getSpectrum(inThetaIndex, inPhiIndex);
+    const lb::Spectrum& sp = ss2->getSpectrum(inTheta_, inTheta_);
     float value;
     if (displayMode_ == PHOTOMETRY_DISPLAY) {
         value = scene_util::spectrumToY(sp, ss2->getColorModel(), ss2->getWavelengths());

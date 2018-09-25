@@ -62,7 +62,9 @@ private slots:
 
     void updateDisplayMode(QString modeName);
     void updateIncomingPolarAngle(int index);
+    void updateIncomingPolarAngle();
     void updateIncomingAzimuthalAngle(int index);
+    void updateIncomingAzimuthalAngle();
     void updateWavelength(int index);
     void useLogPlot(bool on);
     void updateBaseOfLogarithm(int index);
@@ -82,11 +84,10 @@ private slots:
     void displayReflectance();
 
     void updateGlossyIntensity(int intensity);
-    void updateGlossyShininess(int shininess);
-    void updateDiffuseIntensity(int intensity);
-
     void updateGlossyIntensity(double intensity);
+    void updateGlossyShininess(int shininess);
     void updateGlossyShininess(double shininess);
+    void updateDiffuseIntensity(int intensity);
     void updateDiffuseIntensity(double intensity);
 
     void clearFileType();

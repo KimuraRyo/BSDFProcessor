@@ -69,7 +69,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>222</height>
+      <height>213</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -77,6 +77,9 @@
     </property>
     <widget class="QWidget" name="dockWidgetContents_2">
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
        <layout class="QFormLayout" name="formLayout_2">
         <property name="fieldGrowthPolicy">
@@ -133,6 +136,9 @@
               <height>16777215</height>
              </size>
             </property>
+            <property name="inputMask">
+             <string/>
+            </property>
             <property name="text">
              <string>0</string>
             </property>
@@ -140,9 +146,6 @@
              <number>6</number>
             </property>
             <property name="frame">
-             <bool>true</bool>
-            </property>
-            <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
@@ -182,6 +185,9 @@
               <width>50</width>
               <height>16777215</height>
              </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLineEdit { background-color: rgba(255, 255, 255, 0); }</string>
             </property>
             <property name="text">
              <string/>
@@ -226,7 +232,7 @@
              <bool>true</bool>
             </property>
             <property name="readOnly">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -278,6 +284,9 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
+             </property>
              <property name="text">
               <string>10</string>
              </property>
@@ -302,12 +311,9 @@
        </widget>
       </item>
       <item>
-       <spacer name="verticalSpacer_2">
+       <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Expanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -423,9 +429,9 @@
     <property name="geometry">
      <rect>
       <x>320</x>
-      <y>250</y>
+      <y>270</y>
       <width>271</width>
-      <height>101</height>
+      <height>111</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -462,6 +468,9 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QLineEdit { background-color: rgba(255, 255, 255, 0); }</string>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -481,6 +490,9 @@
             <width>80</width>
             <height>16777215</height>
            </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLineEdit { background-color: rgba(255, 255, 255, 0); }</string>
           </property>
           <property name="readOnly">
            <bool>true</bool>
@@ -514,7 +526,7 @@
       <x>39</x>
       <y>280</y>
       <width>271</width>
-      <height>221</height>
+      <height>301</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -526,7 +538,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>200</height>
+      <height>202</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -577,9 +589,9 @@
          <number>9</number>
         </property>
         <item row="0" column="0">
-         <widget class="QLabel" name="label_22">
+         <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Light intensity:</string>
+           <string>Light polar angle:</string>
           </property>
          </widget>
         </item>
@@ -746,6 +758,12 @@
       <width>271</width>
       <height>191</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>200</width>
+      <height>179</height>
+     </size>
     </property>
     <property name="floating">
      <bool>false</bool>
@@ -1071,14 +1089,11 @@
   <tabstop>wavelengthLineEdit</tabstop>
   <tabstop>incomingAzimuthalAngleSlider</tabstop>
   <tabstop>incomingAzimuthalAngleLineEdit</tabstop>
-  <tabstop>logPlotGroupBox</tabstop>
   <tabstop>logPlotBaseSlider</tabstop>
   <tabstop>logPlotBaseLineEdit</tabstop>
   <tabstop>tableGraphicsView</tabstop>
   <tabstop>pickedValueLineEdit</tabstop>
   <tabstop>pickedReflectanceLineEdit</tabstop>
-  <tabstop>lightIntensitySpinBox</tabstop>
-  <tabstop>environmentIntensitySpinBox</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -1094,7 +1109,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>604</x>
-     <y>106</y>
+     <y>107</y>
     </hint>
    </hints>
   </connection>
@@ -1111,6 +1126,262 @@
     <hint type="destinationlabel">
      <x>601</x>
      <y>171</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>displayModeComboBox</sender>
+   <signal>activated(QString)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateDisplayMode(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>487</x>
+     <y>74</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>619</x>
+     <y>71</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lightIntensitySpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateLightIntensity(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>548</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>165</x>
+     <y>719</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>environmentIntensitySpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateEnvironmentIntensity(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>584</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>202</x>
+     <y>688</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>incomingAzimuthalAngleSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateIncomingAzimuthalAngle(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>523</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>632</x>
+     <y>126</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyIntensitySpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyIntensity(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>548</x>
+     <y>472</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>633</x>
+     <y>479</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyShininessSpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyShininess(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>548</x>
+     <y>501</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>600</x>
+     <y>496</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>diffuseIntensitySpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateDiffuseIntensity(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>528</x>
+     <y>565</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>598</x>
+     <y>554</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyIntensitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyIntensity(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>422</x>
+     <y>471</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>604</x>
+     <y>463</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>glossyShininessSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateGlossyShininess(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>453</x>
+     <y>502</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>646</x>
+     <y>511</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>diffuseIntensitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateDiffuseIntensity(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>441</x>
+     <y>560</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>627</x>
+     <y>570</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lightPolarAngleSpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateLightPolarAngle(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>488</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>362</x>
+     <y>644</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lightAzimuthalAngleSpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateLightAzimuthalAngle(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>518</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>609</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lightPolarAngleSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateLightPolarAngle(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>241</x>
+     <y>489</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>389</x>
+     <y>681</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lightAzimuthalAngleSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateLightAzimuthalAngle(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>241</x>
+     <y>519</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>446</x>
+     <y>709</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lightIntensitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateLightIntensity(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>229</x>
+     <y>549</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>316</x>
+     <y>737</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>environmentIntensitySlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateEnvironmentIntensity(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>229</x>
+     <y>585</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>354</x>
+     <y>761</y>
     </hint>
    </hints>
   </connection>
@@ -1147,162 +1418,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>displayModeComboBox</sender>
-   <signal>activated(QString)</signal>
+   <sender>incomingPolarAngleLineEdit</sender>
+   <signal>editingFinished()</signal>
    <receiver>MainWindowBase</receiver>
-   <slot>updateDisplayMode(QString)</slot>
+   <slot>updateIncomingPolarAngle()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>487</x>
-     <y>74</y>
+     <x>560</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
-     <x>619</x>
-     <y>71</y>
+     <x>795</x>
+     <y>85</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>lightIntensitySpinBox</sender>
-   <signal>valueChanged(double)</signal>
+   <sender>incomingAzimuthalAngleLineEdit</sender>
+   <signal>editingFinished()</signal>
    <receiver>MainWindowBase</receiver>
-   <slot>updateLightIntensity(double)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>236</x>
-     <y>486</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>63</x>
-     <y>601</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>environmentIntensitySpinBox</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateEnvironmentIntensity(double)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>236</x>
-     <y>512</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>182</x>
-     <y>616</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>incomingAzimuthalAngleSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateIncomingAzimuthalAngle(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>523</x>
-     <y>143</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>632</x>
-     <y>126</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>glossyIntensitySpinBox</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateGlossyIntensity(double)</slot>
+   <slot>updateIncomingAzimuthalAngle()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>548</x>
-     <y>472</y>
+     <y>136</y>
     </hint>
     <hint type="destinationlabel">
-     <x>616</x>
-     <y>472</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>glossyShininessSpinBox</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateGlossyShininess(double)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>548</x>
-     <y>501</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>615</x>
-     <y>503</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>diffuseIntensitySpinBox</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateDiffuseIntensity(double)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>541</x>
-     <y>560</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>623</x>
-     <y>561</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>glossyIntensitySlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateGlossyIntensity(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>422</x>
-     <y>471</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>640</x>
-     <y>441</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>glossyShininessSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateGlossyShininess(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>453</x>
-     <y>502</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>671</x>
-     <y>521</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>diffuseIntensitySlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateDiffuseIntensity(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>441</x>
-     <y>560</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>675</x>
-     <y>580</y>
+     <x>788</x>
+     <y>141</y>
     </hint>
    </hints>
   </connection>
