@@ -96,6 +96,16 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     addDockWidget(Qt::LeftDockWidgetArea, insertAngleDockWidget_);
     insertAngleDockWidget_->hide();
 
+    resizeDocks({ ui_->controlDockWidget,
+                  ui_->renderingDockWidget,
+                  ui_->informationDockWidget },
+                { ui_->controlDockWidget->minimumHeight(),
+                  ui_->renderingDockWidget->maximumHeight(),
+                  ui_->informationDockWidget->minimumHeight() },
+                Qt::Vertical);
+
+    resizeDocks({ ui_->controlDockWidget }, { 280 }, Qt::Horizontal);
+
     ui_->incomingPolarAngleLineEdit->setValidator(new DoubleValidator(this));
     ui_->incomingAzimuthalAngleLineEdit->setValidator(new DoubleValidator(this));
 
