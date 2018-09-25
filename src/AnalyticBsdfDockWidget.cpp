@@ -199,13 +199,18 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
     lb::Brdf* brdf;
     std::string coordinateSystemName(ui_->coordSysComboBox->currentText().toLocal8Bit());
     if (coordinateSystemName == "Half difference") {
-        int spinBox1Val = ui_->halfDiffCsNumAngle1SpinBox->value();
-        int numAngle1 = (isotropic || spinBox1Val <= 1) ? 1 : (spinBox1Val + 1);
-
         lb::Arrayf halfThetaAngles  = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
                                                             0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0);
-        lb::Arrayf halfPhiAngles    = lb::Arrayf::LinSpaced(numAngle1,
-                                                            0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE1);
+
+        lb::Arrayf halfPhiAngles;
+        if (isotropic || ui_->halfDiffCsNumAngle1SpinBox->value() <= 1) {
+            halfPhiAngles.setZero(1);
+        }
+        else {
+            halfPhiAngles.setLinSpaced(ui_->halfDiffCsNumAngle1SpinBox->value() + 1,
+                                       0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE1);
+        }
+
         lb::Arrayf diffThetaAngles  = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle2SpinBox->value() + 1,
                                                             0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2);
         lb::Arrayf diffPhiAngles    = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle3SpinBox->value() + 1,
@@ -231,13 +236,18 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
         ss->getAngles3() = diffPhiAngles;
     }
     else if (coordinateSystemName == "Specular") {
-        int spinBox1Val = ui_->specularCsNumAngle1SpinBox->value();
-        int numAngle1 = (isotropic || spinBox1Val <= 1) ? 1 : (spinBox1Val + 1);
-
         lb::Arrayf inThetaAngles    = lb::Arrayf::LinSpaced(ui_->specularCsNumAngle0SpinBox->value() + 1,
                                                             0.0, lb::SpecularCoordinateSystem::MAX_ANGLE0);
-        lb::Arrayf inPhiAngles      = lb::Arrayf::LinSpaced(numAngle1,
-                                                            0.0, lb::SpecularCoordinateSystem::MAX_ANGLE1);
+
+        lb::Arrayf inPhiAngles;
+        if (isotropic || ui_->specularCsNumAngle1SpinBox->value() <= 1) {
+            inPhiAngles.setZero(1);
+        }
+        else {
+            inPhiAngles.setLinSpaced(ui_->specularCsNumAngle1SpinBox->value() + 1,
+                                     0.0, lb::SpecularCoordinateSystem::MAX_ANGLE1);
+        }
+
         lb::Arrayf specThetaAngles  = lb::Arrayf::LinSpaced(ui_->specularCsNumAngle2SpinBox->value() + 1,
                                                             0.0, lb::SpecularCoordinateSystem::MAX_ANGLE2);
         lb::Arrayf specPhiAngles    = lb::Arrayf::LinSpaced(ui_->specularCsNumAngle3SpinBox->value() + 1,
