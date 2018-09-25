@@ -50,6 +50,10 @@ RenderingScene::RenderingScene() : numMultiSamples_(0),
     root_->addChild(postProcessingGroup_.get());
     postProcessingChild_->addChild(renderingGroup_.get());
     renderingChild_->addChild(scene_.get());
+
+    inDirUniform_ = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "lightDir");
+    inDirUniform_->set(osg::Vec3(0.0, 0.0, 1.0));
+    scene_->getOrCreateStateSet()->addUniform(inDirUniform_.get());
 }
 
 void RenderingScene::updateView(int width, int height)
@@ -204,6 +208,8 @@ void RenderingScene::attachRenderingShader(osg::Node* node)
         "varying vec3 position;\n"
         "varying vec3 normal;\n"
         "\n"
+        "uniform vec3 lightDir;\n"
+        "\n"
         "// Convert to tangent space vector.\n"
         "vec3 tangentSpace(vec3 v, vec3 N, vec3 T, vec3 B)\n"
         "{\n"
@@ -216,7 +222,6 @@ void RenderingScene::attachRenderingShader(osg::Node* node)
         "\n"
         "void main()\n"
         "{\n"
-        "    vec3 lightDir = normalize(vec3(0.0, 0.0, 1.0));\n"
         "    vec3 viewDir = normalize(gl_ModelViewMatrixInverse[3].xyz - position);\n"
         "    vec3 N = normalize(normal);\n"
         "    vec3 c0 = cross(N, vec3(0.0, 0.0, 1.0));\n"

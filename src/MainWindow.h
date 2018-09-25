@@ -68,7 +68,13 @@ private slots:
     void updateBaseOfLogarithm(int index);
 
     void updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir);
+    void updateLightPolarAngle(int angle);
+    void updateLightPolarAngle(double angle);
+    void updateLightAzimuthalAngle(int angle);
+    void updateLightAzimuthalAngle(double angle);
+    void updateLightIntensity(int intensity);
     void updateLightIntensity(double intensity);
+    void updateEnvironmentIntensity(int intensity);
     void updateEnvironmentIntensity(double intensity);
 
     void displayPickedValue(const osg::Vec3& position);

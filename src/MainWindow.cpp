@@ -47,6 +47,11 @@
 #include "SceneUtil.h"
 #include "SpecularCenteredCoordinateSystem.h"
 
+const double MAX_LIGHT_INTENSITY_SLIDER = 2.0;
+const double MAX_ENVIRONMENT_INTENSITY_SLIDER = 2.0;
+
+const QString readOnlyStyleSheet = "QLineEdit { background-color: rgba(255, 255, 255, 0); }";
+
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           cosineCorrected_(false),
                                           pickedInDir_(0.0, 0.0, 0.0),
@@ -492,15 +497,113 @@ void MainWindow::updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& out
     getMainView()->requestRedraw();
 }
 
+void MainWindow::updateLightPolarAngle(int angle)
+{
+    if (!signalEmittedFromUi_) return;
+
+    signalEmittedFromUi_ = false;
+    ui_->lightPolarAngleSpinBox->setValue(angle);
+    signalEmittedFromUi_ = true;
+}
+
+void MainWindow::updateLightPolarAngle(double angle)
+{
+    if (signalEmittedFromUi_) {
+        signalEmittedFromUi_ = false;
+        ui_->lightPolarAngleSlider->setValue(static_cast<int>(angle));
+        signalEmittedFromUi_ = true;
+    }
+
+    double theta = lb::toRadian(-angle);
+    double phi = lb::toRadian(ui_->lightAzimuthalAngleSpinBox->value() - 90.0);
+
+    lb::Vec3 dir = lb::SphericalCoordinateSystem::toXyz(theta, phi);
+    renderingScene_->setLightDir(scene_util::toOsg(dir));
+    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
+    getRenderingView()->requestRedraw();
+}
+
+void MainWindow::updateLightAzimuthalAngle(int angle)
+{
+    if (!signalEmittedFromUi_) return;
+
+    signalEmittedFromUi_ = false;
+    ui_->lightAzimuthalAngleSpinBox->setValue(angle);
+    signalEmittedFromUi_ = true;
+}
+
+void MainWindow::updateLightAzimuthalAngle(double angle)
+{
+    if (signalEmittedFromUi_) {
+        signalEmittedFromUi_ = false;
+        ui_->lightAzimuthalAngleSlider->setValue(static_cast<int>(angle));
+        signalEmittedFromUi_ = true;
+    }
+
+    double theta = lb::toRadian(-ui_->lightPolarAngleSpinBox->value());
+    double phi = lb::toRadian(angle - 90.0);
+
+    lb::Vec3 dir = lb::SphericalCoordinateSystem::toXyz(theta, phi);
+    renderingScene_->setLightDir(scene_util::toOsg(dir));
+    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
+    getRenderingView()->requestRedraw();
+}
+
+void MainWindow::updateLightIntensity(int intensity)
+{
+    if (!signalEmittedFromUi_) return;
+
+    double val = static_cast<double>(intensity)
+               / ui_->lightIntensitySlider->maximum()
+               * MAX_LIGHT_INTENSITY_SLIDER;
+
+    signalEmittedFromUi_ = false;
+    ui_->lightIntensitySpinBox->setValue(val);
+    signalEmittedFromUi_ = true;
+}
+
 void MainWindow::updateLightIntensity(double intensity)
 {
+    if (signalEmittedFromUi_) {
+        double sliderVal = intensity
+                         * ui_->lightIntensitySlider->maximum()
+                         / MAX_LIGHT_INTENSITY_SLIDER;
+
+        signalEmittedFromUi_ = false;
+        ui_->lightIntensitySlider->setValue(static_cast<int>(sliderVal));
+        signalEmittedFromUi_ = true;
+    }
+
     renderingScene_->setLightIntensity(intensity);
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
     getRenderingView()->requestRedraw();
 }
 
+void MainWindow::updateEnvironmentIntensity(int intensity)
+{
+    if (!signalEmittedFromUi_) return;
+
+    double val = static_cast<double>(intensity)
+               / ui_->environmentIntensitySlider->maximum()
+               * MAX_ENVIRONMENT_INTENSITY_SLIDER;
+
+    signalEmittedFromUi_ = false;
+    ui_->environmentIntensitySpinBox->setValue(val);
+    signalEmittedFromUi_ = true;
+}
+
 void MainWindow::updateEnvironmentIntensity(double intensity)
 {
+    if (signalEmittedFromUi_) {
+        double sliderVal = intensity 
+                         * ui_->environmentIntensitySlider->maximum()
+                         / MAX_ENVIRONMENT_INTENSITY_SLIDER;
+
+        signalEmittedFromUi_ = false;
+        ui_->environmentIntensitySlider->setValue(static_cast<int>(sliderVal));
+        signalEmittedFromUi_ = true;
+    }
+
     renderingScene_->setEnvironmentIntensity(intensity);
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
     getRenderingView()->getCamera()->setClearColor(osg::Vec4(intensity, intensity, intensity, 1.0));

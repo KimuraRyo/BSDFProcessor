@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -50,6 +50,8 @@ public:
     lb::SampleSet2D* getReflectance() { return reflectances_; }
     void setReflectance(lb::SampleSet2D* reflectances) { reflectances_ = reflectances; }
 
+    void setLightDir(const osg::Vec3& dir) { inDirUniform_->set(dir); }
+
     void setLightIntensity(float intensity) { lightIntensity_ = intensity; }
     void setEnvironmentIntensity(float intensity) { environmentIntensity_ = intensity; }
 
@@ -99,6 +101,8 @@ private:
     osgGA::CameraManipulator*   cameraManipulator_;
 
     osg::ref_ptr<RenderingDrawCallback> drawCallback_;
+
+    osg::ref_ptr<osg::Uniform> inDirUniform_;
 
     lb::Brdf*           brdf_;
     lb::SampleSet2D*    reflectances_;

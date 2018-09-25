@@ -584,52 +584,154 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QDoubleSpinBox" name="lightIntensitySpinBox">
-          <property name="maximumSize">
-           <size>
-            <width>70</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="maximum">
-           <double>999.999000000000024</double>
-          </property>
-          <property name="singleStep">
-           <double>0.001000000000000</double>
-          </property>
-          <property name="value">
-           <double>0.000000000000000</double>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QSlider" name="lightPolarAngleSlider">
+            <property name="minimum">
+             <number>-90</number>
+            </property>
+            <property name="maximum">
+             <number>90</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="lightPolarAngleSpinBox">
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="minimum">
+             <double>-90.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>90.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Light azimuthal angle:</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QSlider" name="lightAzimuthalAngleSlider">
+            <property name="minimum">
+             <number>-90</number>
+            </property>
+            <property name="maximum">
+             <number>90</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="lightAzimuthalAngleSpinBox">
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="minimum">
+             <double>-90.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>90.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>Light intensity:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <item>
+           <widget class="QSlider" name="lightIntensitySlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="lightIntensitySpinBox">
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>999.999000000000024</double>
+            </property>
+            <property name="singleStep">
+             <double>0.001000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="4" column="0">
          <widget class="QLabel" name="label_23">
           <property name="text">
            <string>Environment intensity:</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="environmentIntensitySpinBox">
-          <property name="maximumSize">
-           <size>
-            <width>70</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="maximum">
-           <double>999.999000000000024</double>
-          </property>
-          <property name="singleStep">
-           <double>0.001000000000000</double>
-          </property>
-         </widget>
+        <item row="4" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QSlider" name="environmentIntensitySlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="environmentIntensitySpinBox">
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>999.999000000000024</double>
+            </property>
+            <property name="singleStep">
+             <double>0.001000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -1229,5 +1331,13 @@
   <slot>updateGlossyIntensity(int)</slot>
   <slot>updateGlossyShininess(int)</slot>
   <slot>updateDiffuseIntensity(int)</slot>
+  <slot>updateLightPolarAngle(double)</slot>
+  <slot>updateLightAzimuthalAngle(double)</slot>
+  <slot>updateLightPolarAngle(int)</slot>
+  <slot>updateLightAzimuthalAngle(int)</slot>
+  <slot>updateLightIntensity(int)</slot>
+  <slot>updateEnvironmentIntensity(int)</slot>
+  <slot>updateIncomingPolarAngle()</slot>
+  <slot>updateIncomingAzimuthalAngle()</slot>
  </slots>
 </ui>
