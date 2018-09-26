@@ -1190,11 +1190,15 @@ void MainWindow::initializeUi()
     }
 
     ui_->incomingPolarAngleSlider->setMaximum(data_->getNumInTheta() - 1);
+    signalEmittedFromUi_ = false;
     ui_->incomingPolarAngleSlider->setValue(0);
+    signalEmittedFromUi_ = true;
     ui_->incomingPolarAngleLineEdit->setText(QString::number(0));
 
     ui_->incomingAzimuthalAngleSlider->setMaximum(data_->getNumInPhi() - 1);
+    signalEmittedFromUi_ = false;
     ui_->incomingAzimuthalAngleSlider->setValue(0);
+    signalEmittedFromUi_ = true;
     ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(0));
 
     ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
