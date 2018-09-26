@@ -442,6 +442,23 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>reflectanceModelComboBox</tabstop>
+  <tabstop>coordSysComboBox</tabstop>
+  <tabstop>halfDiffCsNumAngle0SpinBox</tabstop>
+  <tabstop>halfDiffCsNumAngle1SpinBox</tabstop>
+  <tabstop>halfDiffCsNumAngle2SpinBox</tabstop>
+  <tabstop>halfDiffCsNumAngle3SpinBox</tabstop>
+  <tabstop>specularCsNumAngle0SpinBox</tabstop>
+  <tabstop>specularCsNumAngle1SpinBox</tabstop>
+  <tabstop>specularCsNumAngle2SpinBox</tabstop>
+  <tabstop>specularCsNumAngle3SpinBox</tabstop>
+  <tabstop>sphericalCsNumAngle0SpinBox</tabstop>
+  <tabstop>sphericalCsNumAngle1SpinBox</tabstop>
+  <tabstop>sphericalCsNumAngle2SpinBox</tabstop>
+  <tabstop>sphericalCsNumAngle3SpinBox</tabstop>
+  <tabstop>generateBrdfPushButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
