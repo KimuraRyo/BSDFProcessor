@@ -824,7 +824,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
     updateInDirLine(inDir, wavelengthIndex);
 
-    const lb::Spectrum& sp = ss2->getSpectrum(inTheta_, inTheta_);
+    const lb::Spectrum& sp = ss2->getSpectrum(inTheta_, inPhi_);
     float value;
     if (displayMode_ == PHOTOMETRY_DISPLAY) {
         value = scene_util::spectrumToY(sp, ss2->getColorModel(), ss2->getWavelengths());

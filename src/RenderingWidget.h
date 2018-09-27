@@ -28,6 +28,8 @@ class RenderingWidget : public osgQt::GLWidget
     Q_OBJECT
 
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     explicit RenderingWidget(const QGLFormat&   format,
                              QWidget*           parent = 0,
                              const QGLWidget*   shareWidget = 0,
@@ -43,6 +45,7 @@ public:
 
 signals:
     void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);
+    void inDirPicked(const lb::Vec3& inDir);
 
 private slots:
     void resetCameraPosition();
@@ -73,6 +76,8 @@ private:
     RenderingScene* renderingScene_;
 
     bool mouseMoved_;
+
+    lb::Vec3 pickedInDir_;
 
     QAction* actionResetCamera_;
     QAction* actionShapeSphere_;

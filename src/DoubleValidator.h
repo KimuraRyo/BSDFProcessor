@@ -20,7 +20,7 @@
 class DoubleValidator : public QDoubleValidator
 {
 public:
-    DoubleValidator(QObject* parent) : QDoubleValidator(parent) {}
+    explicit DoubleValidator(QObject* parent) : QDoubleValidator(parent) {}
 
     QValidator::State validate(QString& s, int& i) const
     {

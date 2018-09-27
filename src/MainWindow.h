@@ -70,6 +70,7 @@ private slots:
     void updateBaseOfLogarithm(int index);
 
     void updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir);
+    void updateInDirection(const lb::Vec3& inDir);
     void updateLightPolarAngle(int angle);
     void updateLightPolarAngle(double angle);
     void updateLightAzimuthalAngle(int angle);
@@ -100,6 +101,9 @@ private:
     void initializeUi();
     void initializeDisplayModeUi(QString modeName);
     void initializeWavelengthUi(int index);
+
+    bool updateIncomingPolarAngleUi(float* inTheta);
+    bool updateIncomingAzimuthalAngleUi(float* inPhi);
 
     QString getDisplayModeName(GraphScene::DisplayMode mode);
 

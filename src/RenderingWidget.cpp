@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -26,7 +26,8 @@ RenderingWidget::RenderingWidget(const QGLFormat&   format,
                                  bool               forwardKeyEvents)
                                  : osgQt::GLWidget(format, parent, shareWidget, f, forwardKeyEvents),
                                    renderingScene_(0),
-                                   mouseMoved_(false)
+                                   mouseMoved_(false),
+                                   pickedInDir_(0.0, 0.0, 0.0)
 {
     //setAcceptDrops(true);
     setMinimumSize(1, 1);
@@ -216,6 +217,7 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
         lb::Vec3 inDir = renderingScene_->getInDir(x, y);
         lb::Vec3 outDir = renderingScene_->getOutDir(x, y);
         if (inDir.isZero() || outDir.isZero()) {
+            pickedInDir_ = lb::Vec3::Zero();
             emit inOutDirPicked(lb::Vec3::Zero(), lb::Vec3::Zero());
             return;
         }
@@ -240,6 +242,7 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
             inDir = lb::reflect(outDir, lb::Vec3(0.0, 0.0, 1.0));
         }
 
+        pickedInDir_ = inDir;
         emit inOutDirPicked(inDir, outDir);
     }
 #ifdef __APPLE__
@@ -252,6 +255,10 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 void RenderingWidget::mouseDoubleClickEvent(QMouseEvent* event)
 {
     osgQt::GLWidget::mouseDoubleClickEvent(event);
+
+    if (!pickedInDir_.isZero()) {
+        emit inDirPicked(pickedInDir_);
+    }
 }
 
 void RenderingWidget::dragEnterEvent(QDragEnterEvent* event)

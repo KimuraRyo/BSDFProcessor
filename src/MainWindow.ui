@@ -142,9 +142,6 @@
             <property name="text">
              <string>0</string>
             </property>
-            <property name="maxLength">
-             <number>6</number>
-            </property>
             <property name="frame">
              <bool>true</bool>
             </property>
@@ -224,9 +221,6 @@
             </property>
             <property name="text">
              <string>0</string>
-            </property>
-            <property name="maxLength">
-             <number>6</number>
             </property>
             <property name="frame">
              <bool>true</bool>
