@@ -28,16 +28,24 @@
 
 #include "SpecularCenteredCoordinateSystem.h"
 
-GraphScene::GraphScene() : numMultiSamples_(4),
-                           useOit_(false),
+GraphScene::GraphScene() : data_(0),
+                           numMultiSamples_(4),
+                           oitUsed_(false),
                            numOitPasses_(8),
-                           useLogPlot_(false),
-                           baseOfLogarithm_(10.0),
+                           logPlotUsed_(false),
+                           baseOfLogarithm_(10.0f),
+                           scaleLength1_(0.5f),
+                           scaleLength2_(1.0f),
                            displayMode_(NORMAL_DISPLAY),
                            camera_(0),
                            cameraManipulator_(0),
+                           inThetaIndex_(0),
+                           inPhiIndex_(0),
+                           wavelengthIndex_(0),
                            inTheta_(0.0f),
-                           inPhi_(0.0f)
+                           inPhi_(0.0f),
+                           pickedInDir_(0.0, 0.0, 0.0),
+                           pickedOutDir_(0.0, 0.0, 0.0)
 {
     const int windowResolution = 512;
 
@@ -72,7 +80,6 @@ GraphScene::GraphScene() : numMultiSamples_(4),
     scene_->addChild(bsdfGroup_.get());
     scene_->addChild(accessoryGroup_.get());
 
-    createAxis(true);
     initializeInDirLine();
     initializeInOutDirLine();
 }
@@ -82,8 +89,8 @@ void GraphScene::updateView(int width, int height)
     assert(postProcessingGroup_.valid() && postProcessingChild_.valid());
     assert(oitGroup_.valid() && oitChild_.valid());
 
-    int numMultiSamples = useOit_ ? 0 : numMultiSamples_;
-    int numOitPasses = useOit_ ? numOitPasses_ : 1;
+    int numMultiSamples = oitUsed_ ? 0 : numMultiSamples_;
+    int numOitPasses = oitUsed_ ? numOitPasses_ : 1;
 
     // Replace post processing group.
     {
@@ -114,36 +121,41 @@ void GraphScene::updateView(int width, int height)
     }
 }
 
-void GraphScene::createAxis(bool useTextLabel, bool useLogPlot, float baseOfLogarithm)
+void GraphScene::createAxisAndScale()
 {
+    if (!data_) return;
+
     // Add axis.
     {
         if (axisGeode_.valid()) {
             accessoryGroup_->removeChild(axisGeode_.get());
         }
 
-        axisGeode_ = scene_util::createAxis(10.0);
+        bool backSideShown;
+        if (data_->getBtdf() || data_->getSpecularTransmittances()) {
+            backSideShown = true;
+        }
+        else {
+            backSideShown = false;
+        }
+
+        osg::Vec3 tempDir = modifyDirLineLength(lb::Vec3(1.0, 0.0, 0.0), wavelengthIndex_);
+        float axisSize = std::max(tempDir.length(), 10.0f);
+
+        axisGeode_ = scene_util::createAxis(axisSize, backSideShown, false);
         axisGeode_->setName("axisGeode_");
         attachColorShader(axisGeode_);
         accessoryGroup_->addChild(axisGeode_);
     }
 
-    std::vector<float> radii;
-    radii.push_back(0.1f);
-    radii.push_back(0.2f);
-    radii.push_back(0.3f);
-    radii.push_back(0.4f);
-    radii.push_back(0.5f);
-    radii.push_back(0.6f);
-    radii.push_back(0.7f);
-    radii.push_back(0.8f);
-    radii.push_back(0.9f);
-    radii.push_back(1.0f);
-
-    if (useLogPlot) {
-        for (auto it = radii.begin(); it != radii.end(); ++it) {
-            *it = scene_util::toLogValue(*it, baseOfLogarithm);
-        }
+    float radius1, radius2;
+    if (logPlotUsed_ && isLogPlotAcceptable()) {
+        radius1 = scene_util::toLogValue(scaleLength1_, baseOfLogarithm_);
+        radius2 = scene_util::toLogValue(scaleLength2_, baseOfLogarithm_);
+    }
+    else {
+        radius1 = scaleLength1_;
+        radius2 = scaleLength2_;
     }
 
     // Add circles.
@@ -157,16 +169,8 @@ void GraphScene::createAxis(bool useTextLabel, bool useLogPlot, float baseOfLoga
         attachColorShader(circleGeode_);
         accessoryGroup_->addChild(circleGeode_);
 
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(0), 256, 1.0f, true));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(1), 256, 1.0f, true));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(2), 256, 1.0f, true));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(3), 256, 1.0f, true));
-        circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(4), 256, 1.0f, false));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(5), 256, 1.0f, true));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(6), 256, 1.0f, true));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(7), 256, 1.0f, true));
-        //circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(8), 256, 1.0f, true));
-        circleGeode_->addDrawable(scene_util::createCircleFloor(radii.at(9), 256, 1.0f, false));
+        circleGeode_->addDrawable(scene_util::createCircleFloor(radius1, 256, 1.0f, false));
+        circleGeode_->addDrawable(scene_util::createCircleFloor(radius2, 256, 1.0f, false));
     }
 
     if (axisTextLabelGeode_.valid()) {
@@ -174,22 +178,60 @@ void GraphScene::createAxis(bool useTextLabel, bool useLogPlot, float baseOfLoga
     }
 
     // Add text labels.
-    if (useTextLabel) {
+    if (data_->isEmpty()) {
         axisTextLabelGeode_ = new osg::Geode;
         axisTextLabelGeode_->setName("axisTextLabelGeode_");
         axisTextLabelGeode_->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
         accessoryGroup_->addChild(axisTextLabelGeode_);
 
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(radii.at(4), 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(-radii.at(4), 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, radii.at(4), 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, -radii.at(4), 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(radius1, 0.0, 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(-radius1, 0.0, 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, radius1, 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, -radius1, 0.0)));
 
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(radii.at(9), 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(-radii.at(9), 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, radii.at(9), 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, -radii.at(9), 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(radius2, 0.0, 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(-radius2, 0.0, 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, radius2, 0.0)));
+        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, -radius2, 0.0)));
     }
+}
+
+void GraphScene::showScaleInPlaneOfIncidence(bool on)
+{
+    if (!data_) return;
+
+    if (scaleInPlaneOfIncidenceGeode_.valid()) {
+        accessoryGroup_->removeChild(scaleInPlaneOfIncidenceGeode_.get());
+    }
+
+    if (!on) return;
+
+    scaleInPlaneOfIncidenceGeode_ = new osg::Geode;
+    scaleInPlaneOfIncidenceGeode_->setName("scaleInPlaneOfIncidenceGeode_");
+    attachColorShader(scaleInPlaneOfIncidenceGeode_);
+    accessoryGroup_->addChild(scaleInPlaneOfIncidenceGeode_);
+
+    osg::Vec3 pos0(0.0, 0.0, 1.0);
+    if (data_->getBtdf() || data_->getSpecularTransmittances()) {
+        pos0 = -pos0;
+    }
+    osg::Vec3 pos1 = scene_util::toOsg(lb::SphericalCoordinateSystem::toXyz(lb::PI_2_F, inPhi_));
+    osg::Vec3 pos2 = scene_util::toOsg(lb::SphericalCoordinateSystem::toXyz(lb::PI_2_F, inPhi_ + lb::PI_F));
+
+    float coeff1, coeff2;
+    if (logPlotUsed_ && isLogPlotAcceptable()) {
+        coeff1 = scene_util::toLogValue(scaleLength1_, baseOfLogarithm_);
+        coeff2 = scene_util::toLogValue(scaleLength2_, baseOfLogarithm_);
+    }
+    else {
+        coeff1 = scaleLength1_;
+        coeff2 = scaleLength2_;
+    }
+
+    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff1, pos1 * coeff1, 64, AXIS_COLOR));
+    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff1, pos2 * coeff1, 64, AXIS_COLOR));
+    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff2, pos1 * coeff2, 64, AXIS_COLOR));
+    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff2, pos2 * coeff2, 64, AXIS_COLOR));
 }
 
 void GraphScene::createBrdfGeode()
@@ -245,20 +287,22 @@ void GraphScene::createBrdfGeode()
 
 void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
 {
+    inThetaIndex_ = inThetaIndex;
+    inPhiIndex_ = inPhiIndex;
+    wavelengthIndex_ = wavelengthIndex;
+
     clearGraphGeometry();
 
     if (data_->getBrdf() ||
         data_->getBtdf()) {
-        createAxis(false, useLogPlot_, baseOfLogarithm_);
         updateBrdfGeometry(inThetaIndex, inPhiIndex, wavelengthIndex);
+        
     }
     else if (data_->getSpecularReflectances() ||
              data_->getSpecularTransmittances()) {
-        createAxis();
         updateSpecularReflectanceGeometry(inThetaIndex, inPhiIndex, wavelengthIndex);
     }
     else {
-        createAxis(true, useLogPlot_, baseOfLogarithm_);
         return;
     }
 }
@@ -269,6 +313,18 @@ void GraphScene::updateGraphGeometry(float inTheta, float inPhi, int wavelengthI
     inPhi_ = inPhi;
 
     updateGraphGeometry(-1, -1, wavelengthIndex);
+}
+
+void GraphScene::updateGraphGeometry()
+{
+    GraphScene::DisplayMode dm = getDisplayMode();
+    if (dm == GraphScene::SAMPLE_POINTS_DISPLAY ||
+        dm == GraphScene::SAMPLE_POINT_LABELS_DISPLAY) {
+        updateGraphGeometry(inThetaIndex_, inPhiIndex_, wavelengthIndex_);
+    }
+    else {
+        updateGraphGeometry(inTheta_, inPhi_, wavelengthIndex_);
+    }
 }
 
 void GraphScene::attachGraphShader(osg::Node* node)
@@ -465,7 +521,7 @@ osg::Vec3 GraphScene::modifyDirLineLength(const lb::Vec3& lineDir, int wavelengt
 
     if (data_->getBrdf() || data_->getBtdf()) {
         float val = data_->getMaxValuesPerWavelength().maxCoeff();
-        if (useLogPlot_){
+        if (logPlotUsed_){
             val = scene_util::toLogValue(val, baseOfLogarithm_);
         }
 
@@ -494,6 +550,10 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
                                     const lb::Vec3& outDir,
                                     int             wavelengthIndex)
 {
+    pickedInDir_ = inDir;
+    pickedOutDir_ = outDir;
+    wavelengthIndex_ = wavelengthIndex;
+
     inOutDirGeode_->removeDrawables(0, inOutDirGeode_->getNumDrawables());
 
     if (inDir.isZero() && outDir.isZero()) {
@@ -503,10 +563,14 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
     const float lineWidth = 2.0f;
     const GLint stippleFactor = 1;
 
-    float angleLength = 0.5f;
-    if (useLogPlot_){
-        angleLength = scene_util::toLogValue(angleLength, baseOfLogarithm_);
+    float arcRadius = std::min(scaleLength1_, scaleLength2_);
+    if (logPlotUsed_){
+        arcRadius = scene_util::toLogValue(arcRadius, baseOfLogarithm_);
     }
+
+    osg::Depth* depth = new osg::Depth;
+    depth->setFunction(osg::Depth::LESS);
+    depth->setRange(0.0, 0.9999999);
 
     // Update the line of an incoming direction.
     {
@@ -520,13 +584,14 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
         osg::Vec3 anglePos0(dir);
         anglePos0.normalize();
-        anglePos0 *= angleLength;
+        anglePos0 *= arcRadius;
 
         osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
         anglePos1.normalize();
-        anglePos1 *= angleLength;
+        anglePos1 *= arcRadius;
 
         osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
+        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
         inOutDirGeode_->addDrawable(angleGeom);
     }
 
@@ -547,15 +612,27 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
         
         osg::Vec3 anglePos0(dir);
         anglePos0.normalize();
-        anglePos0 *= angleLength;
+        anglePos0 *= arcRadius;
 
         osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
         anglePos1.normalize();
-        anglePos1 *= angleLength;
+        anglePos1 *= arcRadius;
 
         osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
+        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
         inOutDirGeode_->addDrawable(angleGeom);
     }
+}
+
+void GraphScene::updateInOutDirLine()
+{
+    updateInOutDirLine(pickedInDir_, pickedOutDir_, wavelengthIndex_);
+}
+
+bool GraphScene::isLogPlotAcceptable()
+{
+    if (!data_) return true;
+    return (data_->getBrdf() || data_->getBtdf() || data_->isEmpty());
 }
 
 void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
@@ -602,12 +679,12 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     switch (displayMode_) {
         case PHOTOMETRY_DISPLAY: {
             setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType, true);
-            useOit_ = false;
+            oitUsed_ = false;
             break;
         }
         case NORMAL_DISPLAY: {
             setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
-            useOit_ = false;
+            oitUsed_ = false;
             break;
         }
         case ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
@@ -631,7 +708,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 inDirGeode_->addDrawable(geom);
             }
 
-            useOit_ = true;
+            oitUsed_ = true;
             break;
         }
         case ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
@@ -659,7 +736,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 inDirGeode_->addDrawable(geom);
             }
 
-            useOit_ = true;
+            oitUsed_ = true;
             break;
         }
         case ALL_WAVELENGTHS_DISPLAY: {
@@ -667,7 +744,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             for (int i = 0; i < data_->getNumWavelengths(); ++i) {
                 setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, i, dataType);
             }
-            useOit_ = true;
+            oitUsed_ = true;
             break;
         }
         case SAMPLE_POINTS_DISPLAY: {
@@ -679,10 +756,10 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             // Update point geometry.
             osg::Geometry* pointGeom = scene_util::createBrdfPointGeometry(*brdf,
                                                                            inThetaIndex, inPhiIndex, wavelengthIndex,
-                                                                           useLogPlot_, baseOfLogarithm_, dataType);
+                                                                           logPlotUsed_, baseOfLogarithm_, dataType);
             bxdfPointGeode_->removeDrawables(0, bxdfPointGeode_->getNumDrawables());
             bxdfPointGeode_->addDrawable(pointGeom);
-            useOit_ = false;
+            oitUsed_ = false;
             break;
         }
         case SAMPLE_POINT_LABELS_DISPLAY: {
@@ -691,8 +768,8 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             scene_util::attachBrdfTextLabels(bxdfTextGeode_.get(),
                                              *brdf,
                                              inThetaIndex, inPhiIndex, wavelengthIndex,
-                                             useLogPlot_, baseOfLogarithm_, dataType);
-            useOit_ = false;
+                                             logPlotUsed_, baseOfLogarithm_, dataType);
+            oitUsed_ = false;
             break;
         }
         default: {
@@ -721,19 +798,19 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
     if (dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
             *brdf, inTheta, inPhi, wavelengthIndex,
-            useLogPlot_, baseOfLogarithm_, dataType, photometric,
+            logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
     }
     else if (dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
             *brdf, inTheta, inPhi, wavelengthIndex,
-            useLogPlot_, baseOfLogarithm_, dataType, photometric,
+            logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
     }
     else {
         meshGeom = scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
             *brdf, inTheta, inPhi, wavelengthIndex,
-            useLogPlot_, baseOfLogarithm_, dataType, photometric,
+            logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
     }
 

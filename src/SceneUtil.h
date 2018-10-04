@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -33,6 +33,8 @@ enum NodeMask {
     SPECULAR_REFLECTANCE_MASK = 1 << 2,
     UNDEFINED_MASK = 1 << 3
 };
+
+const osg::Vec4 AXIS_COLOR(0.1, 0.1, 0.1, 1.0);
 
 namespace scene_util {
 
@@ -171,7 +173,7 @@ osg::Geometry* createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                       float             inTheta,
                                       float             inPhi,
                                       int               wavelengthIndex,
-                                      bool              useLogPlot,
+                                      bool              logPlotUsed,
                                       float             baseOfLogarithm,
                                       lb::DataType      dataType,
                                       bool              photometric,
@@ -183,7 +185,7 @@ osg::Geometry* createBrdfPointGeometry(const lb::Brdf&  brdf,
                                        int              inThetaIndex,
                                        int              inPhiIndex,
                                        int              wavelengthIndex,
-                                       bool             useLogPlot,
+                                       bool             logPlotUsed,
                                        float            baseOfLogarithm,
                                        lb::DataType     dataType);
 
@@ -193,18 +195,18 @@ void attachBrdfTextLabels(osg::Geode*       geode,
                           int               inThetaIndex,
                           int               inPhiIndex,
                           int               wavelengthIndex,
-                          bool              useLogPlot,
+                          bool              logPlotUsed,
                           float             baseOfLogarithm,
                           lb::DataType      dataType);
 
 /*! Creates the lines of XYZ axis. */
-osg::Geode* createAxis(double length = 1.0, bool useRgb = false);
+osg::Geode* createAxis(double length, bool backSideShown, bool rgbUsed = false);
 
 osg::Geometry* createCircleFloor(float  radius,
                                  int    numSegments,
                                  float  lineWidth = 1.0f,
                                  bool   useStipple = false,
-                                 bool   useLogPlot = false,
+                                 bool   logPlotUsed = false,
                                  float  baseOfLogarithm = 10.0f);
 
 /*! Creates a stippled line. */

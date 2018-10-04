@@ -57,7 +57,7 @@
       <x>320</x>
       <y>10</y>
       <width>271</width>
-      <height>231</height>
+      <height>171</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -69,7 +69,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>213</height>
+      <height>151</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -83,17 +83,17 @@
       <item>
        <layout class="QFormLayout" name="formLayout_2">
         <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label_13">
           <property name="text">
-           <string>Display mode:</string>
+           <string>Graph mode:</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="displayModeComboBox">
+         <widget class="QComboBox" name="graphModeComboBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -107,7 +107,7 @@
       <item>
        <layout class="QFormLayout" name="formLayout_6">
         <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label">
@@ -233,76 +233,6 @@
          </layout>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QGroupBox" name="logPlotGroupBox">
-        <property name="title">
-         <string>Log plot</string>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-        <layout class="QFormLayout" name="formLayout_7">
-         <property name="fieldGrowthPolicy">
-          <enum>QFormLayout::ExpandingFieldsGrow</enum>
-         </property>
-         <item row="0" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QSlider" name="logPlotBaseSlider">
-             <property name="minimum">
-              <number>2</number>
-             </property>
-             <property name="maximum">
-              <number>99</number>
-             </property>
-             <property name="value">
-              <number>10</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::NoTicks</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="logPlotBaseLineEdit">
-             <property name="maximumSize">
-              <size>
-               <width>30</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
-             </property>
-             <property name="text">
-              <string>10</string>
-             </property>
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_14">
-           <property name="text">
-            <string>Base:</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
       </item>
       <item>
        <spacer name="verticalSpacer">
@@ -974,7 +904,6 @@
      <addaction name="actionViewTop"/>
      <addaction name="actionViewBottom"/>
     </widget>
-    <addaction name="separator"/>
     <addaction name="menuViewpoint"/>
     <addaction name="separator"/>
    </widget>
@@ -1076,16 +1005,13 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>displayModeComboBox</tabstop>
+  <tabstop>graphModeComboBox</tabstop>
   <tabstop>incomingPolarAngleSlider</tabstop>
   <tabstop>incomingPolarAngleLineEdit</tabstop>
   <tabstop>incomingAzimuthalAngleSlider</tabstop>
   <tabstop>incomingAzimuthalAngleLineEdit</tabstop>
   <tabstop>wavelengthSlider</tabstop>
   <tabstop>wavelengthLineEdit</tabstop>
-  <tabstop>logPlotGroupBox</tabstop>
-  <tabstop>logPlotBaseSlider</tabstop>
-  <tabstop>logPlotBaseLineEdit</tabstop>
   <tabstop>lightPolarAngleSlider</tabstop>
   <tabstop>lightPolarAngleSpinBox</tabstop>
   <tabstop>lightAzimuthalAngleSlider</tabstop>
@@ -1139,7 +1065,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>displayModeComboBox</sender>
+   <sender>graphModeComboBox</sender>
    <signal>activated(QString)</signal>
    <receiver>MainWindowBase</receiver>
    <slot>updateDisplayMode(QString)</slot>
@@ -1391,38 +1317,6 @@
     <hint type="destinationlabel">
      <x>354</x>
      <y>761</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>logPlotBaseSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateBaseOfLogarithm(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>503</x>
-     <y>226</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>605</x>
-     <y>215</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>logPlotGroupBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>useLogPlot(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>368</x>
-     <y>207</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>621</x>
-     <y>233</y>
     </hint>
    </hints>
   </connection>

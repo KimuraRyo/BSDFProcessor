@@ -141,6 +141,11 @@ float MaterialData::getIncomingPolarAngle(int index) const
     }
 }
 
+bool MaterialData::isEmpty() const
+{
+    return !(brdf_ || btdf_ || specularReflectances_ || specularTransmittances_);
+}
+
 float MaterialData::getIncomingAzimuthalAngle(int index) const
 {
     if (brdf_ || btdf_) {

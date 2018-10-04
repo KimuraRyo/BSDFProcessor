@@ -56,12 +56,11 @@ const QString readOnlyStyleSheet = "QLineEdit { background-color: rgba(255, 255,
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           cosineCorrected_(false),
-                                          pickedInDir_(0.0, 0.0, 0.0),
-                                          pickedOutDir_(0.0, 0.0, 0.0),
                                           ui_(new Ui::MainWindowBase)
 {
     ui_->setupUi(this);
 
+    displayDockWidget_              = new DisplayDockWidget(ui_->centralWidget);
     reflectanceModelDockWidget_     = new ReflectanceModelDockWidget(ui_->centralWidget);
     transmittanceModelDockWidget_   = new TransmittanceModelDockWidget(ui_->centralWidget);
     smoothDockWidget_               = new SmoothDockWidget(ui_->centralWidget);
@@ -74,10 +73,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     setCentralWidget(ui_->mainViewerWidget);
     //ui_->mainViewerWidget->setFocus();
 
-    addDockWidget(Qt::RightDockWidgetArea,  ui_->controlDockWidget);
-    addDockWidget(Qt::RightDockWidgetArea,  ui_->renderingDockWidget);
-    addDockWidget(Qt::RightDockWidgetArea,  ui_->informationDockWidget);
-    
+    addDockWidget(Qt::RightDockWidgetArea, ui_->controlDockWidget);
+
+    addDockWidget(Qt::RightDockWidgetArea, displayDockWidget_);
+    displayDockWidget_->hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, ui_->renderingDockWidget);
+    addDockWidget(Qt::RightDockWidgetArea, ui_->informationDockWidget);
+
     addDockWidget(Qt::BottomDockWidgetArea, ui_->tableDockWidget);
     ui_->tableDockWidget->hide();
 
@@ -123,8 +126,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
         graphScene_->setMaterialData(data_);
         graphScene_->setCamera(getMainView()->getCamera());
         graphScene_->setCameraManipulator(getMainView()->getCameraManipulator());
+        graphScene_->createAxisAndScale();
+
         getMainView()->setSceneData(graphScene_->getRoot());
         graphWidget_->setGraphScene(graphScene_);
+
+        displayDockWidget_->setGraphScene(graphScene_);
+        displayDockWidget_->setMaterialData(data_);
 
         ui_->tableGraphicsView->setMaterialData(data_);
     }
@@ -253,7 +261,7 @@ void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 
     initializeUi();
 
-    ui_->logPlotGroupBox->setEnabled(true);
+    displayDockWidget_->updateUi();
     ui_->tableGraphicsView->fitView(0.9);
     displayReflectance();
 }
@@ -403,7 +411,7 @@ void MainWindow::about()
 
 void MainWindow::updateViews()
 {
-    updateInOutDirection(pickedInDir_, pickedOutDir_);
+    graphScene_->updateInOutDirLine();
 
     graphScene_->updateView(graphWidget_->width(), graphWidget_->height());
     getMainView()->requestRedraw();
@@ -412,6 +420,11 @@ void MainWindow::updateViews()
     getRenderingView()->requestRedraw();
 
     displayReflectance();
+}
+
+void MainWindow::requestRedrawGraph()
+{
+    getMainView()->requestRedraw();
 }
 
 void MainWindow::updateDisplayMode(QString modeName)
@@ -542,42 +555,8 @@ void MainWindow::updateWavelength(int index)
     std::cout << "[MainWindow::updateWavelength] " << delta << "(s)" << std::endl;
 }
 
-void MainWindow::useLogPlot(bool on)
-{
-    graphScene_->useLogPlot(on);
-    updateBaseOfLogarithm(ui_->logPlotBaseSlider->value());
-}
-
-void MainWindow::updateBaseOfLogarithm(int index)
-{
-    graphScene_->setBaseOfLogarithm(index);
-
-    GraphScene::DisplayMode dm = graphScene_->getDisplayMode();
-    if (dm == GraphScene::SAMPLE_POINTS_DISPLAY ||
-        dm == GraphScene::SAMPLE_POINT_LABELS_DISPLAY) {
-        graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
-                                         ui_->incomingAzimuthalAngleSlider->value(),
-                                         ui_->wavelengthSlider->value());
-    }
-    else {
-        graphScene_->updateGraphGeometry(graphScene_->getInTheta(),
-                                         graphScene_->getInPhi(),
-                                         ui_->wavelengthSlider->value());
-    }
-
-    updateInOutDirection(pickedInDir_, pickedOutDir_);
-    getMainView()->requestRedraw();
-
-    ui_->logPlotBaseLineEdit->setText(QString::number(index));
-
-    createTable();
-}
-
 void MainWindow::updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir)
 {
-    pickedInDir_ = inDir;
-    pickedOutDir_ = outDir;
-
     graphScene_->updateInOutDirLine(inDir, outDir, ui_->wavelengthSlider->value());
     getMainView()->requestRedraw();
 
@@ -592,7 +571,7 @@ void MainWindow::updateInDirection(const lb::Vec3& inDir)
         dm == GraphScene::SAMPLE_POINTS_DISPLAY ||
         dm == GraphScene::SAMPLE_POINT_LABELS_DISPLAY) {
         QString modeName = getDisplayModeName(GraphScene::NORMAL_DISPLAY);
-        ui_->displayModeComboBox->setCurrentText(modeName);
+        ui_->graphModeComboBox->setCurrentText(modeName);
         initializeDisplayModeUi(modeName);
     }
 
@@ -948,9 +927,11 @@ void MainWindow::clearFileType()
 void MainWindow::createActions()
 {
     ui_->viewMenu->addAction(ui_->controlDockWidget->toggleViewAction());
+    ui_->viewMenu->addAction(displayDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(ui_->renderingDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(ui_->informationDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(ui_->tableDockWidget->toggleViewAction());
+    ui_->viewMenu->addSeparator();
     ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(transmittanceModelDockWidget_->toggleViewAction());
@@ -979,6 +960,9 @@ void MainWindow::createActions()
     connect(graphWidget_, SIGNAL(clearPickedValue()),   this, SLOT(clearPickedValue()));
     connect(graphWidget_, SIGNAL(viewFront()),          this, SLOT(viewFront()));
 
+    connect(graphWidget_, SIGNAL(logPlotToggled(bool)),
+            displayDockWidget_, SLOT(toggleLogPlotCheckBox(bool)));
+
     connect(renderingWidget_, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
             this, SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
     connect(renderingWidget_, SIGNAL(inDirPicked(lb::Vec3)),
@@ -1001,13 +985,16 @@ void MainWindow::createActions()
             this, SLOT(setupBrdf(lb::Brdf*)));
 
     connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
+
+    connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), this, SLOT(requestRedrawGraph()));
+    connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this, SLOT(createTable()));
 }
 
 void MainWindow::initializeUi()
 {
     this->setWindowTitle("BSDF Processor");
 
-    QComboBox* comboBox = ui_->displayModeComboBox;
+    QComboBox* comboBox = ui_->graphModeComboBox;
 
     comboBox->clear();
     comboBox->addItem(getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY));
@@ -1079,6 +1066,8 @@ void MainWindow::initializeUi()
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
                                      ui_->incomingAzimuthalAngleSlider->value(),
                                      ui_->wavelengthSlider->value());
+
+    displayDockWidget_->updateScene();
 
     osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
     if (trackball) {
@@ -1571,7 +1560,7 @@ bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
 
     initializeUi();
 
-    ui_->logPlotGroupBox->setEnabled(false);
+    displayDockWidget_->updateUi();
     ui_->tableGraphicsView->fitView(0.9);
 
     return true;
@@ -1704,7 +1693,7 @@ void MainWindow::updateCameraPosition()
 
 void MainWindow::createTable()
 {
-    float gamma = ui_->logPlotGroupBox->isChecked() ? ui_->logPlotBaseSlider->value() : 1.0f;
+    float gamma = displayDockWidget_->getGamma();
 
     bool photometric = (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY);
 
@@ -1742,12 +1731,13 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
                                          ui_->wavelengthSlider->value());
     }
 
+    graphScene_->updateInOutDirLine();
+
     getMainView()->requestRedraw();
     getRenderingView()->requestRedraw();
 
     createTable();
 
     clearPickedValue();
-    updateInOutDirection(pickedInDir_, pickedOutDir_);
     displayReflectance();
 }

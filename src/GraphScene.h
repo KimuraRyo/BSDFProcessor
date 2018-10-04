@@ -28,6 +28,8 @@
 class GraphScene
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     GraphScene();
     ~GraphScene() {}
 
@@ -50,19 +52,26 @@ public:
     /*! Creates and adds graph geometry to the scene. */
     void createBrdfGeode();
 
-    void createAxis(bool useTextLabel = false, bool useLogPlot = false, float baseOfLogarithm = 10.0f);
+    void setScaleLength1(float length) { scaleLength1_ = length; }
+    void setScaleLength2(float length) { scaleLength2_ = length; }
+    void createAxisAndScale();
+    void showScaleInPlaneOfIncidence(bool on);
 
     void updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
     void updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex);
+    void updateGraphGeometry();
 
     void updateInOutDirLine(const lb::Vec3& inDir, const lb::Vec3& outDir, int wavelengthIndex);
+    void updateInOutDirLine();
 
     void setMaterialData(MaterialData* data) { data_ = data; }
 
-    void useOit(bool on) { useOit_ = on; }
+    void useOit(bool on) { oitUsed_ = on; }
 
-    void useLogPlot(bool on) { useLogPlot_ = on; }
+    void useLogPlot(bool on) { logPlotUsed_ = on; }
+    bool isLogPlot() const { return logPlotUsed_; }
     void setBaseOfLogarithm(float base) { baseOfLogarithm_ = base; }
+    bool isLogPlotAcceptable();
 
     DisplayMode getDisplayMode() const { return displayMode_; }
     void setDisplayMode(DisplayMode mode) { displayMode_ = mode; }
@@ -73,8 +82,8 @@ public:
     inline osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
     inline void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
 
-    float getInTheta() { return inTheta_; }
-    float getInPhi() { return inPhi_; }
+    float getInTheta() const { return inTheta_; }
+    float getInPhi() const { return inPhi_; }
 
 private:
     GraphScene(const GraphScene&);
@@ -126,6 +135,7 @@ private:
 
     osg::ref_ptr<osg::Geode> axisGeode_;
     osg::ref_ptr<osg::Geode> circleGeode_;
+    osg::ref_ptr<osg::Geode> scaleInPlaneOfIncidenceGeode_;
     osg::ref_ptr<osg::Geode> axisTextLabelGeode_;
     
     osg::ref_ptr<osg::Geode> inDirGeode_;
@@ -135,16 +145,28 @@ private:
     osgGA::CameraManipulator*   cameraManipulator_;
 
     int     numMultiSamples_;
-    bool    useOit_;
+    bool    oitUsed_;
     int     numOitPasses_;
 
-    bool    useLogPlot_;
+    bool    logPlotUsed_;
     float   baseOfLogarithm_;
+
+    float   scaleLength1_;
+    float   scaleLength2_;
 
     DisplayMode displayMode_;
 
-    float inTheta_; /*!< Incoming polar angle. This attribute is valid when an angle index is not used. */
-    float inPhi_;   /*!< Incoming azimuthal angle. This attribute is valid when an angle index is not used. */
+    int inThetaIndex_;
+    int inPhiIndex_;
+    int wavelengthIndex_;
+
+    /*! Incoming polar angle. This attribute is valid when an angle index (\a inThetaIndex_) is not used. */
+    float inTheta_;
+
+    /*!< Incoming azimuthal angle. This attribute is valid when an angle index (\a inPhiIndex_) is not used. */
+    float inPhi_;
+
+    lb::Vec3 pickedInDir_, pickedOutDir_;
 };
 
 #endif // GRAPH_SCENE_H

@@ -140,9 +140,9 @@ osg::Group* scene_util::createPostProcessingGroup(osg::Node*    subgraph,
         fboHeight = height;
     }
 
-    bool useMipmap = false;
+    bool mipmapUsed = false;
     if (width != fboWidth || height != fboHeight) {
-        useMipmap = true;
+        mipmapUsed = true;
     }
 
     // Set up an FBO texture.
@@ -150,7 +150,7 @@ osg::Group* scene_util::createPostProcessingGroup(osg::Node*    subgraph,
     {
         fboTexture->setTextureSize(fboWidth, fboHeight);
 
-        if (useMipmap) {
+        if (mipmapUsed) {
             fboTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
             fboTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
         }
@@ -197,7 +197,7 @@ osg::Group* scene_util::createPostProcessingGroup(osg::Node*    subgraph,
         fboCamera->setViewport(0, 0, fboWidth, fboHeight);
         fboCamera->setRenderOrder(osg::Camera::PRE_RENDER);
         fboCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
-        fboCamera->attach(osg::Camera::COLOR_BUFFER, fboTexture, 0, 0, useMipmap, numFboSamples, numFboColorSamples);
+        fboCamera->attach(osg::Camera::COLOR_BUFFER, fboTexture, 0, 0, mipmapUsed, numFboSamples, numFboColorSamples);
 
         postProcessingGroup->addChild(fboCamera);
         fboCamera->addChild(subgraph);
@@ -553,14 +553,14 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
                                                   float             inTheta,
                                                   float             inPhi,
                                                   int               wavelengthIndex,
-                                                  bool              useLogPlot,
+                                                  bool              logPlotUsed,
                                                   float             baseOfLogarithm,
                                                   lb::DataType      dataType,
                                                   bool              photometric,
                                                   int               numTheta,
                                                   int               numPhi)
 {
-    const bool useHue = false;
+    const bool hueUsed = false;
 
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setName("meshGeom");
@@ -619,7 +619,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
             continue;
         }
 
-        if (useLogPlot) {
+        if (logPlotUsed) {
             brdfValue = toLogValue(brdfValue, baseOfLogarithm);
         }
 
@@ -682,7 +682,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         normals->push_back(toOsg(normal));
         normals->push_back(toOsg(normal));
 
-        if (useHue) {
+        if (hueUsed) {
             osg::Vec3 rgb0 = scene_util::hueToRgb(pos0.norm() / maxBrdfValue);
             osg::Vec3 rgb1 = scene_util::hueToRgb(pos1.norm() / maxBrdfValue);
             osg::Vec3 rgb2 = scene_util::hueToRgb(pos2.norm() / maxBrdfValue);
@@ -699,7 +699,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     geom->setNormalArray(normals, osg::Array::BIND_PER_VERTEX);
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, vertices->size()));
 
-    if (useHue) {
+    if (hueUsed) {
         geom->setColorArray(colors, osg::Array::BIND_PER_VERTEX);
     }
     else {
@@ -715,24 +715,24 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
-    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, bool photometric,
+    bool logPlotUsed, float baseOfLogarithm, lb::DataType dataType, bool photometric,
     int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
-    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, bool photometric,
+    bool logPlotUsed, float baseOfLogarithm, lb::DataType dataType, bool photometric,
     int numTheta, int numPhi);
 
 template osg::Geometry* scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
-    bool useLogPlot, float baseOfLogarithm, lb::DataType dataType, bool photometric,
+    bool logPlotUsed, float baseOfLogarithm, lb::DataType dataType, bool photometric,
     int numTheta, int numPhi);
 
 osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
                                                    int              inThetaIndex,
                                                    int              inPhiIndex,
                                                    int              wavelengthIndex,
-                                                   bool             useLogPlot,
+                                                   bool             logPlotUsed,
                                                    float            baseOfLogarithm,
                                                    lb::DataType     dataType)
 {
@@ -750,7 +750,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
         float brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
         if (brdfValue <= 0.0f) continue;
 
-        if (useLogPlot) {
+        if (logPlotUsed) {
             brdfValue = toLogValue(brdfValue, baseOfLogarithm);
         }
 
@@ -792,7 +792,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                                       int               inThetaIndex,
                                       int               inPhiIndex,
                                       int               wavelengthIndex,
-                                      bool              useLogPlot,
+                                      bool              logPlotUsed,
                                       float             baseOfLogarithm,
                                       lb::DataType      dataType)
 {
@@ -832,7 +832,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
             if (brdfValue <= 0.0f) continue;
 
             float distance;
-            if (useLogPlot) {
+            if (logPlotUsed) {
                 distance = toLogValue(brdfValue, baseOfLogarithm);
             }
             else {
@@ -917,7 +917,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
 
             float brdfValue = ss->getSpectrum(inThetaIndex, inPhiIndex, i2, i3)[wavelengthIndex];
             float distance;
-            if (useLogPlot) {
+            if (logPlotUsed) {
                 distance = toLogValue(brdfValue, baseOfLogarithm);
             }
             else {
@@ -947,7 +947,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
     //geode->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 }
 
-osg::Geode* scene_util::createAxis(double length, bool useRgb)
+osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUsed)
 {
     osg::ref_ptr<osg::Geode> axisGeode = new osg::Geode;
     axisGeode->setName("axisGeode");
@@ -960,12 +960,17 @@ osg::Geode* scene_util::createAxis(double length, bool useRgb)
     vertices->push_back(osg::Vec3( length, 0.0, 0.0));
     vertices->push_back(osg::Vec3(0.0, -length, 0.0));
     vertices->push_back(osg::Vec3(0.0,  length, 0.0));
-    vertices->push_back(osg::Vec3(0.0, 0.0, 0.0));
+    if (backSideShown) {
+        vertices->push_back(osg::Vec3(0.0, 0.0, -length));
+    }
+    else {
+        vertices->push_back(osg::Vec3(0.0, 0.0, 0.0));
+    }
     vertices->push_back(osg::Vec3(0.0, 0.0, length));
     geom->setVertexArray(vertices);
     
     osg::Vec4Array* colors = new osg::Vec4Array;
-    if (useRgb) {
+    if (rgbUsed) {
         colors->push_back(osg::Vec4(1.0, 0.0, 0.0, 1.0));
         colors->push_back(osg::Vec4(1.0, 0.0, 0.0, 1.0));
         colors->push_back(osg::Vec4(0.0, 1.0, 0.0, 1.0));
@@ -976,7 +981,7 @@ osg::Geode* scene_util::createAxis(double length, bool useRgb)
         geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
     }
     else {
-        colors->push_back(osg::Vec4(0.1, 0.1, 0.1, 1.0));
+        colors->push_back(AXIS_COLOR);
         geom->setColorArray(colors);
         geom->setColorBinding(osg::Geometry::BIND_OVERALL);
     }
@@ -993,7 +998,7 @@ osg::Geometry* scene_util::createCircleFloor(float  radius,
                                              int    numSegments,
                                              float  lineWidth,
                                              bool   useStipple,
-                                             bool   useLogPlot,
+                                             bool   logPlotUsed,
                                              float  baseOfLogarithm)
 {
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
@@ -1107,11 +1112,6 @@ osg::Geometry* scene_util::createArc(const osg::Vec3&   pos0,
     osg::StateSet* stateSet = geom->getOrCreateStateSet();
 
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-
-    osg::Depth* depth = new osg::Depth;
-    depth->setFunction(osg::Depth::LESS);
-    depth->setRange(0.0, 0.9999999);
-    stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
     osg::LineWidth* lineWidth = new osg::LineWidth;
     lineWidth->setWidth(width);

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2018 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -33,6 +33,11 @@ GraphWidget::GraphWidget(const QGLFormat&   format,
     actionResetCamera_ = new QAction(this);
     actionResetCamera_->setText(QApplication::translate("GraphWidget", "Reset camera position", 0));
     connect(actionResetCamera_, SIGNAL(triggered()), this, SLOT(resetCameraPosition()));
+
+    actionLogPlot_ = new QAction(this);
+    actionLogPlot_->setText(QApplication::translate("GraphWidget", "Log plot", 0));
+    actionLogPlot_->setCheckable(true);
+    connect(actionLogPlot_, SIGNAL(toggled(bool)), this, SLOT(toggleLogPlot(bool)));
 }
 
 void GraphWidget::resizeEvent(QResizeEvent* event)
@@ -195,7 +200,17 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent* event)
 
 void GraphWidget::showContextMenu(const QPoint& pos)
 {
+    actionLogPlot_->setChecked(graphScene_->isLogPlot());
+
+    if (graphScene_->isLogPlotAcceptable()) {
+        actionLogPlot_->setEnabled(true);
+    }
+    else {
+        actionLogPlot_->setDisabled(true);
+    }
+
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
+    menu.addAction(actionLogPlot_);
     menu.exec(pos);
 }

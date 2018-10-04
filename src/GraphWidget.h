@@ -41,9 +41,11 @@ signals:
     void picked(const osg::Vec3& position);
     void clearPickedValue();
     void viewFront();
+    void logPlotToggled(bool on);
 
 private slots:
     void resetCameraPosition() { emit viewFront(); }
+    void toggleLogPlot(bool on) { emit logPlotToggled(on); }
 
 private:
     Q_DISABLE_COPY(GraphWidget)
@@ -67,6 +69,7 @@ private:
     bool mouseMoved_;
 
     QAction* actionResetCamera_;
+    QAction* actionLogPlot_;
 };
 
 #endif // GRAPH_WIDGET_H

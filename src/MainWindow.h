@@ -11,6 +11,7 @@
 
 #include "ui_MainWindow.h"
 
+#include "DisplayDockWidget.h"
 #include "GraphScene.h"
 #include "GraphWidget.h"
 #include "InsertIncomingAzimuthalAngleDockWidget.h"
@@ -31,8 +32,6 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     explicit MainWindow(QWidget* parent);
     ~MainWindow();
 
@@ -59,6 +58,7 @@ private slots:
     void about();
 
     void updateViews();
+    void requestRedrawGraph();
 
     void updateDisplayMode(QString modeName);
     void updateIncomingPolarAngle(int index);
@@ -66,8 +66,6 @@ private slots:
     void updateIncomingAzimuthalAngle(int index);
     void updateIncomingAzimuthalAngle();
     void updateWavelength(int index);
-    void useLogPlot(bool on);
-    void updateBaseOfLogarithm(int index);
 
     void updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir);
     void updateInDirection(const lb::Vec3& inDir);
@@ -90,6 +88,8 @@ private slots:
     void updateGlossyShininess(double shininess);
     void updateDiffuseIntensity(int intensity);
     void updateDiffuseIntensity(double intensity);
+
+    void createTable();
 
     void clearFileType();
 
@@ -122,8 +122,6 @@ private:
 
     void updateCameraPosition();
 
-    void createTable();
-
     void editBrdf(lb::Spectrum::Scalar  glossyIntensity,
                   lb::Spectrum::Scalar  glossyShininess,
                   lb::Spectrum::Scalar  diffuseIntensity);
@@ -137,8 +135,6 @@ private:
 
     bool cosineCorrected_;
 
-    lb::Vec3 pickedInDir_, pickedOutDir_;
-
     double maxGlossyIntensity_;
     double maxGlossyShininess_;
     double maxDiffuseIntensity_;
@@ -146,6 +142,7 @@ private:
     /*! This attribute holds whether a slot function is invoked by the signal from UI. */
     bool signalEmittedFromUi_;
 
+    DisplayDockWidget*                      displayDockWidget_;
     ReflectanceModelDockWidget*             reflectanceModelDockWidget_;
     TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;

@@ -43,20 +43,22 @@ public:
     lb::SampleSet2D* getSpecularTransmittances() { return specularTransmittances_; }
     void setSpecularTransmittances(lb::SampleSet2D* transmittances);
 
-    lb::FileType getFileType() { return fileType_; }
+    lb::FileType getFileType() const { return fileType_; }
     void setFileType(lb::FileType type) { fileType_ = type; }
 
     lb::SampleSet2D* getReflectances() { return reflectances_; }
 
-    inline int getNumInTheta() { return numInTheta_; }
-    inline int getNumInPhi()   { return numInPhi_; }
+    inline int getNumInTheta() const { return numInTheta_; }
+    inline int getNumInPhi()   const { return numInPhi_; }
 
-    inline int getNumWavelengths() { return numWavelengths_; }
+    inline int getNumWavelengths() const { return numWavelengths_; }
 
     void clearData();
 
     void updateBrdf();
     void updateBtdf();
+
+    bool isEmpty() const;
 
     float getIncomingPolarAngle(int index) const;
     float getIncomingAzimuthalAngle(int index) const;
