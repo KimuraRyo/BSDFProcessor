@@ -905,7 +905,6 @@
      <addaction name="actionViewBottom"/>
     </widget>
     <addaction name="menuViewpoint"/>
-    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">

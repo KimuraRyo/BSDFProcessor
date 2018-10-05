@@ -926,6 +926,8 @@ void MainWindow::clearFileType()
 
 void MainWindow::createActions()
 {
+    ui_->viewMenu->addAction(graphWidget_->getLogPlotAction());
+    ui_->viewMenu->addSeparator();
     ui_->viewMenu->addAction(ui_->controlDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(displayDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(ui_->renderingDockWidget->toggleViewAction());

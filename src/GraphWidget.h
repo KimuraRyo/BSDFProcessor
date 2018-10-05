@@ -36,6 +36,8 @@ public:
 
     void setGraphScene(GraphScene* scene) { graphScene_ = scene; }
 
+    QAction* getLogPlotAction() { return actionLogPlot_; }
+
 signals:
     void fileDropped(const QString& fileName);
     void picked(const osg::Vec3& position);
