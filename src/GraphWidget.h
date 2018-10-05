@@ -45,6 +45,8 @@ signals:
 
 private slots:
     void resetCameraPosition() { emit viewFront(); }
+    void copyCameraSettings();
+    void pasteCameraSettings();
     void toggleLogPlot(bool on) { emit logPlotToggled(on); }
 
 private:
@@ -64,11 +66,15 @@ private:
     
     void showContextMenu(const QPoint& pos);
 
+    static bool getParameters(const QStringList& paramList, const QString& name, osg::Vec3d* params);
+
     GraphScene* graphScene_;
 
     bool mouseMoved_;
 
     QAction* actionResetCamera_;
+    QAction* actionCopyCameraSettings_;
+    QAction* actionPasteCameraSettings_;
     QAction* actionLogPlot_;
 };
 

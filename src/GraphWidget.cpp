@@ -34,10 +34,61 @@ GraphWidget::GraphWidget(const QGLFormat&   format,
     actionResetCamera_->setText(QApplication::translate("GraphWidget", "Reset camera position", 0));
     connect(actionResetCamera_, SIGNAL(triggered()), this, SLOT(resetCameraPosition()));
 
+    actionCopyCameraSettings_ = new QAction(this);
+    actionCopyCameraSettings_->setText(QApplication::translate("GraphWidget", "Copy camera settings", 0));
+    connect(actionCopyCameraSettings_, SIGNAL(triggered()), this, SLOT(copyCameraSettings()));
+
+    actionPasteCameraSettings_ = new QAction(this);
+    actionPasteCameraSettings_->setText(QApplication::translate("GraphWidget", "Paste camera settings", 0));
+    connect(actionPasteCameraSettings_, SIGNAL(triggered()), this, SLOT(pasteCameraSettings()));
+
     actionLogPlot_ = new QAction(this);
     actionLogPlot_->setText(QApplication::translate("GraphWidget", "Log plot", 0));
     actionLogPlot_->setCheckable(true);
     connect(actionLogPlot_, SIGNAL(toggled(bool)), this, SLOT(toggleLogPlot(bool)));
+}
+
+void GraphWidget::copyCameraSettings()
+{
+    osgGA::CameraManipulator* cm = graphScene_->getCameraManipulator();
+    osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+    if (!tm) return;
+
+    osg::Vec3d pos, center, up;
+    tm->getTransformation(pos, center, up);
+
+    QString posStr = "CameraPosition "
+                   + QString::number(pos.x()) + " "
+                   + QString::number(pos.y()) + " "
+                   + QString::number(pos.z());
+    QString centerStr = "CameraCenter "
+                      + QString::number(center.x()) + " "
+                      + QString::number(center.y()) + " "
+                      + QString::number(center.z());
+    QString upStr = "CameraUp "
+                  + QString::number(up.x()) + " "
+                  + QString::number(up.y()) + " "
+                  + QString::number(up.z());
+
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(posStr + " " + centerStr + " " + upStr);
+}
+
+void GraphWidget::pasteCameraSettings()
+{
+    const QClipboard* clipboard = QApplication::clipboard();
+    QStringList paramList = clipboard->text().split(' ', QString::SkipEmptyParts);
+
+    osg::Vec3d pos, center, up;
+    if (getParameters(paramList, "CameraPosition",  &pos) &&
+        getParameters(paramList, "CameraCenter",    &center) &&
+        getParameters(paramList, "CameraUp",        &up)) {
+        osgGA::CameraManipulator* cm = graphScene_->getCameraManipulator();
+        osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+        if (!tm) return;
+
+        tm->setTransformation(pos, center, up);
+    }
 }
 
 void GraphWidget::resizeEvent(QResizeEvent* event)
@@ -57,6 +108,7 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
 
     osgGA::CameraManipulator* cm = graphScene_->getCameraManipulator();
     osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+    if (!tm) return;
 
     osg::Vec3 camPos, camCenter, camUp;
     graphScene_->getCamera()->getViewMatrixAsLookAt(camPos, camCenter, camUp);
@@ -65,8 +117,6 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
 
     switch (event->key()) {
         case Qt::Key_Up: {
-            if (!tm) break;
-            
             osg::Vec3 rotAxis = camDir ^ camUp;
             osg::Quat rotQuat(M_PI / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
@@ -74,8 +124,6 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
             break;
         }
         case Qt::Key_Down: {
-            if (!tm) break;
-
             osg::Vec3 rotAxis = camDir ^ camUp;
             osg::Quat rotQuat(-M_PI / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
@@ -83,8 +131,6 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
             break;
         }
         case Qt::Key_Left: {
-            if (!tm) break;
-
             osg::Vec3 rotAxis(0.0, 0.0, 1.0);
             osg::Quat rotQuat(-M_PI / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
@@ -92,8 +138,6 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
             break;
         }
         case Qt::Key_Right: {
-            if (!tm) break;
-
             osg::Vec3 rotAxis(0.0, 0.0, 1.0);
             osg::Quat rotQuat(M_PI / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
@@ -101,15 +145,11 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
             break;
         }
         case Qt::Key_Plus: {
-            if (!tm) break;
-
             tm->setDistance(tm->getDistance() * 0.9);
 
             break;
         }
         case Qt::Key_Minus: {
-            if (!tm) break;
-
             tm->setDistance(tm->getDistance() * 1.0 / 0.9);
 
             break;
@@ -211,6 +251,37 @@ void GraphWidget::showContextMenu(const QPoint& pos)
 
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
+    menu.addAction(actionCopyCameraSettings_);
+    menu.addAction(actionPasteCameraSettings_);
+    menu.addSeparator();
     menu.addAction(actionLogPlot_);
     menu.exec(pos);
+}
+
+bool GraphWidget::getParameters(const QStringList& paramList, const QString& name, osg::Vec3d* params)
+{
+    int index = paramList.indexOf(name);
+    if (index == -1) {
+        std::cout << "[getParameters] Parameter not found: " << name.toStdString() << std::endl;
+        return false;
+    }
+
+    if (index + 3 >= paramList.size()) {
+        std::cout << "[getParameters] Invalid format." << std::endl;
+        return false;
+    }
+
+    bool okX, okY, okZ;
+    double x = paramList.at(index + 1).toDouble(&okX);
+    double y = paramList.at(index + 2).toDouble(&okY);
+    double z = paramList.at(index + 3).toDouble(&okZ);
+    if (okX && okY && okZ) {
+        params->set(x, y, z);
+    }
+    else {
+        std::cout << "[GraphWidget::getParameters] Invalid format." << std::endl;
+        return false;
+    }
+
+    return true;
 }
