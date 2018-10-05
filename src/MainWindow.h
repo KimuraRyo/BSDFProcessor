@@ -39,7 +39,7 @@ public slots:
     void openFile(const QString& fileName);
 
 private slots:
-    void setupBrdf(lb::Brdf* brdf, lb::DataType dataType);
+    bool setupBrdf(lb::Brdf* brdf, lb::DataType dataType);
     void setupBrdf(lb::Brdf* brdf);
     void updateBrdf();
 

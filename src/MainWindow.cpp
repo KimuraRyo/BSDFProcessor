@@ -238,8 +238,19 @@ void MainWindow::openFile(const QString& fileName)
         << " (" << timer.elapsed() * 0.001f << "(s)" << ")" << std::endl;
 }
 
-void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
+bool MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 {
+    if (dataType != lb::BRDF_DATA && dataType != lb::BTDF_DATA) {
+        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
+        return false;
+    }
+
+    if (!brdf->getSampleSet()->validate()) {
+        std::cerr << "[MainWindow::setupBrdf] Invalid BRDF." << std::endl;
+        delete brdf;
+        return false;
+    }
+
     if (cosineCorrected_) {
         lb::divideByCosineOutTheta(brdf);
     }
@@ -251,10 +262,6 @@ void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
     else if (dataType == lb::BTDF_DATA) {
         data_->setBtdf(new lb::Btdf(brdf));
     }
-    else {
-        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
-        return;
-    }
     graphScene_->createBrdfGeode();
 
     renderingScene_->setData(brdf, data_->getReflectances(), dataType);
@@ -264,6 +271,8 @@ void MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
     displayDockWidget_->updateUi();
     ui_->tableGraphicsView->fitView(0.9);
     displayReflectance();
+
+    return true;
 }
 
 void MainWindow::setupBrdf(lb::Brdf* brdf)
@@ -279,7 +288,7 @@ void MainWindow::setupBrdf(lb::Brdf* brdf)
         std::cerr << "[MainWindow::setupBrdf] Invalid data type." << std::endl;
         return;
     }
-    
+
     setupBrdf(brdf, dataType);
 }
 
@@ -1536,9 +1545,7 @@ bool MainWindow::openDdrDdt(const QString& fileName, lb::DataType dataType)
     lb::SpecularCoordinatesBrdf* brdf = lb::DdrReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    setupBrdf(brdf, dataType);
-
-    return true;
+    return setupBrdf(brdf, dataType);
 }
 
 bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
@@ -1609,11 +1616,11 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
         return false;
     }
 
-    setupBrdf(brdf->clone(), dataType);
+    bool ok = setupBrdf(brdf->clone(), dataType);
 
     delete material;
 
-    return true;
+    return ok;
 }
 
 bool MainWindow::openZemaxBsdf(const QString& fileName)
@@ -1622,9 +1629,7 @@ bool MainWindow::openZemaxBsdf(const QString& fileName)
     lb::SpecularCoordinatesBrdf* brdf = lb::ZemaxBsdfReader::read(fileName.toLocal8Bit().data(), &dataType);
     if (!brdf) return false;
 
-    setupBrdf(brdf, dataType);
-
-    return true;
+    return setupBrdf(brdf, dataType);
 }
 
 bool MainWindow::openAstm(const QString& fileName)
@@ -1635,9 +1640,7 @@ bool MainWindow::openAstm(const QString& fileName)
     lb::SphericalCoordinatesBrdf* brdf = lb::AstmReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    setupBrdf(brdf, dialog.getDataType());
-
-    return true;
+    return setupBrdf(brdf, dialog.getDataType());
 }
 
 bool MainWindow::openMerlBinary(const QString& fileName)
@@ -1645,9 +1648,7 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     lb::HalfDifferenceCoordinatesBrdf* brdf = lb::MerlBinaryReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    setupBrdf(brdf, lb::BRDF_DATA);
-
-    return true;
+    return setupBrdf(brdf, lb::BRDF_DATA);
 }
 
 void MainWindow::exportFile(const QString& fileName)
@@ -1696,9 +1697,7 @@ void MainWindow::updateCameraPosition()
 void MainWindow::createTable()
 {
     float gamma = displayDockWidget_->getGamma();
-
     bool photometric = (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY);
-
     ui_->tableGraphicsView->createTable(ui_->wavelengthSlider->value(), gamma, photometric);
 }
 
