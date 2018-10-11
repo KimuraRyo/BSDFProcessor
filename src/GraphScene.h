@@ -77,11 +77,11 @@ public:
     DisplayMode getDisplayMode() const { return displayMode_; }
     void setDisplayMode(DisplayMode mode) { displayMode_ = mode; }
 
-    inline osg::Camera* getCamera() { return camera_; }
-    inline void setCamera(osg::Camera* camera) { camera_ = camera; }
+    osg::Camera* getCamera() { return camera_; }
+    void setCamera(osg::Camera* camera);
 
-    inline osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
-    inline void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
+    osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
+    void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
 
     float getInTheta() const { return inTheta_; }
     float getInPhi() const { return inPhi_; }
@@ -101,10 +101,12 @@ private:
 
     void initializeInDirLine();
     void updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex);
-    osg::Vec3 modifyDirLineLength(const lb::Vec3& lineDir, int wavelengthIndex);
     void clearInDirLine() { inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables()); }
 
     void initializeInOutDirLine();
+
+    /*! Modifies the length of a line from the origin concidering BRDF/BTDF. */
+    osg::Vec3 modifyLineLength(const lb::Vec3& pos, int wavelengthIndex);
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
 

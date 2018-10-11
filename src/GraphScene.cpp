@@ -139,8 +139,8 @@ void GraphScene::createAxisAndScale()
             backSideShown = false;
         }
 
-        osg::Vec3 tempDir = modifyDirLineLength(lb::Vec3(1.0, 0.0, 0.0), wavelengthIndex_);
-        float axisSize = std::max(tempDir.length(), 10.0f);
+        osg::Vec3 tempAxis = modifyLineLength(lb::Vec3(1.0, 0.0, 0.0), wavelengthIndex_);
+        float axisSize = std::max(tempAxis.length(), 2.0f);
 
         axisGeode_ = scene_util::createAxis(axisSize, backSideShown, false);
         axisGeode_->setName("axisGeode_");
@@ -259,10 +259,10 @@ void GraphScene::createBrdfGeode()
 
         osg::ClipPlane* clipPlane = new osg::ClipPlane;
         if (data_->getBrdf()) {
-            clipPlane->setClipPlane(0.0, 0.0, 1.0, -0.00001);
+            clipPlane->setClipPlane(0.0, 0.0, 1.0, -0.000001);
         }
         else {
-            clipPlane->setClipPlane(0.0, 0.0, -1.0, -0.00001);
+            clipPlane->setClipPlane(0.0, 0.0, -1.0, -0.000001);
         }
         bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(clipPlane, osg::StateAttribute::ON);
 
@@ -332,6 +332,101 @@ void GraphScene::updateGraphGeometry()
     else {
         updateGraphGeometry(inTheta_, inPhi_, wavelengthIndex_);
     }
+}
+
+void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
+                                    const lb::Vec3& outDir,
+                                    int             wavelengthIndex)
+{
+    pickedInDir_ = inDir;
+    pickedOutDir_ = outDir;
+    wavelengthIndex_ = wavelengthIndex;
+
+    inOutDirGeode_->removeDrawables(0, inOutDirGeode_->getNumDrawables());
+
+    if (inDir.isZero() && outDir.isZero()) {
+        return;
+    }
+
+    const float lineWidth = 2.0f;
+    const GLint stippleFactor = 1;
+
+    float arcRadius = std::min(scaleLength1_, scaleLength2_);
+    if (logPlotUsed_){
+        arcRadius = scene_util::toLogValue(arcRadius, baseOfLogarithm_);
+    }
+
+    osg::Depth* depth = new osg::Depth;
+    depth->setFunction(osg::Depth::LESS);
+    depth->setRange(0.0, 0.9999999);
+
+    // Update the line of an incoming direction.
+    {
+        osg::Vec4 color(1.0, 0.2, 0.0, 1.0);
+        GLushort stipplePattern = 0x8fff;
+
+        osg::Vec3 dir = modifyLineLength(inDir, wavelengthIndex);
+        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
+                                                             lineWidth, stippleFactor, stipplePattern);
+        inOutDirGeode_->addDrawable(geom);
+
+        osg::Vec3 anglePos0(dir);
+        anglePos0.normalize();
+        anglePos0 *= arcRadius;
+
+        osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
+        anglePos1.normalize();
+        anglePos1 *= arcRadius;
+
+        osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
+        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
+        inOutDirGeode_->addDrawable(angleGeom);
+    }
+
+    // Update the line of an outgoing direction.
+    {
+        osg::Vec3 dir = modifyLineLength(outDir, wavelengthIndex);
+        if (data_->getBtdf() ||
+            data_->getSpecularTransmittances()) {
+            dir.z() = -dir.z();
+        }
+
+        osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
+        GLushort stipplePattern = 0xff8f;
+        
+        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
+                                                             lineWidth, stippleFactor, stipplePattern);
+        inOutDirGeode_->addDrawable(geom);
+        
+        osg::Vec3 anglePos0(dir);
+        anglePos0.normalize();
+        anglePos0 *= arcRadius;
+
+        osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
+        anglePos1.normalize();
+        anglePos1 *= arcRadius;
+
+        osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
+        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
+        inOutDirGeode_->addDrawable(angleGeom);
+    }
+}
+
+void GraphScene::updateInOutDirLine()
+{
+    updateInOutDirLine(pickedInDir_, pickedOutDir_, wavelengthIndex_);
+}
+
+void GraphScene::setCamera(osg::Camera* camera)
+{
+    camera_ = camera;
+    camera_->setNearFarRatio(0.00005);
+}
+
+bool GraphScene::isLogPlotAcceptable()
+{
+    if (!data_) return true;
+    return (data_->getBrdf() || data_->getBtdf() || data_->isEmpty());
 }
 
 void GraphScene::attachGraphShader(osg::Node* node)
@@ -509,7 +604,7 @@ void GraphScene::updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex)
 {
     osg::Vec3 dir;
     if (inDir[2] >= 0.0) {
-        dir = modifyDirLineLength(inDir, wavelengthIndex);
+        dir = modifyLineLength(inDir, wavelengthIndex);
     }
     else {
         dir = osg::Vec3(0.0, 0.0, 1.0);
@@ -520,25 +615,6 @@ void GraphScene::updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex)
                                                          osg::Vec4(1.0, 0.0, 0.0, 1.0));
     inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables());
     inDirGeode_->addDrawable(geom);
-}
-
-osg::Vec3 GraphScene::modifyDirLineLength(const lb::Vec3& lineDir, int wavelengthIndex)
-{
-    osg::Vec3 dir(lineDir[0], lineDir[1], lineDir[2]);
-
-    if (data_->getBrdf() || data_->getBtdf()) {
-        float val = data_->getMaxValuesPerWavelength().maxCoeff();
-        if (logPlotUsed_){
-            val = scene_util::toLogValue(val, baseOfLogarithm_);
-        }
-
-        const float coeff = 1.2f;
-        if (val > 1.0f / coeff) {
-            dir *= val * coeff;
-        }
-    }
-
-    return dir;
 }
 
 void GraphScene::initializeInOutDirLine()
@@ -553,93 +629,23 @@ void GraphScene::initializeInOutDirLine()
     accessoryGroup_->addChild(inOutDirGeode_.get());
 }
 
-void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
-                                    const lb::Vec3& outDir,
-                                    int             wavelengthIndex)
+osg::Vec3 GraphScene::modifyLineLength(const lb::Vec3& pos, int wavelengthIndex)
 {
-    pickedInDir_ = inDir;
-    pickedOutDir_ = outDir;
-    wavelengthIndex_ = wavelengthIndex;
+    osg::Vec3 newPos(pos[0], pos[1], pos[2]);
 
-    inOutDirGeode_->removeDrawables(0, inOutDirGeode_->getNumDrawables());
-
-    if (inDir.isZero() && outDir.isZero()) {
-        return;
-    }
-
-    const float lineWidth = 2.0f;
-    const GLint stippleFactor = 1;
-
-    float arcRadius = std::min(scaleLength1_, scaleLength2_);
-    if (logPlotUsed_){
-        arcRadius = scene_util::toLogValue(arcRadius, baseOfLogarithm_);
-    }
-
-    osg::Depth* depth = new osg::Depth;
-    depth->setFunction(osg::Depth::LESS);
-    depth->setRange(0.0, 0.9999999);
-
-    // Update the line of an incoming direction.
-    {
-        osg::Vec4 color(1.0, 0.2, 0.0, 1.0);
-        GLushort stipplePattern = 0x8fff;
-
-        osg::Vec3 dir = modifyDirLineLength(inDir, wavelengthIndex);
-        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
-                                                             lineWidth, stippleFactor, stipplePattern);
-        inOutDirGeode_->addDrawable(geom);
-
-        osg::Vec3 anglePos0(dir);
-        anglePos0.normalize();
-        anglePos0 *= arcRadius;
-
-        osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
-        anglePos1.normalize();
-        anglePos1 *= arcRadius;
-
-        osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
-        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
-        inOutDirGeode_->addDrawable(angleGeom);
-    }
-
-    // Update the line of an outgoing direction.
-    {
-        osg::Vec3 dir = modifyDirLineLength(outDir, wavelengthIndex);
-        if (data_->getBtdf() ||
-            data_->getSpecularTransmittances()) {
-            dir.z() = -dir.z();
+    if (data_->getBrdf() || data_->getBtdf()) {
+        float val = data_->getMaxValuesPerWavelength().maxCoeff();
+        if (logPlotUsed_) {
+            val = scene_util::toLogValue(val, baseOfLogarithm_);
         }
 
-        osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
-        GLushort stipplePattern = 0xff8f;
-        
-        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
-                                                             lineWidth, stippleFactor, stipplePattern);
-        inOutDirGeode_->addDrawable(geom);
-        
-        osg::Vec3 anglePos0(dir);
-        anglePos0.normalize();
-        anglePos0 *= arcRadius;
-
-        osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
-        anglePos1.normalize();
-        anglePos1 *= arcRadius;
-
-        osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
-        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
-        inOutDirGeode_->addDrawable(angleGeom);
+        const float coeff = 1.2f;
+        if (val * coeff > 1.0f) {
+            newPos *= std::min(val * coeff, 20.0f);
+        }
     }
-}
 
-void GraphScene::updateInOutDirLine()
-{
-    updateInOutDirLine(pickedInDir_, pickedOutDir_, wavelengthIndex_);
-}
-
-bool GraphScene::isLogPlotAcceptable()
-{
-    if (!data_) return true;
-    return (data_->getBrdf() || data_->getBtdf() || data_->isEmpty());
+    return newPos;
 }
 
 void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
@@ -710,8 +716,8 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 osg::Vec4 color(scene_util::hueToRgb(inThetaRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi_);
-                osg::Vec3 dir = modifyDirLineLength(curInDir, wavelengthIndex);
-                osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 1.0f);
+                osg::Vec3 dir = modifyLineLength(curInDir, wavelengthIndex);
+                osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 2.0f);
                 inDirGeode_->addDrawable(geom);
             }
 
@@ -738,8 +744,8 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, curInPhi);
-                osg::Vec3 dir = modifyDirLineLength(curInDir, wavelengthIndex);
-                osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 1.0f);
+                osg::Vec3 dir = modifyLineLength(curInDir, wavelengthIndex);
+                osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 2.0f);
                 inDirGeode_->addDrawable(geom);
             }
 

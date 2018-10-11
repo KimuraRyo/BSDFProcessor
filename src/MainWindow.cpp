@@ -56,6 +56,7 @@ const QString readOnlyStyleSheet = "QLineEdit { background-color: rgba(255, 255,
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           cosineCorrected_(false),
+                                          signalEmittedFromUi_(true),
                                           ui_(new Ui::MainWindowBase)
 {
     ui_->setupUi(this);

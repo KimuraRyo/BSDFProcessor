@@ -880,10 +880,10 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
 
     osg::ClipPlane* clipPlane = new osg::ClipPlane;
     if (dataType == lb::BTDF_DATA) {
-        clipPlane->setClipPlane(0.0, 0.0, -1.0, 0.00001);
+        clipPlane->setClipPlane(0.0, 0.0, -1.0, 0.000001);
     }
     else {
-        clipPlane->setClipPlane(0.0, 0.0, 1.0, 0.00001);
+        clipPlane->setClipPlane(0.0, 0.0, 1.0, 0.000001);
     }
 
     // Add lines.
@@ -951,10 +951,10 @@ osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUs
 {
     osg::ref_ptr<osg::Geode> axisGeode = new osg::Geode;
     axisGeode->setName("axisGeode");
-    
+
     osg::Geometry* geom = new osg::Geometry;
     axisGeode->addDrawable(geom);
-    
+
     osg::Vec3Array* vertices = new osg::Vec3Array;
     vertices->push_back(osg::Vec3(-length, 0.0, 0.0));
     vertices->push_back(osg::Vec3( length, 0.0, 0.0));
@@ -968,7 +968,7 @@ osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUs
     }
     vertices->push_back(osg::Vec3(0.0, 0.0, length));
     geom->setVertexArray(vertices);
-    
+
     osg::Vec4Array* colors = new osg::Vec4Array;
     if (rgbUsed) {
         colors->push_back(osg::Vec4(1.0, 0.0, 0.0, 1.0));
@@ -987,10 +987,10 @@ osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUs
     }
 
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, 6));
-    
+
     osg::StateSet* stateSet = axisGeode->getOrCreateStateSet();
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-    
+
     return axisGeode.release();
 }
 
@@ -1062,7 +1062,7 @@ osg::Geometry* scene_util::createStippledLine(const osg::Vec3&  pos0,
 
     osg::Depth* depth = new osg::Depth;
     depth->setFunction(osg::Depth::LESS);
-    depth->setRange(0.0, 0.9999999);
+    depth->setRange(0.0, 0.999999999);
     stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
     osg::LineWidth* lineWidth = new osg::LineWidth;
