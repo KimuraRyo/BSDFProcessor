@@ -56,6 +56,7 @@ public:
     void setScaleLength2(float length) { scaleLength2_ = length; }
     void createAxisAndScale();
     void showScaleInPlaneOfIncidence(bool on);
+    void updateScaleInPlaneOfIncidence();
 
     void updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
     void updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex);

@@ -234,6 +234,13 @@ void GraphScene::showScaleInPlaneOfIncidence(bool on)
     scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff2, pos2 * coeff2, 64, AXIS_COLOR));
 }
 
+void GraphScene::updateScaleInPlaneOfIncidence()
+{
+    if (scaleInPlaneOfIncidenceGeode_.valid()) {
+        showScaleInPlaneOfIncidence(true);
+    }
+}
+
 void GraphScene::createBrdfGeode()
 {
     const lb::SampleSet* ss = data_->getSampleSet();

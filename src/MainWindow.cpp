@@ -509,6 +509,7 @@ void MainWindow::updateIncomingAzimuthalAngle(int index)
     graphScene_->updateGraphGeometry(ui_->incomingPolarAngleSlider->value(),
                                      index,
                                      ui_->wavelengthSlider->value());
+    graphScene_->updateScaleInPlaneOfIncidence();
 
     float inAzimuthalDegree = lb::toDegree(data_->getIncomingAzimuthalAngle(index));
     ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inAzimuthalDegree));
@@ -528,6 +529,7 @@ void MainWindow::updateIncomingAzimuthalAngle()
     if (inPhi == graphScene_->getInPhi()) return;
 
     graphScene_->updateGraphGeometry(graphScene_->getInTheta(), inPhi, ui_->wavelengthSlider->value());
+    graphScene_->updateScaleInPlaneOfIncidence();
 
     getMainView()->requestRedraw();
     clearPickedValue();
@@ -599,6 +601,7 @@ void MainWindow::updateInDirection(const lb::Vec3& inDir)
     if (!updateIncomingAzimuthalAngleUi(&inPhi)) return;
 
     graphScene_->updateGraphGeometry(inTheta, inPhi, ui_->wavelengthSlider->value());
+    graphScene_->updateScaleInPlaneOfIncidence();
 
     getMainView()->requestRedraw();
 }
