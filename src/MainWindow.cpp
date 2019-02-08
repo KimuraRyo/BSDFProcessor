@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -48,6 +48,7 @@
 #include "OpenLightToolsBsdfDialog.h"
 #include "SceneUtil.h"
 #include "SpecularCenteredCoordinateSystem.h"
+#include "Version.h"
 
 const double MAX_LIGHT_INTENSITY_SLIDER = 2.0;
 const double MAX_ENVIRONMENT_INTENSITY_SLIDER = 2.0;
@@ -1679,10 +1680,12 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
         return;
     }
 
+    std::string comments("Software: BSDFProcessor-" + std::string(getVersion()));
     lb::DdrWriter::write(fileName.toLocal8Bit().data(),
                          *brdf,
                          data_->isInDirDependentCoordinateSystem(),
-                         dataType);
+                         dataType,
+                         comments);
 }
 
 void MainWindow::updateCameraPosition()
