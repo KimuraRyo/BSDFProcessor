@@ -1,5 +1,5 @@
 ## =================================================================== ##
-## Copyright (C) 2014-2018 Kimura Ryo                                  ##
+## Copyright (C) 2014-2019 Kimura Ryo                                  ##
 ##                                                                     ##
 ## This Source Code Form is subject to the terms of the Mozilla Public ##
 ## License, v. 2.0. If a copy of the MPL was not distributed with this ##
@@ -60,13 +60,12 @@ include_directories(${OPENGL_INCLUDE_DIR})
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:SSE2")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2")
-
     # 32 bit executable
     if(CMAKE_SIZEOF_VOID_P MATCHES 4)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:SSE2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
-    endif(CMAKE_SIZEOF_VOID_P MATCHES 4)
+    endif()
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
