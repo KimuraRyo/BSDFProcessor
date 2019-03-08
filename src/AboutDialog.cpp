@@ -14,8 +14,7 @@
 
 #include <libbsdf/Common/Version.h>
 
-#include <Version.h>
-
+#include "Version.h"
 #include "LicenseInformationDialog.h"
 
 AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent),
