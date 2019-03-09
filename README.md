@@ -1,9 +1,15 @@
 # <img src="resource/BSDFProcessor.png" width="48"/> BSDF Processor
-## Overview
 BSDF Processor is an application for interactive visualization of BSDF (bidirectional scattering distribution function).
-The target users of BSDF Processor are engineers and researchers investigating the measured reflection and transmission data.
-BSDF Processor can load data files and provides 3D plots, real-time rendering of 3D models, table view and so on.
+The user can investigate and edit BRDF (bidirectional reflectance distribution function) and BTDF (bidirectional transmittance distribution function).
 Basic functions are implemented using [libbsdf][1].
+
+## Features
+* 3D plot using incoming angles and multiple display modes
+* Real-time rendering with directional and environment lighting
+* Table view of sample points
+* Simple editor
+* File loaders for multiple formats
+* BRDF/BTDF generators using reflectance/transmittance models
 
 **BSDF Processor can load the following formats:**
 
@@ -22,7 +28,7 @@ Format | Extension
 -------|---------------------------------
 Integra Diffuse Distribution | .ddr, .ddt
 
-### Gallery
+## Gallery
 #### Screenshots
 <p align="center">
 <img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFProcessor/images/screenshot1.png" height="190"/>&nbsp;
@@ -33,11 +39,11 @@ Integra Diffuse Distribution | .ddr, .ddt
 #### Movie
 [![mov](http://img.youtube.com/vi/AJXpTs0InYc/mqdefault.jpg)](https://youtu.be/AJXpTs0InYc)
 
-### License
+## License
 BSDF Processor is licensed under the terms of the Mozilla Public License, version 2.0.
 See the LICENSE file.
 
-### Download
+## Download
 Windows (32bit):  
 [BSDFProcessor-1.2.0-windows-x86.zip][6]
 
@@ -51,10 +57,6 @@ BSDF Processor uses the following open source libraries:
 
 CMake is used as the build system.
 Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_DIR`, `EIGEN3_INCLUDE_DIR`, and `CMAKE_PREFIX_PATH` for Qt 5.
-
-## Future Plans
-* Loads other file formats
-* Displays more information of BSDFs
 
 ## Sponsor
 [<img src="resource/IntegraLogo.png" width="200"/>][5]
