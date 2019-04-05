@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -14,6 +14,10 @@
 #include <QThread>
 
 #include <osg/Timer>
+
+#include <libbsdf/Brdf/Analyzer.h>
+#include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
+#include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 
 ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
                                              const std::shared_ptr<lb::Brdf>    brdf,
@@ -66,16 +70,29 @@ void ReflectanceCalculator::computeReflectances()
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
-    // Compute reflectance or transmittance.
-    for (int inPhIndex = 0; inPhIndex < processedReflectances_->getNumPhi();   ++inPhIndex) {
+    // Compute reflectances or transmittances.
+    lb::Spectrum sp;
+    lb::Vec3 inDir;
+    int inPhIndex;
+    #pragma omp parallel for private(sp, inDir, inPhIndex) schedule(dynamic)
     for (int inThIndex = 0; inThIndex < processedReflectances_->getNumTheta(); ++inThIndex) {
+    for (    inPhIndex = 0; inPhIndex < processedReflectances_->getNumPhi();   ++inPhIndex) {
         if (stopped_) {
             emit stopped();
-            return;
+            continue;
         }
 
-        lb::Vec3 inDir = processedReflectances_->getDirection(inThIndex, inPhIndex);
-        lb::Spectrum sp = integrator_->computeReflectance(*brdf, inDir);
+        if (lb::SphericalCoordinatesBrdf* spheBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
+            sp = lb::computeReflectance(*spheBrdf, inThIndex, inPhIndex);
+        }
+        else if (lb::SpecularCoordinatesBrdf* specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
+            sp = lb::computeReflectance(*specBrdf, inThIndex, inPhIndex);
+        }
+        else {
+            inDir = processedReflectances_->getDirection(inThIndex, inPhIndex);
+            sp = integrator_->computeReflectance(*brdf, inDir);
+        }
+
         processedReflectances_->setSpectrum(inThIndex, inPhIndex, sp);
 
         qApp->processEvents();
