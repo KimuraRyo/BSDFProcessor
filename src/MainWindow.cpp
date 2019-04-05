@@ -47,7 +47,6 @@
 #include "OpenAstmDialog.h"
 #include "OpenLightToolsBsdfDialog.h"
 #include "SceneUtil.h"
-#include "SpecularCenteredCoordinateSystem.h"
 #include "Version.h"
 
 const double MAX_LIGHT_INTENSITY_SLIDER = 2.0;

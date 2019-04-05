@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -35,7 +35,7 @@ struct SpecularCenteredCoordinateSystem
                              lb::Vec3* inDir, lb::Vec3* outDir)
     {
         *inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
-        *outDir = toOutDirXyz(inTheta, specTheta, specPhi);
+        *outDir = toOutDirXyz(inTheta, inPhi, specTheta, specPhi);
     }
 
     static const std::string ANGLE0_NAME; /*!< This attribute holds the name of inTheta. */
@@ -50,13 +50,28 @@ struct SpecularCenteredCoordinateSystem
 
 private:
     /*! Converts an outgoing direction from a specular-centered coordinate system to a Cartesian. */
+    static inline lb::Vec3 toOutDirXyz(float inTheta, float inPhi, float specTheta, float specPhi)
+    {
+        lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
+        lb::Vec2::Scalar rotAngle = inTheta * (1.0 - specTheta / MAX_ANGLE2);
+        lb::Vec2 rotThVec = Eigen::Rotation2D<lb::Vec2::Scalar>(rotAngle) * lb::Vec2(xyzVec[0], xyzVec[2]);
+        lb::Vec2 rotPhVec = Eigen::Rotation2D<lb::Vec2::Scalar>(inPhi) * lb::Vec2(rotThVec[0], xyzVec[1]);
+
+        return lb::Vec3(static_cast<lb::Vec3::Scalar>(rotPhVec[0]),
+                        static_cast<lb::Vec3::Scalar>(rotPhVec[1]),
+                        static_cast<lb::Vec3::Scalar>(rotThVec[1]));
+    }
+
+    /*! Converts an outgoing direction from a specular-centered coordinate system to a Cartesian. */
     static inline lb::Vec3 toOutDirXyz(float inTheta, float specTheta, float specPhi)
     {
         lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
-        float rotAngle = inTheta * (1.0f - specTheta / MAX_ANGLE2);
-        lb::Vec2f rotVec = Eigen::Rotation2D<lb::Vec2f::Scalar>(rotAngle) * lb::Vec2f(xyzVec[0], xyzVec[2]);
+        lb::Vec2::Scalar rotAngle = inTheta * (1.0 - specTheta / MAX_ANGLE2);
+        lb::Vec2 rotVec = Eigen::Rotation2D<lb::Vec2::Scalar>(rotAngle) * lb::Vec2(xyzVec[0], xyzVec[2]);
 
-        return lb::Vec3(rotVec[0], xyzVec[1], rotVec[1]);
+        return lb::Vec3(static_cast<lb::Vec3::Scalar>(rotVec[0]),
+                        static_cast<lb::Vec3::Scalar>(xyzVec[1]),
+                        static_cast<lb::Vec3::Scalar>(rotVec[1]));
     }
 };
 
