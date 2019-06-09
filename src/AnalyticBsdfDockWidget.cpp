@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018 Kimura Ryo                                       //
+// Copyright (C) 2018-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -236,41 +236,20 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
         ss->getAngles3() = diffPhiAngles;
     }
     else if (coordinateSystemName == "Specular") {
-        lb::Arrayf inThetaAngles    = lb::Arrayf::LinSpaced(ui_->specularCsNumAngle0SpinBox->value() + 1,
-                                                            0.0, lb::SpecularCoordinateSystem::MAX_ANGLE0);
-
-        lb::Arrayf inPhiAngles;
+        int numInPhi;
         if (isotropic || ui_->specularCsNumAngle1SpinBox->value() <= 1) {
-            inPhiAngles.setZero(1);
+            numInPhi = 1;
         }
         else {
-            inPhiAngles.setLinSpaced(ui_->specularCsNumAngle1SpinBox->value() + 1,
-                                     0.0, lb::SpecularCoordinateSystem::MAX_ANGLE1);
+            numInPhi = ui_->specularCsNumAngle1SpinBox->value() + 1;
         }
 
-        lb::Arrayf specThetaAngles  = lb::Arrayf::LinSpaced(ui_->specularCsNumAngle2SpinBox->value() + 1,
-                                                            0.0, lb::SpecularCoordinateSystem::MAX_ANGLE2);
-        lb::Arrayf specPhiAngles    = lb::Arrayf::LinSpaced(ui_->specularCsNumAngle3SpinBox->value() + 1,
-                                                            0.0, lb::SpecularCoordinateSystem::MAX_ANGLE3);
-
-        // Create narrow intervals near specular directions.
-        for (int i = 1; i < specThetaAngles.size() - 1; ++i) {
-            lb::Arrayf::Scalar ratio = specThetaAngles[i] / lb::SpecularCoordinateSystem::MAX_ANGLE2;
-            ratio = std::pow(ratio, static_cast<lb::Arrayf::Scalar>(2.0));
-            specThetaAngles[i] = ratio * lb::SpecularCoordinateSystem::MAX_ANGLE2;
-        }
-
-        brdf = new lb::SpecularCoordinatesBrdf(inThetaAngles.size(),
-                                               inPhiAngles.size(),
-                                               specThetaAngles.size(),
-                                               specPhiAngles.size(),
-                                               lb::RGB_MODEL, 3, false);
-
-        lb::SampleSet* ss = brdf->getSampleSet();
-        ss->getAngles0() = inThetaAngles;
-        ss->getAngles1() = inPhiAngles;
-        ss->getAngles2() = specThetaAngles;
-        ss->getAngles3() = specPhiAngles;
+        brdf = new lb::SpecularCoordinatesBrdf(ui_->specularCsNumAngle0SpinBox->value() + 1,
+                                               numInPhi,
+                                               ui_->specularCsNumAngle2SpinBox->value() + 1,
+                                               ui_->specularCsNumAngle3SpinBox->value() + 1,
+                                               2.0f,
+                                               lb::RGB_MODEL, 3);
     }
     else if (coordinateSystemName == "Spherical") {
         int spinBox1Val = ui_->sphericalCsNumAngle1SpinBox->value();
