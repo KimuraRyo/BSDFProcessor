@@ -1682,7 +1682,6 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
     std::string comments("Software: BSDFProcessor-" + std::string(getVersion()));
     lb::DdrWriter::write(fileName.toLocal8Bit().data(),
                          *brdf,
-                         data_->isInDirDependentCoordinateSystem(),
                          dataType,
                          comments);
 }
