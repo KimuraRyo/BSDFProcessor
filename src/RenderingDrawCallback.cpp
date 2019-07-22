@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2017 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -37,7 +37,7 @@ void RenderingDrawCallback::render() const
 
     float* inDirPtr;
     float* renderedData;
-    lb::Vec3 inDir, outDir;
+    lb::Vec3f inDir, outDir;
     int numPixels = inDirImage_->s() * inDirImage_->t();
     #pragma omp parallel for private(inDirPtr, renderedData, inDir, outDir)
     for (int i = 0; i < numPixels; ++i) {
@@ -52,11 +52,11 @@ void RenderingDrawCallback::render() const
         // Ignore background.
         if (inDirPtr[3] != 0.0f) continue;
 
-        inDir = lb::Vec3(inDirPtr[0], inDirPtr[1], inDirPtr[2]);
-        outDir = lb::Vec3(outDirData[i * 4], outDirData[i * 4 + 1], outDirData[i * 4 + 2]);
+        inDir = lb::Vec3f(inDirPtr[0], inDirPtr[1], inDirPtr[2]);
+        outDir = lb::Vec3f(outDirData[i * 4], outDirData[i * 4 + 1], outDirData[i * 4 + 2]);
 
-        inDir = inDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
-        outDir = outDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
+        inDir = inDir.cwiseProduct(lb::Vec3f(2.0, 2.0, 2.0)) - lb::Vec3f(1.0, 1.0, 1.0);
+        outDir = outDir.cwiseProduct(lb::Vec3f(2.0, 2.0, 2.0)) - lb::Vec3f(1.0, 1.0, 1.0);
         outDir[2] = std::max(outDir[2], 0.0f);
         outDir.normalize();
 
@@ -70,7 +70,7 @@ void RenderingDrawCallback::render() const
             inDir[2] = -inDir[2];
         }
 
-        if (inDir[2] <= 0.0) continue;
+        if (inDir[2] <= 0.0f) continue;
         inDir.normalize();
 
         if (brdf_ && lightIntensity_ > 0.0f) {
@@ -79,24 +79,23 @@ void RenderingDrawCallback::render() const
     }
 }
 
-void RenderingDrawCallback::renderBrdf(const lb::Vec3& inDir, const lb::Vec3& outDir, float* pixel) const
+void RenderingDrawCallback::renderBrdf(const lb::Vec3f& inDir, const lb::Vec3f& outDir, float* pixel) const
 {
-    lb::Spectrum sp = brdf_->getSpectrum(inDir, outDir);
+    lb::Spectrum sp = brdf_->getSpectrum(inDir.cast<lb::Vec3::Scalar>(), outDir.cast<lb::Vec3::Scalar>());
     const lb::SampleSet* ss = brdf_->getSampleSet();
 
-    lb::Vec3 rgb;
+    lb::Vec3f rgb;
     if (ss->getColorModel() == lb::RGB_MODEL) {
         rgb = sp;
     }
     else if (ss->getColorModel() == lb::XYZ_MODEL) {
-        rgb = lb::xyzToSrgb(sp);
+        rgb = lb::xyzToSrgb<lb::Vec3f>(sp);
     }
     else if (ss->getNumWavelengths() == 1) {
         rgb[0] = rgb[1] = rgb[2] = sp[0];
     }
     else {
-        const lb::SampleSet* ss = brdf_->getSampleSet();
-        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, ss->getWavelengths());
+        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, ss->getWavelengths()).cast<lb::Vec3f::Scalar>();
     }
 
     rgb *= lb::PI_F * inDir[2] * lightIntensity_;
@@ -105,22 +104,22 @@ void RenderingDrawCallback::renderBrdf(const lb::Vec3& inDir, const lb::Vec3& ou
     pixel[2] += rgb[2];
 }
 
-void RenderingDrawCallback::renderReflectance(const lb::Vec3& outDir, float* pixel) const
+void RenderingDrawCallback::renderReflectance(const lb::Vec3f& outDir, float* pixel) const
 {
-    lb::Spectrum sp = reflectances_->getSpectrum(outDir);
+    lb::Spectrum sp = reflectances_->getSpectrum(outDir.cast<lb::Vec3::Scalar>());
 
-    lb::Vec3 rgb;
+    lb::Vec3f rgb;
     if (reflectances_->getColorModel() == lb::RGB_MODEL) {
         rgb = sp;
     }
     else if (reflectances_->getColorModel() == lb::XYZ_MODEL) {
-        rgb = lb::xyzToSrgb(sp);
+        rgb = lb::xyzToSrgb<lb::Vec3f>(sp);
     }
     else if (reflectances_->getNumWavelengths() == 1) {
         rgb[0] = rgb[1] = rgb[2] = sp[0];
     }
     else {
-        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, reflectances_->getWavelengths());
+        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, reflectances_->getWavelengths()).cast<lb::Vec3f::Scalar>();
     }
 
     rgb *= environmentIntensity_;

@@ -11,6 +11,9 @@ cmake_minimum_required(VERSION 3.0.0)
 # Let AUTOMOC and AUTOUIC process GENERATED files.
 cmake_policy(SET CMP0071 NEW)
 
+# Enable double precision vector types
+add_definitions(-DLIBBSDF_DOUBLE_PRECISION_VECTOR)
+
 if(NOT LIBBSDF_DIR)
     set(LIBBSDF_CORE_FOLDER_NAME "libbsdf Core")
     set(LIBBSDF_APPLICATION_FOLDER_NAME "libbsdf Applications")

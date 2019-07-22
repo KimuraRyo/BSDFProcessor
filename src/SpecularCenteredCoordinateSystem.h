@@ -31,8 +31,13 @@ struct SpecularCenteredCoordinateSystem
      * Converts from four angles to incoming and outgoing directions and
      * assigns them to \a inDir and \a outDir.
      */
-    static inline void toXyz(float inTheta, float inPhi, float specTheta, float specPhi,
-                             lb::Vec3* inDir, lb::Vec3* outDir)
+    template <typename ScalarT>
+    static void toXyz(ScalarT   inTheta,
+                      ScalarT   inPhi,
+                      ScalarT   specTheta,
+                      ScalarT   specPhi,
+                      lb::Vec3* inDir,
+                      lb::Vec3* outDir)
     {
         *inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
         *outDir = toOutDirXyz(inTheta, inPhi, specTheta, specPhi);
@@ -50,7 +55,11 @@ struct SpecularCenteredCoordinateSystem
 
 private:
     /*! Converts an outgoing direction from a specular-centered coordinate system to a Cartesian. */
-    static inline lb::Vec3 toOutDirXyz(float inTheta, float inPhi, float specTheta, float specPhi)
+    template <typename ScalarT>
+    static lb::Vec3 toOutDirXyz(ScalarT inTheta,
+                                ScalarT inPhi,
+                                ScalarT specTheta,
+                                ScalarT specPhi)
     {
         lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
         lb::Vec2::Scalar rotAngle = inTheta * (1.0 - specTheta / MAX_ANGLE2);
@@ -63,7 +72,10 @@ private:
     }
 
     /*! Converts an outgoing direction from a specular-centered coordinate system to a Cartesian. */
-    static inline lb::Vec3 toOutDirXyz(float inTheta, float specTheta, float specPhi)
+    template <typename ScalarT>
+    static lb::Vec3 toOutDirXyz(ScalarT inTheta,
+                                ScalarT specTheta,
+                                ScalarT specPhi)
     {
         lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
         lb::Vec2::Scalar rotAngle = inTheta * (1.0 - specTheta / MAX_ANGLE2);

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -205,9 +205,7 @@ osg::Geode* createAxis(double length, bool backSideShown, bool rgbUsed = false);
 osg::Geometry* createCircleFloor(float  radius,
                                  int    numSegments,
                                  float  lineWidth = 1.0f,
-                                 bool   useStipple = false,
-                                 bool   logPlotUsed = false,
-                                 float  baseOfLogarithm = 10.0f);
+                                 bool   useStipple = false);
 
 /*! Creates a stippled line. */
 osg::Geometry* createStippledLine(const osg::Vec3&  pos0,

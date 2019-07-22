@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -43,7 +43,7 @@ float scene_util::spectrumToY(const lb::Spectrum&   spectrum,
                               const lb::Arrayf&     wavelengths)
 {
     if (colorModel == lb::RGB_MODEL) {
-        lb::Vec3f xyz = lb::srgbToXyz(spectrum);
+        lb::Vec3f xyz = lb::srgbToXyz<lb::Vec3f>(spectrum);
         return xyz[1];
     }
     else if (colorModel == lb::SPECTRAL_MODEL) {
@@ -576,7 +576,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         lb::toDegree(spBrdf->getSpecTheta(1) - spBrdf->getSpecTheta(0)) < 0.1f) {
         for (int i = 1; i < thetaAngles.size() - 1; ++i) {
             lb::Arrayf::Scalar ratio = thetaAngles[i] / CoordSysT::MAX_ANGLE2;
-            ratio = std::pow(ratio, static_cast<lb::Arrayf::Scalar>(1.2));
+            ratio = std::pow(ratio, lb::Arrayf::Scalar(1.2));
             thetaAngles[i] = ratio * CoordSysT::MAX_ANGLE2;
         }
     }
@@ -675,7 +675,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         vertices->push_back(toOsg(pos2));
         vertices->push_back(toOsg(pos3));
 
-        lb::Vec3 normal = (pos2 - pos0).cross3(pos3 - pos1);
+        lb::Vec3 normal = (pos2 - pos0).cross(pos3 - pos1);
         normal.normalize();
         normals->push_back(toOsg(normal));
         normals->push_back(toOsg(normal));
@@ -997,9 +997,7 @@ osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUs
 osg::Geometry* scene_util::createCircleFloor(float  radius,
                                              int    numSegments,
                                              float  lineWidth,
-                                             bool   useStipple,
-                                             bool   logPlotUsed,
-                                             float  baseOfLogarithm)
+                                             bool   useStipple)
 {
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setName("CircleFloor");
