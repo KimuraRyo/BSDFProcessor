@@ -169,8 +169,8 @@ void AnalyticBsdfDockWidget::updateCoordSysWidget(int index)
 void AnalyticBsdfDockWidget::updateParameter()
 {
     for (auto it = currentParameters_.begin(); it != currentParameters_.end(); ++it) {
-        if (QDoubleSpinBox* spinBox = dynamic_cast<QDoubleSpinBox*>(it->first)) {
-            *it->second->getFloat() = spinBox->value();
+        if (QDoubleSpinBox* dSpinBox = dynamic_cast<QDoubleSpinBox*>(it->first)) {
+            *it->second->getFloat() = dSpinBox->value();
         }
         else if (ColorButton* colorButton = dynamic_cast<ColorButton*>(it->first)) {
             *it->second->getVec3() = util::qtToLb(colorButton->getColor());
@@ -219,7 +219,7 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
         // Create narrow intervals near specular directions.
         for (int i = 1; i < halfThetaAngles.size() - 1; ++i) {
             lb::Arrayf::Scalar ratio = halfThetaAngles[i] / lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2;
-            ratio = std::pow(ratio, static_cast<lb::Arrayf::Scalar>(2.0));
+            ratio = std::pow(ratio, lb::Arrayf::Scalar(2));
             halfThetaAngles[i] = ratio * lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2;
         }
 

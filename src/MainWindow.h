@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -8,6 +8,10 @@
 
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846 // pi
+#endif
 
 #include "ui_MainWindow.h"
 

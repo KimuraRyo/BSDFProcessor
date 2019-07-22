@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2018 Kimura Ryo                                  //
+// Copyright (C) 2016-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -86,9 +86,9 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::Minnaert(white, 0.83f));
     models.push_back(new lb::ModifiedPhong(white, 10.0f));
     models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
-                                                     static_cast<int>(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
-                                                     static_cast<int>(lb::MultipleScatteringSmith::GAUSSIAN_HEIGHT),
-                                                     static_cast<int>(lb::MultipleScatteringSmith::BECKMANN_SLOPE),
+                                                     int(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
+                                                     int(lb::MultipleScatteringSmith::GAUSSIAN_HEIGHT),
+                                                     int(lb::MultipleScatteringSmith::BECKMANN_SLOPE),
                                                      10));
     models.push_back(new lb::OrenNayar(white, 0.3f));
     models.push_back(new lb::Phong(white, 10.0f));

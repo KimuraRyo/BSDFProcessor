@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -130,7 +130,7 @@ lb::Vec3 RenderingScene::getOutDir(int x, int y)
 
     lb::Vec3 outDir = lb::toVec3(color);
     outDir = outDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
-    outDir[2] = std::max(outDir[2], 0.0f);
+    outDir[2] = std::max(outDir[2], lb::Vec3::Scalar(0));
     outDir.normalize();
 
     return outDir;

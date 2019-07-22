@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -139,7 +139,7 @@ void GraphScene::createAxisAndScale()
             backSideShown = false;
         }
 
-        osg::Vec3 tempAxis = modifyLineLength(lb::Vec3(1.0, 0.0, 0.0), wavelengthIndex_);
+        osg::Vec3 tempAxis = modifyLineLength(lb::Vec3(1.0, 0.0, 0.0));
         float axisSize = std::max(tempAxis.length(), 2.0f);
 
         axisGeode_ = scene_util::createAxis(axisSize, backSideShown, false);
@@ -365,7 +365,7 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
         osg::Vec4 color(1.0, 0.2, 0.0, 1.0);
         GLushort stipplePattern = 0x8fff;
 
-        osg::Vec3 dir = modifyLineLength(inDir, wavelengthIndex);
+        osg::Vec3 dir = modifyLineLength(inDir);
         osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
                                                              lineWidth, stippleFactor, stipplePattern);
         inOutDirGeode_->addDrawable(geom);
@@ -385,7 +385,7 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
     // Update the line of an outgoing direction.
     {
-        osg::Vec3 dir = modifyLineLength(outDir, wavelengthIndex);
+        osg::Vec3 dir = modifyLineLength(outDir);
         if (data_->getBtdf() ||
             data_->getSpecularTransmittances()) {
             dir.z() = -dir.z();
@@ -600,11 +600,11 @@ void GraphScene::initializeInDirLine()
     accessoryGroup_->addChild(inDirGeode_.get());
 }
 
-void GraphScene::updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex)
+void GraphScene::updateInDirLine(const lb::Vec3& inDir)
 {
     osg::Vec3 dir;
     if (inDir[2] >= 0.0) {
-        dir = modifyLineLength(inDir, wavelengthIndex);
+        dir = modifyLineLength(inDir);
     }
     else {
         dir = osg::Vec3(0.0, 0.0, 1.0);
@@ -629,7 +629,7 @@ void GraphScene::initializeInOutDirLine()
     accessoryGroup_->addChild(inOutDirGeode_.get());
 }
 
-osg::Vec3 GraphScene::modifyLineLength(const lb::Vec3& pos, int wavelengthIndex)
+osg::Vec3 GraphScene::modifyLineLength(const lb::Vec3& pos)
 {
     osg::Vec3 newPos(pos[0], pos[1], pos[2]);
 
@@ -671,7 +671,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 
     // Update the line of incoming direction.
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
-    updateInDirLine(inDir, wavelengthIndex);
+    updateInDirLine(inDir);
 
     lb::Brdf* brdf;
     lb::DataType dataType;
@@ -711,12 +711,12 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             }
 
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
-                float curInTheta = data_->getIncomingPolarAngle(i);
+                curInTheta = data_->getIncomingPolarAngle(i);
                 float inThetaRatio = curInTheta / lb::PI_2_F;
                 osg::Vec4 color(scene_util::hueToRgb(inThetaRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi_);
-                osg::Vec3 dir = modifyLineLength(curInDir, wavelengthIndex);
+                osg::Vec3 dir = modifyLineLength(curInDir);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 2.0f);
                 inDirGeode_->addDrawable(geom);
             }
@@ -739,12 +739,12 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             }
 
             for (int i = 0; i < numInPhi; ++i) {
-                float curInPhi = data_->getIncomingAzimuthalAngle(i);
+                curInPhi = data_->getIncomingAzimuthalAngle(i);
                 float inPhiRatio = curInPhi / (2.0f * lb::PI_F);
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, curInPhi);
-                osg::Vec3 dir = modifyLineLength(curInDir, wavelengthIndex);
+                osg::Vec3 dir = modifyLineLength(curInDir);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 2.0f);
                 inDirGeode_->addDrawable(geom);
             }
@@ -912,7 +912,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
 
     // Update the line of incoming direction.
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
-    updateInDirLine(inDir, wavelengthIndex);
+    updateInDirLine(inDir);
 
     const lb::Spectrum& sp = ss2->getSpectrum(inTheta_, inPhi_);
     float value;

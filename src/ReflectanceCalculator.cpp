@@ -27,7 +27,7 @@ ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   
                                                integrator_(integrator),
                                                stopped_(false)
 {
-    intialize(reflectances, integrator);
+    intialize(reflectances);
 }
 
 ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
@@ -38,7 +38,7 @@ ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   
                                                integrator_(integrator),
                                                stopped_(false)
 {
-    intialize(reflectances, integrator);
+    intialize(reflectances);
 }
 
 ReflectanceCalculator::~ReflectanceCalculator()
@@ -107,7 +107,7 @@ void ReflectanceCalculator::computeReflectances()
     emit finished();
 }
 
-void ReflectanceCalculator::intialize(lb::SampleSet2D* reflectances, lb::Integrator* integrator)
+void ReflectanceCalculator::intialize(lb::SampleSet2D* reflectances)
 {
     processedReflectances_ = new lb::SampleSet2D(reflectances->getNumTheta(),
                                                  reflectances->getNumPhi(),
@@ -115,6 +115,6 @@ void ReflectanceCalculator::intialize(lb::SampleSet2D* reflectances, lb::Integra
                                                  reflectances->getNumWavelengths());
 
     processedReflectances_->getWavelengths() = reflectances->getWavelengths();
-    processedReflectances_->getThetaArray() = reflectances->getThetaArray();
-    processedReflectances_->getPhiArray() = reflectances->getPhiArray();
+    processedReflectances_->getThetaArray()  = reflectances->getThetaArray();
+    processedReflectances_->getPhiArray()    = reflectances->getPhiArray();
 }

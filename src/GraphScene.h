@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -100,13 +100,13 @@ private:
     osg::Group* createPostProcessing(osg::Node* subgraph, int width, int height, int numFboSamples = 4);
 
     void initializeInDirLine();
-    void updateInDirLine(const lb::Vec3& inDir, int wavelengthIndex);
+    void updateInDirLine(const lb::Vec3& inDir);
     void clearInDirLine() { inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables()); }
 
     void initializeInOutDirLine();
 
     /*! Modifies the length of a line from the origin concidering BRDF/BTDF. */
-    osg::Vec3 modifyLineLength(const lb::Vec3& pos, int wavelengthIndex);
+    osg::Vec3 modifyLineLength(const lb::Vec3& pos);
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
 

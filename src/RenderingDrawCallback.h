@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -47,10 +47,10 @@ private:
     void render() const;
 
     /*! Renders a pixel with a BRDF and BTDF. */
-    void renderBrdf(const lb::Vec3& inDir, const lb::Vec3& outDir, float* pixel) const;
+    void renderBrdf(const lb::Vec3f& inDir, const lb::Vec3f& outDir, float* pixel) const;
     
     /*! Renders a pixel with a reflectance and transmittance. */
-    void renderReflectance(const lb::Vec3& outDir, float* pixel) const;
+    void renderReflectance(const lb::Vec3f& outDir, float* pixel) const;
 
     osg::Image* inDirImage_;    /*!< Incoming directions as input and the renderd image as output. */
     osg::Image* outDirImage_;   /*!< Outgoing directions. */

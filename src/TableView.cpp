@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -95,7 +95,6 @@ void TableView::createBrdfTable(int wavelengthIndex)
 void TableView::createBrdfDataItems(int wavelengthIndex)
 {
     const lb::Brdf* brdf = 0;
-    const lb::SampleSet2D* ss2 = 0;
     if (data_->getBrdf()) {
         brdf = data_->getBrdf();
     }
@@ -167,7 +166,6 @@ void TableView::createBrdfDataItems(int wavelengthIndex)
 void TableView::createBrdfDataPixmapItem(int wavelengthIndex)
 {
     const lb::Brdf* brdf = 0;
-    const lb::SampleSet2D* ss2 = 0;
     if (data_->getBrdf()) {
         brdf = data_->getBrdf();
     }

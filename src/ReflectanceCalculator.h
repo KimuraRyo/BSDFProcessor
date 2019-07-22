@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -46,7 +46,7 @@ signals:
     void stopped();
 
 private:
-    void intialize(lb::SampleSet2D* reflectances, lb::Integrator* integrator);
+    void intialize(lb::SampleSet2D* reflectances);
 
     std::shared_ptr<lb::Brdf> brdf_;
     std::shared_ptr<lb::Btdf> btdf_;
