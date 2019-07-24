@@ -604,6 +604,8 @@ void MainWindow::updateInDirection(const lb::Vec3& inDir)
     graphScene_->updateGraphGeometry(inTheta, inPhi, ui_->wavelengthSlider->value());
     graphScene_->updateScaleInPlaneOfIncidence();
 
+    updatePickedReflectanceUi();
+
     getMainView()->requestRedraw();
 }
 
@@ -1338,58 +1340,6 @@ bool MainWindow::updateIncomingPolarAngleUi(float* inTheta)
     }
 
     *inTheta = std::min(lb::toRadian(inThetaDegree), lb::SphericalCoordinateSystem::MAX_ANGLE0);
-    float inPhi = graphScene_->getInPhi();
-
-    lb::Brdf* brdf = 0;
-    lb::SampleSet2D* ss2 = 0;
-    if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
-    }
-    else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
-    }
-    else if (data_->getSpecularReflectances()) {
-        ss2 = data_->getSpecularReflectances();
-    }
-    else if (data_->getSpecularTransmittances()) {
-        ss2 = data_->getSpecularTransmittances();
-    }
-    else {
-        return false;
-    }
-
-    lb::Spectrum reflectances;
-    lb::ColorModel cm;
-    lb::Arrayf wavelengths;
-    if (brdf) {
-        // Compute a reflectance/transmittance.
-        lb::Integrator integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
-        lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(*inTheta, inPhi);
-        reflectances = integrator.computeReflectance(*brdf, inDir);
-
-        const lb::SampleSet* ss = brdf->getSampleSet();
-
-        cm = ss->getColorModel();
-        wavelengths = ss->getWavelengths();
-    }
-    else if (ss2) {
-        reflectances = ss2->getSpectrum(*inTheta, inPhi);
-
-        cm = ss2->getColorModel();
-        wavelengths = ss2->getWavelengths();
-    }
-    else {
-        return false;
-    }
-
-    float reflectance;
-    if (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY) {
-        reflectance = scene_util::spectrumToY(reflectances, cm, wavelengths);
-    }
-    else {
-        reflectance = reflectances[ui_->wavelengthSlider->value()];
-    }
-    ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
 
     // Adjust the slider.
     int nearestIndex = 0;
@@ -1434,9 +1384,28 @@ bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
         ui_->incomingAzimuthalAngleLineEdit->home(false);
     }
 
-    float inTheta = graphScene_->getInTheta();
     *inPhi = std::min(lb::toRadian(inPhiDegree), lb::SphericalCoordinateSystem::MAX_ANGLE1);
 
+    // Adjust the slider.
+    int nearestIndex = 0;
+    lb::Arrayf inPhiArray = data_->getReflectances()->getPhiArray();
+    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE1;
+    for (int i = 0; i < inPhiArray.size(); ++i) {
+        float diff = std::abs(*inPhi - inPhiArray[i]);
+        if (minDiff > diff) {
+            minDiff = diff;
+            nearestIndex = i;
+        }
+    }
+    signalEmittedFromUi_ = false;
+    ui_->incomingAzimuthalAngleSlider->setValue(nearestIndex);
+    signalEmittedFromUi_ = true;
+
+    return true;
+}
+
+bool MainWindow::updatePickedReflectanceUi()
+{
     lb::Brdf* brdf = 0;
     lb::SampleSet2D* ss2 = 0;
     if (data_->getBrdf()) {
@@ -1455,14 +1424,20 @@ bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
         return false;
     }
 
-    lb::Spectrum reflectances;
+    float inTheta = graphScene_->getInTheta();
+    float inPhi   = graphScene_->getInPhi();
+
+    lb::Spectrum refSp;
     lb::ColorModel cm;
     lb::Arrayf wavelengths;
     if (brdf) {
-        // Compute a reflectance/transmittance.
-        lb::Integrator integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
-        lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta, *inPhi);
-        reflectances = integrator.computeReflectance(*brdf, inDir);
+        // Compute reflectance/transmittance.
+        //lb::Integrator integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
+        //lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(*inTheta, inPhi);
+        //refSp = integrator.computeReflectance(*brdf, inDir);
+
+        // Interpolate precomputed reflectance/transmittance.
+        refSp = data_->getReflectances()->getSpectrum(inTheta, inPhi);
 
         const lb::SampleSet* ss = brdf->getSampleSet();
 
@@ -1470,7 +1445,7 @@ bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
         wavelengths = ss->getWavelengths();
     }
     else if (ss2) {
-        reflectances = ss2->getSpectrum(inTheta, *inPhi);
+        refSp = ss2->getSpectrum(inTheta, inPhi);
 
         cm = ss2->getColorModel();
         wavelengths = ss2->getWavelengths();
@@ -1481,27 +1456,12 @@ bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
 
     float reflectance;
     if (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY) {
-        reflectance = scene_util::spectrumToY(reflectances, cm, wavelengths);
+        reflectance = scene_util::spectrumToY(refSp, cm, wavelengths);
     }
     else {
-        reflectance = reflectances[ui_->wavelengthSlider->value()];
+        reflectance = refSp[ui_->wavelengthSlider->value()];
     }
     ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
-
-    // Adjust the slider.
-    int nearestIndex = 0;
-    lb::Arrayf inPhiArray = data_->getReflectances()->getPhiArray();
-    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE1;
-    for (int i = 0; i < inPhiArray.size(); ++i) {
-        float diff = std::abs(*inPhi - inPhiArray[i]);
-        if (minDiff > diff) {
-            minDiff = diff;
-            nearestIndex = i;
-        }
-    }
-    signalEmittedFromUi_ = false;
-    ui_->incomingAzimuthalAngleSlider->setValue(nearestIndex);
-    signalEmittedFromUi_ = true;
 
     return true;
 }

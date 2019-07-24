@@ -108,6 +108,7 @@ private:
 
     bool updateIncomingPolarAngleUi(float* inTheta);
     bool updateIncomingAzimuthalAngleUi(float* inPhi);
+    bool updatePickedReflectanceUi();
 
     QString getDisplayModeName(GraphScene::DisplayMode mode);
 

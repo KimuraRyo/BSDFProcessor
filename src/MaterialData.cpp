@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2018 Kimura Ryo                                  //
+// Copyright (C) 2016-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -12,11 +12,9 @@
 
 #include <QThread>
 
-
 #include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Processor.h>
-#include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 
 #include "ReflectanceCalculator.h"
 
@@ -30,15 +28,11 @@ MaterialData::MaterialData() : origBrdf_(0),
                                numWavelengths_(1),
                                reflectancesComputed_(false)
 {
-    integrator_ = new lb::Integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
-    //integrator_ = new lb::Integrator(10000000, false);
 }
 
 MaterialData::~MaterialData()
 {
     clearData();
-
-    delete integrator_;
 }
 
 void MaterialData::setBrdf(lb::Brdf* brdf)
@@ -374,14 +368,14 @@ void MaterialData::computeReflectances()
     }
 
     reflectancesComputed_ = false;
-    
+
     // Compute reflectance and transmittance.
     ReflectanceCalculator* calc;
     if (brdf_) {
-        calc = new ReflectanceCalculator(reflectances_, brdf_, integrator_);
+        calc = new ReflectanceCalculator(reflectances_, brdf_);
     }
     else if (btdf_) {
-        calc = new ReflectanceCalculator(reflectances_, btdf_, integrator_);
+        calc = new ReflectanceCalculator(reflectances_, btdf_);
     }
     else {
         return;

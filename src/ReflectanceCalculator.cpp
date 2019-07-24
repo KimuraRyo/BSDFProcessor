@@ -16,26 +16,25 @@
 #include <osg/Timer>
 
 #include <libbsdf/Brdf/Analyzer.h>
+#include <libbsdf/Brdf/Integrator.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 
+#include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
+
 ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
-                                             const std::shared_ptr<lb::Brdf>    brdf,
-                                             lb::Integrator*                    integrator)
+                                             const std::shared_ptr<lb::Brdf>    brdf)
                                              : reflectances_(reflectances),
                                                brdf_(brdf),
-                                               integrator_(integrator),
                                                stopped_(false)
 {
     intialize(reflectances);
 }
 
 ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
-                                             const std::shared_ptr<lb::Btdf>    btdf,
-                                             lb::Integrator*                    integrator)
+                                             const std::shared_ptr<lb::Btdf>    btdf)
                                              : reflectances_(reflectances),
                                                btdf_(btdf),
-                                               integrator_(integrator),
                                                stopped_(false)
 {
     intialize(reflectances);
@@ -70,6 +69,9 @@ void ReflectanceCalculator::computeReflectances()
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
+    lb::Integrator integrator = lb::Integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
+    //lb::Integrator integrator = lb::Integrator(10000000, false);
+
     // Compute reflectances or transmittances.
     lb::Spectrum sp;
     lb::Vec3 inDir;
@@ -90,7 +92,7 @@ void ReflectanceCalculator::computeReflectances()
         }
         else {
             inDir = processedReflectances_->getDirection(inThIndex, inPhIndex);
-            sp = integrator_->computeReflectance(*brdf, inDir);
+            sp = integrator.computeReflectance(*brdf, inDir);
         }
 
         processedReflectances_->setSpectrum(inThIndex, inPhIndex, sp);

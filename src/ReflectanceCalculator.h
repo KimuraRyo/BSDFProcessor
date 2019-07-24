@@ -15,7 +15,6 @@
 
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/Btdf.h>
-#include <libbsdf/Brdf/Integrator.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
 
 /*!
@@ -28,12 +27,10 @@ class ReflectanceCalculator : public QObject
 
 public:
     ReflectanceCalculator(lb::SampleSet2D*                  reflectances,
-                          const std::shared_ptr<lb::Brdf>   brdf,
-                          lb::Integrator*                   integrator);
+                          const std::shared_ptr<lb::Brdf>   brdf);
 
     ReflectanceCalculator(lb::SampleSet2D*                  reflectances,
-                          const std::shared_ptr<lb::Btdf>   btdf,
-                          lb::Integrator*                   integrator);
+                          const std::shared_ptr<lb::Btdf>   btdf);
 
     ~ReflectanceCalculator();
 
@@ -50,13 +47,11 @@ private:
 
     std::shared_ptr<lb::Brdf> brdf_;
     std::shared_ptr<lb::Btdf> btdf_;
-    
+
     lb::SampleSet2D* reflectances_; /*!< Reflectances at each incoming direction. */
 
     /*! Reflectances at each incoming direction processed in another thread. */
     lb::SampleSet2D* processedReflectances_;
-
-    lb::Integrator* integrator_;
 
     bool stopped_;
 };

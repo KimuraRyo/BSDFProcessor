@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2018 Kimura Ryo                                  //
+// Copyright (C) 2016-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -15,7 +15,6 @@
 
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/Btdf.h>
-#include <libbsdf/Brdf/Integrator.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 
@@ -120,8 +119,6 @@ private:
     int numWavelengths_;
 
     bool reflectancesComputed_;
-
-    lb::Integrator* integrator_;
 
     /*!
      * The number of incoming directions. This is used if a coordinate system does not have
