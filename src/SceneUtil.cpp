@@ -576,7 +576,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         lb::toDegree(spBrdf->getSpecTheta(1) - spBrdf->getSpecTheta(0)) < 0.1f) {
         for (int i = 1; i < thetaAngles.size() - 1; ++i) {
             lb::Arrayf::Scalar ratio = thetaAngles[i] / CoordSysT::MAX_ANGLE2;
-            ratio = std::pow(ratio, lb::Arrayf::Scalar(1.2));
+            ratio = std::pow(ratio, lb::Arrayf::Scalar(2.0));
             thetaAngles[i] = ratio * CoordSysT::MAX_ANGLE2;
         }
     }
