@@ -1067,13 +1067,17 @@ void MainWindow::initializeUi()
     signalEmittedFromUi_ = false;
     ui_->incomingPolarAngleSlider->setValue(0);
     signalEmittedFromUi_ = true;
-    ui_->incomingPolarAngleLineEdit->setText(QString::number(0));
+
+    float inPolarDegree = lb::toDegree(data_->getIncomingPolarAngle(0));
+    ui_->incomingPolarAngleLineEdit->setText(QString::number(inPolarDegree));
 
     ui_->incomingAzimuthalAngleSlider->setMaximum(data_->getNumInPhi() - 1);
     signalEmittedFromUi_ = false;
     ui_->incomingAzimuthalAngleSlider->setValue(0);
     signalEmittedFromUi_ = true;
-    ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(0));
+
+    float inAzimuthalDegree = lb::toDegree(data_->getIncomingAzimuthalAngle(0));
+    ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inAzimuthalDegree));
 
     ui_->wavelengthSlider->setMaximum(data_->getNumWavelengths() - 1);
     ui_->wavelengthSlider->setValue(0);
