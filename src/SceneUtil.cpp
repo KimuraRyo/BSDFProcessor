@@ -31,6 +31,7 @@
 #include <osgText/Font>
 #include <osgUtil/SmoothingVisitor>
 
+#include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/SpecularCoordinateSystem.h>
@@ -565,21 +566,17 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setName("meshGeom");
 
-    lb::Arrayf thetaAngles  = lb::Arrayf::LinSpaced(numTheta,   0.0, CoordSysT::MAX_ANGLE2);
-    lb::Arrayf phiAngles    = lb::Arrayf::LinSpaced(numPhi,     0.0, CoordSysT::MAX_ANGLE3);
-
-    // Create narrow intervals near specular directions.
-    // Generated meshes are noisy a little.
-    const lb::SpecularCoordinatesBrdf* spBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf);
-    if (spBrdf &&
-        spBrdf->getNumSpecTheta() >= 2 &&
-        lb::toDegree(spBrdf->getSpecTheta(1) - spBrdf->getSpecTheta(0)) < 0.1f) {
-        for (int i = 1; i < thetaAngles.size() - 1; ++i) {
-            lb::Arrayf::Scalar ratio = thetaAngles[i] / CoordSysT::MAX_ANGLE2;
-            ratio = std::pow(ratio, lb::Arrayf::Scalar(2.0));
-            thetaAngles[i] = ratio * CoordSysT::MAX_ANGLE2;
-        }
+    lb::Arrayf thetaAngles;
+    if (dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf) ||
+        dynamic_cast<const lb::HalfDifferenceCoordinatesBrdf*>(&brdf)) {
+        // Create narrow intervals near specular directions.
+        thetaAngles = lb::createExponentialArray<lb::Arrayf>(numTheta, CoordSysT::MAX_ANGLE2, 2.0f);
     }
+    else {
+        thetaAngles = lb::Arrayf::LinSpaced(numTheta, 0.0, CoordSysT::MAX_ANGLE2);
+    }
+
+    lb::Arrayf phiAngles = lb::Arrayf::LinSpaced(numPhi, 0.0, CoordSysT::MAX_ANGLE3);
 
     std::vector<lb::Vec3, Eigen::aligned_allocator<lb::Vec3> > positions;
     positions.reserve(numTheta * numPhi);

@@ -239,15 +239,10 @@ bool MaterialData::isInDirDependentCoordinateSystem() const
         brdf = btdf_->getBrdf();
     }
     else {
-        brdf = 0;
-    }
-
-    if (brdf && dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(brdf)) {
         return false;
     }
-    else {
-        return true;
-    }
+
+    return lb::isInDirDependentCoordinateSystem(*brdf);
 }
 
 void MaterialData::editBrdf(lb::Spectrum::Scalar    glossyIntensity,

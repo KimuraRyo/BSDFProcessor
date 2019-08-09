@@ -199,8 +199,10 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
     lb::Brdf* brdf;
     std::string coordinateSystemName(ui_->coordSysComboBox->currentText().toLocal8Bit());
     if (coordinateSystemName == "Half difference") {
-        lb::Arrayf halfThetaAngles  = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
-                                                            0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0);
+        // Create narrow intervals near specular directions.
+        lb::Arrayf halfThetaAngles = lb::createExponentialArray<lb::Arrayf>(ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
+                                                                            lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0,
+                                                                            2.0f);
 
         lb::Arrayf halfPhiAngles;
         if (isotropic || ui_->halfDiffCsNumAngle1SpinBox->value() <= 1) {
@@ -215,13 +217,6 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
                                                             0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2);
         lb::Arrayf diffPhiAngles    = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle3SpinBox->value() + 1,
                                                             0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE3);
-
-        // Create narrow intervals near specular directions.
-        for (int i = 1; i < halfThetaAngles.size() - 1; ++i) {
-            lb::Arrayf::Scalar ratio = halfThetaAngles[i] / lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2;
-            ratio = std::pow(ratio, lb::Arrayf::Scalar(2));
-            halfThetaAngles[i] = ratio * lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2;
-        }
 
         brdf = new lb::HalfDifferenceCoordinatesBrdf(halfThetaAngles.size(),
                                                      halfPhiAngles.size(),
