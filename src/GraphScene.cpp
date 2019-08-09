@@ -641,7 +641,7 @@ osg::Vec3 GraphScene::modifyLineLength(const lb::Vec3& pos)
 
         const float coeff = 1.2f;
         if (val * coeff > 1.0f) {
-            newPos *= std::min(val * coeff, 20.0f);
+            newPos *= std::min(val * coeff, 100.0f);
         }
     }
 
