@@ -60,7 +60,7 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
                 spinBox->setMaximum(*it->getMaxFloat());
                 spinBox->setMaximumWidth(75);
 
-                if (spinBox->maximum() >= 1000.0) {
+                if (spinBox->maximum() >= 9999.9) {
                     spinBox->setDecimals(4);
                     spinBox->setSingleStep(1.0);
                 }
