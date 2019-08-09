@@ -581,13 +581,16 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     std::vector<lb::Vec3, Eigen::aligned_allocator<lb::Vec3> > positions;
     positions.reserve(numTheta * numPhi);
 
+    // An incoming polar angle of zero is offset to validate an incoming azimuthal angle.
+    float offsetInTheta = std::max(inTheta, lb::EPSILON_F);
+
     float maxBrdfValue = 0.0f;
 
     // Create outgoing directions.
     for (int phIndex = 0; phIndex < numPhi;   ++phIndex) {
     for (int thIndex = 0; thIndex < numTheta; ++thIndex) {
         lb::Vec3 inDir, outDir;
-        CoordSysT::toXyz(inTheta, inPhi, thetaAngles[thIndex], phiAngles[phIndex], &inDir, &outDir);
+        CoordSysT::toXyz(offsetInTheta, inPhi, thetaAngles[thIndex], phiAngles[phIndex], &inDir, &outDir);
 
         if (outDir[2] < 0.0) {
             outDir[2] = 0.0;
@@ -735,12 +738,26 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
 {
     const lb::SampleSet* ss = brdf.getSampleSet();
 
+    lb::Vec3 offsetInDir = lb::Vec3::Zero();
+
+    // An incoming polar angle of zero is offset to validate an incoming azimuthal angle.
+    if (inThetaIndex == 0 &&
+        ss->getAngle0(inThetaIndex) == 0.0f) {
+        float inPhi = ss->getAngle1(inPhiIndex);
+        offsetInDir = lb::SphericalCoordinateSystem::toXyz(lb::EPSILON_F, inPhi);
+        offsetInDir.normalize();
+    }
+
     osg::Vec3Array* vertices = new osg::Vec3Array;
 
     for (int i2 = 0; i2 < ss->getNumAngles2(); ++i2) {
     for (int i3 = 0; i3 < ss->getNumAngles3(); ++i3) {
         lb::Vec3 inDir, outDir;
         brdf.getInOutDirection(inThetaIndex, inPhiIndex, i2, i3, &inDir, &outDir);
+
+        if (offsetInDir.z() != 0.0f) {
+            inDir = offsetInDir;
+        }
 
         if (lb::isDownwardDir(outDir)) continue;
 
