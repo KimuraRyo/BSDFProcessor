@@ -600,8 +600,6 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
                 continue;
             }
         }
-
-        inDir.normalize();
         outDir.normalize();
 
         float brdfValue;
@@ -745,7 +743,6 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
         ss->getAngle0(inThetaIndex) == 0.0f) {
         float inPhi = ss->getAngle1(inPhiIndex);
         offsetInDir = lb::SphericalCoordinateSystem::toXyz(lb::EPSILON_F, inPhi);
-        offsetInDir.normalize();
     }
 
     osg::Vec3Array* vertices = new osg::Vec3Array;
