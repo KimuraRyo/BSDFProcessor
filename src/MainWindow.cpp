@@ -1320,6 +1320,8 @@ void MainWindow::initializeWavelengthUi(int index)
 
 bool MainWindow::updateIncomingPolarAngleUi(float* inTheta)
 {
+    if (data_->isEmpty()) return false;
+
     GraphScene::DisplayMode dm = graphScene_->getDisplayMode();
     if (dm == GraphScene::SAMPLE_POINTS_DISPLAY ||
         dm == GraphScene::SAMPLE_POINT_LABELS_DISPLAY) {
@@ -1365,6 +1367,8 @@ bool MainWindow::updateIncomingPolarAngleUi(float* inTheta)
 
 bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
 {
+    if (data_->isEmpty()) return false;
+
     GraphScene::DisplayMode dm = graphScene_->getDisplayMode();
     if (dm == GraphScene::SAMPLE_POINTS_DISPLAY ||
         dm == GraphScene::SAMPLE_POINT_LABELS_DISPLAY) {
