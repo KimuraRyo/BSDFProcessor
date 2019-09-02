@@ -8,13 +8,13 @@
 
 #include "ReflectanceModelDockWidget.h"
 
-#include <iostream>
-
 #include <osg/Timer>
 
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
+
+#include <libbsdf/Common/Log.h>
 
 #include <libbsdf/ReflectanceModel/AshikhminShirley.h>
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
@@ -52,7 +52,7 @@ ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
 
 void ReflectanceModelDockWidget::generateBrdf()
 {
-    std::cout << "[ReflectanceModelDockWidget::generateBrdf]" << std::endl;
+    lbTrace << "[ReflectanceModelDockWidget::generateBrdf]";
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
@@ -64,7 +64,7 @@ void ReflectanceModelDockWidget::generateBrdf()
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[ReflectanceModelDockWidget::generateBrdf] " << delta << "(s)" << std::endl;
+    lbInfo << "[ReflectanceModelDockWidget::generateBrdf] " << delta << "(s)";
 
     emit generated(brdf, lb::BRDF_DATA);
     emit generated();

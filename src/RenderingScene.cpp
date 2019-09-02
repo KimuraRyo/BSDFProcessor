@@ -8,12 +8,12 @@
 
 #include "RenderingScene.h"
 
-#include <iostream>
-
 #include <osg/ComputeBoundsVisitor>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Texture2D>
+
+#include <libbsdf/Common/Log.h>
 
 #include "SceneUtil.h"
 
@@ -279,7 +279,7 @@ osg::Group* RenderingScene::createPostProcessing(osg::Node* subgraph, int width,
                                                                             numFboSamples, 0);
 
     if (!postProcessingGroup) {
-        std::cerr << "[RenderingScene::createPostProcessing] Failed to create a post-processing group." << std::endl;
+        lbError << "[RenderingScene::createPostProcessing] Failed to create a post-processing group.";
         return 0;
     }
 

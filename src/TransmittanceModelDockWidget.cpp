@@ -8,13 +8,13 @@
 
 #include "TransmittanceModelDockWidget.h"
 
-#include <iostream>
-
 #include <osg/Timer>
 
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
+
+#include <libbsdf/Common/Log.h>
 
 #include <libbsdf/ReflectanceModel/GGX.h>
 #include <libbsdf/ReflectanceModel/GgxAnisotropic.h>
@@ -41,7 +41,7 @@ TransmittanceModelDockWidget::TransmittanceModelDockWidget(QWidget* parent)
 
 void TransmittanceModelDockWidget::generateBrdf()
 {
-    std::cout << "[TransmittanceModelDockWidget::generateBrdf]" << std::endl;
+    lbTrace << "[TransmittanceModelDockWidget::generateBrdf]";
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
@@ -60,9 +60,11 @@ void TransmittanceModelDockWidget::generateBrdf()
     if (iorUsed && specBrdf) {
         bool found = false;
 
+        const std::string iorParamName("Refractive index");
+
         lb::ReflectanceModel::Parameters& params = model->getParameters();
         for (auto it = params.begin(); it != params.end(); ++it) {
-            if (it->getName() == "Refractive index") {
+            if (it->getName() == iorParamName) {
                 float ior = *it->getFloat();
                 for (int i = 0; i < specBrdf->getNumInTheta(); ++i) {
                     float inTheta = specBrdf->getInTheta(i);
@@ -77,9 +79,7 @@ void TransmittanceModelDockWidget::generateBrdf()
         }
 
         if (!found) {
-            std::cerr
-                << "[TransmittanceModelDockWidget::generateBrdf] \"Refractive index\" is not found."
-                << std::endl;
+            lbError << "[TransmittanceModelDockWidget::generateBrdf] \"" << iorParamName << "\" is not found.";
         }
     }
 
@@ -87,7 +87,7 @@ void TransmittanceModelDockWidget::generateBrdf()
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[TransmittanceModelDockWidget::generateBrdf] " << delta << "(s)" << std::endl;
+    lbInfo << "[TransmittanceModelDockWidget::generateBrdf] " << delta << "(s)";
 
     emit generated(brdf, lb::BTDF_DATA);
     emit generated();

@@ -8,13 +8,13 @@
 
 #include "MaterialData.h"
 
-#include <iostream>
-
 #include <QThread>
 
 #include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Processor.h>
+
+#include <libbsdf/Common/Log.h>
 
 #include "ReflectanceCalculator.h"
 
@@ -335,7 +335,7 @@ void MaterialData::updateSampleSet(lb::SampleSet* ss)
 
 void MaterialData::computeReflectances()
 {
-    std::cout << "[MaterialData::computeReflectances]" << std::endl;
+    lbTrace << "[MaterialData::computeReflectances]";
 
     const lb::SampleSet* ss = getSampleSet();
     if (!ss) return;

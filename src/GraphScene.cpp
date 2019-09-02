@@ -8,8 +8,6 @@
 
 #include "GraphScene.h"
 
-#include <iostream>
-
 #include <osg/ClipPlane>
 #include <osg/Depth>
 #include <osg/Geometry>
@@ -22,6 +20,7 @@
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
+#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/SpecularCoordinateSystem.h>
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
@@ -574,7 +573,7 @@ osg::Group* GraphScene::createPostProcessing(osg::Node* subgraph, int width, int
                                                                             numFboSamples, 0);
 
     if (!postProcessingGroup) {
-        std::cerr << "[GraphScene::createPostProcessing] Failed to create a post-processing group." << std::endl;
+        lbError << "[GraphScene::createPostProcessing] Failed to create a post-processing group.";
         return 0;
     }
 
@@ -608,7 +607,7 @@ void GraphScene::updateInDirLine(const lb::Vec3& inDir)
     }
     else {
         dir = osg::Vec3(0.0, 0.0, 1.0);
-        std::cerr << "[GraphScene::updateInDirLine] Negative Z-component: " << inDir << std::endl;
+        lbError << "[GraphScene::updateInDirLine] Negative Z-component: " << inDir;
     }
 
     osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir,

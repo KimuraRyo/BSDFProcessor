@@ -8,8 +8,6 @@
 
 #include "ReflectanceCalculator.h"
 
-#include <iostream>
-
 #include <QApplication>
 #include <QThread>
 
@@ -20,6 +18,7 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 
+#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 
 ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
@@ -52,9 +51,7 @@ void ReflectanceCalculator::stop()
 
 void ReflectanceCalculator::computeReflectances()
 {
-    std::cout
-        << "[ReflectanceCalculator::computeReflectances] thread: "
-        << QThread::currentThread() << std::endl;
+    lbInfo << "[ReflectanceCalculator::computeReflectances] thread: " << QThread::currentThread();
 
     lb::Brdf* brdf;
     if (brdf_) {
@@ -102,7 +99,7 @@ void ReflectanceCalculator::computeReflectances()
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[ReflectanceCalculator::computeReflectances] " << delta << "(s)" << std::endl;
+    lbInfo << "[ReflectanceCalculator::computeReflectances] " << delta << "(s)";
 
     reflectances_->getSpectra() = processedReflectances_->getSpectra();
 

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -14,6 +14,8 @@
 
 #include <osgDB/WriteFile>
 #include <osgGA/TrackballManipulator>
+
+#include <libbsdf/Common/Log.h>
 
 #include "GraphScene.h"
 #include "SceneUtil.h"
@@ -192,7 +194,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
                                                      false);
 
         if (pickedNode) {
-            //std::cout << "[GraphWidget::mouseReleaseEvent] " << pickedNode->getName() << std::endl;
+            lbInfo << "[GraphWidget::mouseReleaseEvent] " << pickedNode->getName();
             emit picked(intersectPosition);
         }
         else {
@@ -262,12 +264,12 @@ bool GraphWidget::getParameters(const QStringList& paramList, const QString& nam
 {
     int index = paramList.indexOf(name);
     if (index == -1) {
-        std::cout << "[getParameters] Parameter not found: " << name.toStdString() << std::endl;
+        lbError << "[GraphWidget::getParameters] Parameter not found: " << name.toStdString();
         return false;
     }
 
     if (index + 3 >= paramList.size()) {
-        std::cout << "[getParameters] Invalid format." << std::endl;
+        lbError << "[GraphWidget::getParameters] Invalid format.";
         return false;
     }
 
@@ -279,7 +281,7 @@ bool GraphWidget::getParameters(const QStringList& paramList, const QString& nam
         params->set(x, y, z);
     }
     else {
-        std::cout << "[GraphWidget::getParameters] Invalid format." << std::endl;
+        lbError << "[GraphWidget::getParameters] Invalid format.";
         return false;
     }
 

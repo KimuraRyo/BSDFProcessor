@@ -8,11 +8,11 @@
 
 #include "AnalyticBsdfDockWidget.h"
 
-#include <iostream>
-
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
+
+#include <libbsdf/Common/Log.h>
 
 #include "ColorButton.h"
 #include "Utility.h"
@@ -256,9 +256,9 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
                                                 lb::RGB_MODEL, 3, true);
     }
     else {
-        std::cout
+        lbError
             << "[AnalyticBsdfDockWidget::initializeBrdf] Invalid coordinate system: "
-            << coordinateSystemName << std::endl;
+            << coordinateSystemName;
         return 0;
     }
 

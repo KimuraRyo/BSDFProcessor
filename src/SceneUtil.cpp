@@ -8,8 +8,6 @@
 
 #include "SceneUtil.h"
 
-#include <iostream>
-
 #include <QColor>
 #include <QString>
 
@@ -33,6 +31,7 @@
 
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
+#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/SpecularCoordinateSystem.h>
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
@@ -51,11 +50,7 @@ float scene_util::spectrumToY(const lb::Spectrum&   spectrum,
         return lb::SpectrumUtility::spectrumToY(spectrum, wavelengths);
     }
     else {
-        std::cerr
-            << "[scene_util::spectrumToY] Invalid color model for photometric values: "
-            << colorModel
-            << std::endl;
-
+        lbError << "[scene_util::spectrumToY] Invalid color model for photometric values: " << colorModel;
         return 0.0f;
     }
 }
@@ -487,16 +482,15 @@ osg::Node* scene_util::pickNode(osgViewer::View*    view,
              it != intersections.end();
              ++it) {
             if (!it->nodePath.empty()) {
-                //std::cout
-                //    << "[pickNode] "
-                //    << "picked node: " << it->nodePath.back()->getName()
-                //    << ", position: " << it->localIntersectionPoint
-                //    << ", node type" << it->nodePath.back()->className()
-                //    //<< ", Distance to ref. plane: " << it->distance
-                //    //<< ", max. dist: " << it->maxDistance
-                //    << ", primitive index: " << it->primitiveIndex
-                //    << ", numIntersectionPoints: " << it->numIntersectionPoints
-                //    << std::endl;
+                lbDebug
+                    << "[scene_util::pickNode]"
+                    << "\n\tpicked node: "                      << it->nodePath.back()->getName()
+                    << "\n\tposition: "                         << it->localIntersectionPoint
+                    << "\n\tnode type: "                        << it->nodePath.back()->className()
+                    << "\n\tdistance from reference plane: "    << it->distance
+                    << "\n\tmax distance: "                     << it->maxDistance
+                    << "\n\tprimitive index: "                  << it->primitiveIndex
+                    << "\n\tnumIntersectionPoints: "            << it->numIntersectionPoints;
 
                 osg::Geode* geode = dynamic_cast<osg::Geode*>(it->nodePath.back());
                 if (geode) {
@@ -517,23 +511,24 @@ osg::Node* scene_util::pickNode(osgViewer::View*    view,
 
 void scene_util::displayNodePath(const osg::NodePath& nodePath)
 {
-    std::cout << "[scene_util::displayNodePath] ";
+    std::string path("[scene_util::displayNodePath] ");
+
     for(osg::NodePath::const_iterator it = nodePath.begin(); it != nodePath.end(); ++it) {
-        std::cout << "/" << (*it)->getName();
+        path += "/" + (*it)->getName();
     }
-    std::cout << std::endl;
+
+    lbTrace << path;
 }
 
 void scene_util::displayGlInformation(osg::GraphicsContext* graphicsContext)
 {
     graphicsContext->makeCurrent();
 
-    std::cout << "GL_VENDOR: "      << std::string((char*)glGetString(GL_VENDOR)) << std::endl;
-    std::cout << "GL_RENDERER: "    << std::string((char*)glGetString(GL_RENDERER)) << std::endl;
-    std::cout << "GL_VERSION: "     << std::string((char*)glGetString(GL_VERSION)) << std::endl;
-    std::cout << "GL_SHADING_LANGUAGE_VERSION: "
-                                    << std::string((char*)glGetString(GL_SHADING_LANGUAGE_VERSION)) << std::endl;
-    
+    lbInfo << "GL_VENDOR: "                   << std::string((char*)glGetString(GL_VENDOR));
+    lbInfo << "GL_RENDERER: "                 << std::string((char*)glGetString(GL_RENDERER));
+    lbInfo << "GL_VERSION: "                  << std::string((char*)glGetString(GL_VERSION));
+    lbInfo << "GL_SHADING_LANGUAGE_VERSION: " << std::string((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+
     graphicsContext->releaseContext();
 }
 

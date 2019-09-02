@@ -8,8 +8,6 @@
 
 #include "MainWindow.h"
 
-#include <iostream>
-
 #include <QtWidgets>
 
 #include <osg/io_utils>
@@ -26,6 +24,7 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/TwoSidedMaterial.h>
 
+#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/Version.h>
@@ -59,6 +58,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           signalEmittedFromUi_(true),
                                           ui_(new Ui::MainWindowBase)
 {
+    lb::Log::setNotificationLevel(lb::Log::Level::TRACE_MSG);
+
     ui_->setupUi(this);
 
     displayDockWidget_              = new DisplayDockWidget(ui_->centralWidget);
@@ -153,11 +154,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     createActions();
 
-    std::cout << "libbsdf-" << lb::getVersion() << std::endl;
-    std::cout << "OpenSceneGraph-" << osgGetVersion() << std::endl;
-    std::cout << "Qt-" << qVersion() << std::endl;
-    std::cout << "Eigen-" << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << std::endl;
-    std::cout << "Eigen SIMD: " << Eigen::SimdInstructionSetsInUse() << std::endl;
+    lbInfo << "libbsdf-" << lb::getVersion();
+    lbInfo << "OpenSceneGraph-" << osgGetVersion();
+    lbInfo << "Qt-" << qVersion();
+    lbInfo << "Eigen-" << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION;
+    lbInfo << "Eigen SIMD: " << Eigen::SimdInstructionSetsInUse();
 }
 
 MainWindow::~MainWindow()
@@ -234,20 +235,20 @@ void MainWindow::openFile(const QString& fileName)
     QFileInfo fileInfo(fileName);
     this->setWindowTitle(fileInfo.fileName() + " - BSDF Processor");
 
-    std::cout
+    lbInfo
         << "[MainWindow::openFile] fileName: " << fileName.toLocal8Bit().data()
-        << " (" << timer.elapsed() * 0.001f << "(s)" << ")" << std::endl;
+        << " (" << timer.elapsed() * 0.001f << "(s)" << ")";
 }
 
 bool MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 {
     if (dataType != lb::BRDF_DATA && dataType != lb::BTDF_DATA) {
-        std::cerr << "[MainWindow::setupBrdf] Invalid data type: " << dataType << std::endl;
+        lbError << "[MainWindow::setupBrdf] Invalid data type: " << dataType;
         return false;
     }
 
     if (!brdf->getSampleSet()->validate()) {
-        std::cerr << "[MainWindow::setupBrdf] Invalid BRDF." << std::endl;
+        lbError << "[MainWindow::setupBrdf] Invalid BRDF.";
         delete brdf;
         return false;
     }
@@ -286,7 +287,7 @@ void MainWindow::setupBrdf(lb::Brdf* brdf)
         dataType = lb::BTDF_DATA;
     }
     else {
-        std::cerr << "[MainWindow::setupBrdf] Invalid data type." << std::endl;
+        lbError << "[MainWindow::setupBrdf] Invalid data type.";
         return;
     }
 
@@ -564,7 +565,7 @@ void MainWindow::updateWavelength(int index)
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    std::cout << "[MainWindow::updateWavelength] " << delta << "(s)" << std::endl;
+    lbInfo << "[MainWindow::updateWavelength] " << delta << "(s)";
 }
 
 void MainWindow::updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir)
@@ -724,7 +725,7 @@ void MainWindow::updateEnvironmentIntensity(double intensity)
 
 void MainWindow::displayPickedValue(const osg::Vec3& position)
 {
-    //std::cout << "[MainWindow::displayPickedValue] position: " << position << std::endl;
+    lbDebug << "[MainWindow::displayPickedValue] position: " << position;
 
     if (!ui_->pickedValueLineEdit->isEnabled()) {
         ui_->pickedValueLineEdit->clear();
@@ -1274,9 +1275,7 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->pickedValueLineEdit->setDisabled(true);
     }
     else {
-        std::cerr
-            << "[MainWindow::initializeDisplayModeUi] Unknown mode: "
-            << modeName.toStdString() << std::endl;
+        lbError << "[MainWindow::initializeDisplayModeUi] Unknown mode: " << modeName.toStdString();
         return;
     }
 }
@@ -1312,9 +1311,7 @@ void MainWindow::initializeWavelengthUi(int index)
         ui_->wavelengthLineEdit->setText(QString::number(wavelength) + "nm");
     }
     else {
-        std::cerr
-            << "[MainWindow::initializeWavelengthUi] Unknown color model: "
-            << data_->getColorModel() << std::endl;
+        lbError << "[MainWindow::initializeWavelengthUi] Unknown color model: " << data_->getColorModel();
     }
 }
 
@@ -1533,7 +1530,7 @@ bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
         data_->setSpecularTransmittances(ss2);
     }
     else {
-        std::cerr << "[MainWindow::openSdrSdt] Invalid data type: " << dataType << std::endl;
+        lbError << "[MainWindow::openSdrSdt] Invalid data type: " << dataType;
         return false;
     }
 
@@ -1643,7 +1640,7 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
         brdf = data_->getBtdf()->getBrdf();
     }
     else {
-        std::cerr << "[MainWindow::exportDdrDdt] Invalid data for export." << std::endl;
+        lbError << "[MainWindow::exportDdrDdt] Invalid data for export.";
         return;
     }
 
@@ -1678,7 +1675,7 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
                           lb::Spectrum::Scalar  glossyShininess,
                           lb::Spectrum::Scalar  diffuseIntensity)
 {
-    std::cout << "[MainWindow::editBrdf]" << std::endl;
+    lbTrace << "[MainWindow::editBrdf]";
 
     lb::Brdf* brdf;
     if (data_->getBrdf()) {
