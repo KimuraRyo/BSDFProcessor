@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -231,6 +231,9 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
                 lb::SphericalCoordinateSystem::fromXyz(inDir, outDir, &inTheta, &outTheta, &outPhi);
                 lb::SphericalCoordinateSystem::toXyz(inTheta, 0.0f, outTheta, outPhi, &inDir, &outDir);
             }
+
+            lb::Spectrum sp = brdf->getSpectrum(inDir, outDir);
+            lbDebug << "[RenderingWidget::mouseReleaseEvent] Spectrum: " << sp.format(lb::EIGEN_IO_FMT);
         }
         else if (ss2) {
             if (ss2->isIsotropic()) {
