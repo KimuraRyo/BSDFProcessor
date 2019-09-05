@@ -62,14 +62,23 @@ void TransmittanceModelDockWidget::generateBrdf()
 
         const std::string iorParamName("Refractive index");
 
+        using std::asin;
+        using std::max;
+        using std::min;
+        using std::sin;
+
         lb::ReflectanceModel::Parameters& params = model->getParameters();
         for (auto it = params.begin(); it != params.end(); ++it) {
             if (it->getName() == iorParamName) {
-                float ior = *it->getFloat();
+                // If the refractive index used for offset is less than 1.0, lb::SpecularCoordinatesBrdf is inefficient.
+                float ior = max(*it->getFloat(), 1.0f);
+
+                if (ior == 1.0f) break;
+
                 for (int i = 0; i < specBrdf->getNumInTheta(); ++i) {
                     float inTheta = specBrdf->getInTheta(i);
-                    float sinT = std::min(std::sin(inTheta) / ior, 1.0f);
-                    float refractedTheta = std::asin(sinT);
+                    float sinT = min(sin(inTheta) / ior, 1.0f);
+                    float refractedTheta = asin(sinT);
                     specBrdf->setSpecularOffset(i, refractedTheta - inTheta);
                 }
 
