@@ -233,7 +233,7 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
             }
 
             lb::Spectrum sp = brdf->getSpectrum(inDir, outDir);
-            lbDebug << "[RenderingWidget::mouseReleaseEvent] Spectrum: " << sp.format(lb::EIGEN_IO_FMT);
+            lbDebug << "[RenderingWidget::mouseReleaseEvent] Spectrum: " << sp.format(lb::LB_EIGEN_IO_FMT);
         }
         else if (ss2) {
             if (ss2->isIsotropic()) {
