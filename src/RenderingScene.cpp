@@ -143,7 +143,7 @@ void RenderingScene::fitCameraPosition(osg::Camera*     camera,
 {
     using std::min;
     using std::abs;
-    
+
     osg::ComputeBoundsVisitor cbv(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN);
     if (node) {
         node->accept(cbv);

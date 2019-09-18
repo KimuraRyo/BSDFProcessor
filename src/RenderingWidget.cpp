@@ -83,7 +83,7 @@ void RenderingWidget::showSphere()
 void RenderingWidget::showCylinder()
 {
     renderingScene_->getScene()->removeChildren(0, renderingScene_->getScene()->getNumChildren());
-    
+
     osg::Geode* geode = new osg::Geode;
     osg::Cylinder* cylinder = new osg::Cylinder(osg::Vec3(), 1.0f, 2.0f);
     osg::Quat rotQuat(M_PI / 2.0, osg::Vec3(0.0, 1.0, 0.0));
@@ -105,7 +105,7 @@ void RenderingWidget::showLoadedModel()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Model File"), QString(),
                                                     tr("Obj Files (*.obj)"));
-    
+
     if (fileName.isEmpty()) return;
 
     openModel(fileName);
@@ -115,7 +115,7 @@ void RenderingWidget::showLoadedModel()
 void RenderingWidget::resizeEvent(QResizeEvent* event)
 {
     osgQt::GLWidget::resizeEvent(event);
-    
+
     if (renderingScene_) {
         renderingScene_->updateView(event->size().width(), event->size().height());
     }
@@ -138,7 +138,7 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
     switch (event->key()) {
         case Qt::Key_Up: {
             if (!tm) break;
-            
+
             osg::Vec3 rotAxis = camDir ^ camUp;
             osg::Quat rotQuat(M_PI / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
@@ -290,7 +290,7 @@ void RenderingWidget::contextMenuEvent(QContextMenuEvent* event)
 
 #ifndef __APPLE__
     if (mouseMoved_) return;
-    
+
     showContextMenu(event->globalPos());
 #endif
 }
@@ -299,13 +299,13 @@ void RenderingWidget::showContextMenu(const QPoint& pos)
 {
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
-    
+
     QMenu* shapeMenu = menu.addMenu(tr("Shape"));
     shapeMenu->addAction(actionShapeSphere_);
     shapeMenu->addAction(actionShapeCylinder_);
     shapeMenu->addAction(actionShapeBox_);
     shapeMenu->addAction(actionShapeOpen_);
-    
+
     menu.exec(pos);
 }
 

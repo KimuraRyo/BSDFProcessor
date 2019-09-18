@@ -53,7 +53,7 @@ void GraphicsSampleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem
     painter->fillRect(boundingRect(), color_);
 
     qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    
+
     if (lod > 40.0) {
         painter->setPen(QPen(gridColor_, 0));
         painter->drawRect(boundingRect());
@@ -63,7 +63,7 @@ void GraphicsSampleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem
         int precision = std::min(static_cast<int>(lod / 20.0), 6);
         QString textg = QString::number(value_, 'g', precision);
         QString textf = QString::number(value_, 'f', precision);
-        
+
         QString text;
         if (value_ < 1.0f || value_ >= 10000.0f) {
             text = textg;

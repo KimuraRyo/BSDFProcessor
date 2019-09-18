@@ -106,7 +106,7 @@ private:
     lb::SampleSet2D* specularTransmittances_;   /*!< The array of specular transmittance. */
 
     lb::FileType fileType_; /*! File format. */
-    
+
     lb::SampleSet2D* reflectances_; /*!< Reflectances at each incoming direction. */
 
     lb::Spectrum maxPerWavelength_; /*!< Maximum values at each wavelength. */

@@ -48,7 +48,7 @@ private:
 
     /*! Renders a pixel with a BRDF and BTDF. */
     void renderBrdf(const lb::Vec3f& inDir, const lb::Vec3f& outDir, float* pixel) const;
-    
+
     /*! Renders a pixel with a reflectance and transmittance. */
     void renderReflectance(const lb::Vec3f& outDir, float* pixel) const;
 

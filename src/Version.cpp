@@ -23,6 +23,6 @@ const char* getVersion()
         sprintf(version, "%d.%d.%d", BSDFPROCESSOR_MAJOR_VERSION, BSDFPROCESSOR_MINOR_VERSION, BSDFPROCESSOR_PATCH_VERSION);
         initialized = true;
     }
-    
+
     return version;
 }

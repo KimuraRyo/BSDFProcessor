@@ -41,7 +41,7 @@ signals:
 private slots:
     void useLogPlot(bool on);
     void updateBaseOfLogarithm(int index);
-    
+
     void toggleLogPlotCheckBox(bool on);
 
     void setScaleLength1(double length);

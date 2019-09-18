@@ -302,7 +302,7 @@ void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavel
     if (data_->getBrdf() ||
         data_->getBtdf()) {
         updateBrdfGeometry(inThetaIndex, inPhiIndex, wavelengthIndex);
-        
+
     }
     else if (data_->getSpecularReflectances() ||
              data_->getSpecularTransmittances()) {
@@ -392,11 +392,11 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 
         osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
         GLushort stipplePattern = 0xff8f;
-        
+
         osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
                                                              lineWidth, stippleFactor, stipplePattern);
         inOutDirGeode_->addDrawable(geom);
-        
+
         osg::Vec3 anglePos0(dir);
         anglePos0.normalize();
         anglePos0 *= arcRadius;
@@ -592,7 +592,7 @@ void GraphScene::initializeInDirLine()
     if (inDirGeode_.valid()) {
         accessoryGroup_->removeChild(inDirGeode_.get());
     }
-    
+
     inDirGeode_ = new osg::Geode;
     inDirGeode_->setName("inDirGeode_");
     attachColorShader(inDirGeode_.get());
@@ -621,7 +621,7 @@ void GraphScene::initializeInOutDirLine()
     if (inOutDirGeode_.valid()) {
         accessoryGroup_->removeChild(inOutDirGeode_.get());
     }
-    
+
     inOutDirGeode_ = new osg::Geode;
     inOutDirGeode_->setName("inOutDirGeode_");
     attachColorShader(inOutDirGeode_.get());
@@ -942,7 +942,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     spRefLine->push_back(0);
     spRefLine->push_back(1);
     spRefGeometry->addPrimitiveSet(spRefLine);
-    
+
     osg::Vec4Array* colors = new osg::Vec4Array;
     colors->push_back(osg::Vec4(1.0, 1.0, 1.0, 1.0));
     spRefGeometry->setColorArray(colors);

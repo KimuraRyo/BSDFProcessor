@@ -96,7 +96,7 @@ void GraphWidget::pasteCameraSettings()
 void GraphWidget::resizeEvent(QResizeEvent* event)
 {
     osgQt::GLWidget::resizeEvent(event);
-    
+
     if (graphScene_) {
         graphScene_->updateView(event->size().width(), event->size().height());
     }
@@ -235,7 +235,7 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent* event)
 
 #ifndef __APPLE__
     if (mouseMoved_) return;
-    
+
     showContextMenu(event->globalPos());
 #endif
 }

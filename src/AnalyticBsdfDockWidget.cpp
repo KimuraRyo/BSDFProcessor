@@ -55,7 +55,7 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
             case lb::ReflectanceModel::Parameter::FLOAT_PARAMETER:
             {
                 QDoubleSpinBox* spinBox = new QDoubleSpinBox(ui_->parameterWidget);
-                
+
                 spinBox->setMinimum(*it->getMinFloat());
                 spinBox->setMaximum(*it->getMaxFloat());
                 spinBox->setMaximumWidth(75);

@@ -206,7 +206,7 @@ void TableView::createBrdfDataPixmapItem(int wavelengthIndex)
                                          ss->getColorModel(),
                                          ss->getWavelengths(),
                                          wavelengthIndex);
-            
+
             maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex];
             if (maxValue == 0.0f) {
                 color = 0;
@@ -280,7 +280,7 @@ void TableView::createReflectanceTable(int wavelengthIndex)
     else {
         return;
     }
-    
+
     int num0 = ss2->getNumTheta();
     int num1 = ss2->getNumPhi();
 
@@ -446,7 +446,7 @@ void TableView::paintEvent(QPaintEvent* event)
         else {
             painter.translate(angleNameRect.height() + 1, 1);
         }
-        
+
         painter.fillRect(angleNameRect, QColor(Qt::red).lighter(180));
         painter.drawRect(angleNameRect);
         painter.drawText(angleNameRect, Qt::AlignCenter, "Incoming polar angle");

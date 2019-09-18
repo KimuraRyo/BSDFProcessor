@@ -62,7 +62,7 @@ void scene_util::fitCameraPosition(osg::Camera*     camera,
 {
     using std::min;
     using std::abs;
-    
+
     osg::ComputeBoundsVisitor cbv(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN);
     if (node) {
         node->accept(cbv);
@@ -371,11 +371,11 @@ osg::Camera* scene_util::createHudText(const std::string& textString, int width,
     text->setFont(font);
     text->setCharacterSize(20.0f);
     text->setColor(osg::Vec4(1.0, 1.0, 1.0, 1.0));
-    
+
     text->setPosition(osg::Vec3(10.0, 10.0, 0.0));
     text->setLayout(osgText::Text::LEFT_TO_RIGHT);
     text->setText(textString);
-    
+
     geode->addDrawable(text);
 
     osg::ref_ptr<osg::Camera> camera = new osg::Camera;
@@ -1022,7 +1022,7 @@ osg::Geometry* scene_util::createCircleFloor(float  radius,
     colors->push_back(osg::Vec4(0.1, 0.1, 0.1, 1.0));
     geom->setColorArray(colors);
     geom->setColorBinding(osg::Geometry::BIND_OVERALL);
-    
+
     osg::StateSet* stateSet = geom->getOrCreateStateSet();
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
@@ -1049,7 +1049,7 @@ osg::Geometry* scene_util::createStippledLine(const osg::Vec3&  pos0,
 {
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setName("StippledLine");
-    
+
     osg::Vec3Array* vertices = new osg::Vec3Array;
     vertices->push_back(pos0);
     vertices->push_back(pos1);

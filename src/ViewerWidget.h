@@ -28,7 +28,7 @@ class ViewerWidget : public QWidget, public osgViewer::CompositeViewer
 {
 public:
     explicit ViewerWidget(QWidget* parent);
-    
+
     void addViewWidget(osgQt::GLWidget* qglWidget);
 
     static QGLFormat createQGLFormat(int x = 0, int y = 0, int w = 1024, int h = 1024,
@@ -38,7 +38,7 @@ private:
     Q_DISABLE_COPY(ViewerWidget)
 
     void paintEvent(QPaintEvent* event);
-    
+
     void initializeViewer(osgQt::GLWidget* qglWidget, osgViewer::View* view);
 
     /*! Sets up event handlers in the view. */

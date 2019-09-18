@@ -140,7 +140,7 @@ private:
     osg::ref_ptr<osg::Geode> circleGeode_;
     osg::ref_ptr<osg::Geode> scaleInPlaneOfIncidenceGeode_;
     osg::ref_ptr<osg::Geode> axisTextLabelGeode_;
-    
+
     osg::ref_ptr<osg::Geode> inDirGeode_;
     osg::ref_ptr<osg::Geode> inOutDirGeode_;
 

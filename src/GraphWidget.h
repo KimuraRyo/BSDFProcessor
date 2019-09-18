@@ -65,7 +65,7 @@ private:
     void dropEvent(QDropEvent* event);
     void wheelEvent(QWheelEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
-    
+
     void showContextMenu(const QPoint& pos);
 
     static bool getParameters(const QStringList& paramList, const QString& name, osg::Vec3d* params);

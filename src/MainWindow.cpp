@@ -354,7 +354,7 @@ void MainWindow::exportBxdfUsingDialog()
         fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
                                                 tr("Integra DDT Files (*.ddt)"));
     }
-    
+
     if (fileName.isEmpty()) return;
 
     exportFile(fileName);
@@ -708,7 +708,7 @@ void MainWindow::updateEnvironmentIntensity(int intensity)
 void MainWindow::updateEnvironmentIntensity(double intensity)
 {
     if (signalEmittedFromUi_) {
-        double sliderVal = intensity 
+        double sliderVal = intensity
                          * ui_->environmentIntensitySlider->maximum()
                          / MAX_ENVIRONMENT_INTENSITY_SLIDER;
 
@@ -1562,7 +1562,7 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
             return false;
         }
     }
-    
+
     lb::Brdf* brdf;
     lb::DataType dataType;
     if (dialog.isFrontBrdf()) {

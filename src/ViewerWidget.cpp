@@ -22,7 +22,7 @@ ViewerWidget::ViewerWidget(QWidget* parent) : QWidget(parent)
 
     // Disable the default setting of viewer.done() by pressing Escape.
     setKeyEventSetsDone(0);
-    
+
     setRunFrameScheme(osgViewer::ViewerBase::ON_DEMAND);
 
     connect(&timer_, SIGNAL(timeout()), this, SLOT(update()));
