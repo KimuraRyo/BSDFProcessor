@@ -240,7 +240,7 @@ void MainWindow::openFile(const QString& fileName)
         << " (" << timer.elapsed() * 0.001f << "(s)" << ")";
 }
 
-bool MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
+bool MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType)
 {
     if (dataType != lb::BRDF_DATA && dataType != lb::BTDF_DATA) {
         lbError << "[MainWindow::setupBrdf] Invalid data type: " << dataType;
@@ -249,12 +249,11 @@ bool MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
 
     if (!brdf->getSampleSet()->validate()) {
         lbError << "[MainWindow::setupBrdf] Invalid BRDF.";
-        delete brdf;
         return false;
     }
 
     if (cosineCorrected_) {
-        lb::divideByCosineOutTheta(brdf);
+        lb::divideByCosineOutTheta(brdf.get());
     }
 
     data_->clearData();
@@ -266,7 +265,7 @@ bool MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
     }
     graphScene_->createBrdfGeode();
 
-    renderingScene_->setData(brdf, data_->getReflectances(), dataType);
+    renderingScene_->setData(brdf.get(), data_->getReflectances(), dataType);
 
     initializeUi();
 
@@ -277,7 +276,7 @@ bool MainWindow::setupBrdf(lb::Brdf* brdf, lb::DataType dataType)
     return true;
 }
 
-void MainWindow::setupBrdf(lb::Brdf* brdf)
+void MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf)
 {
     lb::DataType dataType;
     if (data_->getBrdf()) {
@@ -738,7 +737,7 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
 
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(graphScene_->getInTheta(), graphScene_->getInPhi());
     if (position.z() > 0.0f) {
-        lb::Brdf* brdf = data_->getBrdf();
+        lb::Brdf* brdf = data_->getBrdf().get();
         lb::SampleSet2D* sr = data_->getSpecularReflectances();
         if (brdf) {
             lb::Vec3 outDir = lb::toVec3(position).normalized();
@@ -986,21 +985,21 @@ void MainWindow::createActions()
     connect(renderingWidget_, SIGNAL(inDirPicked(lb::Vec3)),
             this, SLOT(updateInDirection(lb::Vec3)));
 
-    connect(reflectanceModelDockWidget_, SIGNAL(generated(lb::Brdf*, lb::DataType)),
-            this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
+    connect(reflectanceModelDockWidget_, SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
+            this, SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
     connect(reflectanceModelDockWidget_, SIGNAL(generated()),
             this, SLOT(clearFileType()));
 
-    connect(transmittanceModelDockWidget_, SIGNAL(generated(lb::Brdf*, lb::DataType)),
-            this, SLOT(setupBrdf(lb::Brdf*, lb::DataType)));
+    connect(transmittanceModelDockWidget_, SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
+            this, SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
     connect(transmittanceModelDockWidget_, SIGNAL(generated()),
             this, SLOT(clearFileType()));
 
     connect(smoothDockWidget_, SIGNAL(processed()),
             this, SLOT(updateBrdf()));
 
-    connect(insertAngleDockWidget_, SIGNAL(processed(lb::Brdf*)),
-            this, SLOT(setupBrdf(lb::Brdf*)));
+    connect(insertAngleDockWidget_, SIGNAL(processed(std::shared_ptr<lb::Brdf>)),
+            this, SLOT(setupBrdf(std::shared_ptr<lb::Brdf>)));
 
     connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
 
@@ -1163,10 +1162,10 @@ void MainWindow::initializeUi()
 
     lb::Brdf* brdf = 0;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
 
     if (brdf) {
@@ -1414,10 +1413,10 @@ bool MainWindow::updatePickedReflectanceUi()
     lb::Brdf* brdf = 0;
     lb::SampleSet2D* ss2 = 0;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
     else if (data_->getSpecularReflectances()) {
         ss2 = data_->getSpecularReflectances();
@@ -1514,7 +1513,7 @@ bool MainWindow::openDdrDdt(const QString& fileName, lb::DataType dataType)
     lb::SpecularCoordinatesBrdf* brdf = lb::DdrReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    return setupBrdf(brdf, dataType);
+    return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), dataType);
 }
 
 bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
@@ -1551,10 +1550,15 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
 
     OpenLightToolsBsdfDialog dialog(this);
 
-    if (material->getFrontMaterial()->getBsdf()->getBrdf()) { dialog.addFrontBrdfItem(); }
-    if (material->getFrontMaterial()->getBsdf()->getBtdf()) { dialog.addFrontBtdfItem(); }
-    if (material->getBackMaterial()->getBsdf()->getBrdf())  { dialog.addBackBrdfItem(); }
-    if (material->getBackMaterial()->getBsdf()->getBtdf())  { dialog.addBackBtdfItem(); }
+    std::shared_ptr<lb::Brdf> frontBrdf = material->getFrontMaterial()->getBsdf()->getBrdf();
+    std::shared_ptr<lb::Btdf> frontBtdf = material->getFrontMaterial()->getBsdf()->getBtdf();
+    std::shared_ptr<lb::Brdf> backBrdf  = material->getBackMaterial()->getBsdf()->getBrdf();
+    std::shared_ptr<lb::Btdf> backBtdf  = material->getBackMaterial()->getBsdf()->getBtdf();
+
+    if (frontBrdf) { dialog.addFrontBrdfItem(); }
+    if (frontBtdf) { dialog.addFrontBtdfItem(); }
+    if (backBrdf)  { dialog.addBackBrdfItem(); }
+    if (backBtdf)  { dialog.addBackBtdfItem(); }
 
     if (dialog.hasMultipleItems()) {
         if (dialog.exec() == QDialog::Rejected) {
@@ -1566,26 +1570,26 @@ bool MainWindow::openLightToolsBsdf(const QString& fileName)
     lb::Brdf* brdf;
     lb::DataType dataType;
     if (dialog.isFrontBrdf()) {
-        brdf = material->getFrontMaterial()->getBsdf()->getBrdf();
+        brdf = frontBrdf.get();
         dataType = lb::BRDF_DATA;
     }
     else if (dialog.isFrontBtdf()) {
-        brdf = material->getFrontMaterial()->getBsdf()->getBtdf()->getBrdf();
+        brdf = frontBtdf->getBrdf().get();
         dataType = lb::BTDF_DATA;
     }
     else if (dialog.isBackBrdf()) {
-        brdf = material->getBackMaterial()->getBsdf()->getBrdf();
+        brdf = backBrdf.get();
         dataType = lb::BRDF_DATA;
     }
     else if (dialog.isBackBtdf()) {
-        brdf = material->getBackMaterial()->getBsdf()->getBtdf()->getBrdf();
+        brdf = backBtdf->getBrdf().get();
         dataType = lb::BTDF_DATA;
     }
     else {
         return false;
     }
 
-    bool ok = setupBrdf(brdf->clone(), dataType);
+    bool ok = setupBrdf(std::shared_ptr<lb::Brdf>(brdf->clone()), dataType);
 
     delete material;
 
@@ -1598,7 +1602,7 @@ bool MainWindow::openZemaxBsdf(const QString& fileName)
     lb::SpecularCoordinatesBrdf* brdf = lb::ZemaxBsdfReader::read(fileName.toLocal8Bit().data(), &dataType);
     if (!brdf) return false;
 
-    return setupBrdf(brdf, dataType);
+    return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), dataType);
 }
 
 bool MainWindow::openAstm(const QString& fileName)
@@ -1609,7 +1613,7 @@ bool MainWindow::openAstm(const QString& fileName)
     lb::SphericalCoordinatesBrdf* brdf = lb::AstmReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    return setupBrdf(brdf, dialog.getDataType());
+    return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), dialog.getDataType());
 }
 
 bool MainWindow::openMerlBinary(const QString& fileName)
@@ -1617,7 +1621,7 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     lb::HalfDifferenceCoordinatesBrdf* brdf = lb::MerlBinaryReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
-    return setupBrdf(brdf, lb::BRDF_DATA);
+    return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), lb::BRDF_DATA);
 }
 
 void MainWindow::exportFile(const QString& fileName)
@@ -1634,10 +1638,10 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::Brdf* brdf;
     if (dataType == lb::BRDF_DATA && data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (dataType == lb::BTDF_DATA && data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
     else {
         lbError << "[MainWindow::exportDdrDdt] Invalid data for export.";
@@ -1679,9 +1683,9 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
 
     lb::Brdf* brdf;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     } else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
     else {
         return;

@@ -43,8 +43,8 @@ public slots:
     void openFile(const QString& fileName);
 
 private slots:
-    bool setupBrdf(lb::Brdf* brdf, lb::DataType dataType);
-    void setupBrdf(lb::Brdf* brdf);
+    bool setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType);
+    void setupBrdf(std::shared_ptr<lb::Brdf> brdf);
     void updateBrdf();
 
     void openBxdfUsingDialog();

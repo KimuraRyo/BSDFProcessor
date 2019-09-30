@@ -49,10 +49,10 @@ void TableView::createTable(int wavelengthIndex, float gamma, bool photometric)
 
     const lb::Brdf* brdf = 0;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
 
     if (!brdf ||
@@ -96,10 +96,10 @@ void TableView::createBrdfDataItems(int wavelengthIndex)
 {
     const lb::Brdf* brdf = 0;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
     else {
         return;
@@ -167,10 +167,10 @@ void TableView::createBrdfDataPixmapItem(int wavelengthIndex)
 {
     const lb::Brdf* brdf = 0;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
     else {
         return;
@@ -373,10 +373,10 @@ void TableView::paintEvent(QPaintEvent* event)
     const lb::Brdf* brdf = 0;
     const lb::SampleSet2D* ss2 = 0;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
     }
     else if (data_->getSpecularReflectances()) {
         ss2 = data_->getSpecularReflectances();

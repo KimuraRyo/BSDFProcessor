@@ -48,13 +48,13 @@ void TransmittanceModelDockWidget::generateBrdf()
     QString name = ui_->reflectanceModelComboBox->currentText();
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
 
-    lb::Brdf* brdf = initializeBrdf(model->isIsotropic());
+    std::shared_ptr<lb::Brdf> brdf = initializeBrdf(model->isIsotropic());
 
     bool iorUsed = (dynamic_cast<lb::Ggx*>(model) ||
                     dynamic_cast<lb::GgxAnisotropic*>(model) ||
                     dynamic_cast<lb::MultipleScatteringSmith*>(model));
 
-    lb::SpecularCoordinatesBrdf* specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf);
+    lb::SpecularCoordinatesBrdf* specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
 
     // Offset specular directions for refraction.
     if (iorUsed && specBrdf) {
@@ -92,7 +92,7 @@ void TransmittanceModelDockWidget::generateBrdf()
         }
     }
 
-    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf, lb::BTDF_DATA);
+    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf.get(), lb::BTDF_DATA);
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);

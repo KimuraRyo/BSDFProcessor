@@ -194,7 +194,7 @@ void AnalyticBsdfDockWidget::initializeReflectanceModels()
             this, SLOT(updateCoordSysWidget(int)));
 }
 
-lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
+std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
 {
     lb::Brdf* brdf;
     std::string coordinateSystemName(ui_->coordSysComboBox->currentText().toLocal8Bit());
@@ -264,5 +264,5 @@ lb::Brdf* AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
 
     brdf->setSourceType(lb::GENERATED_SOURCE);
 
-    return brdf;
+    return std::shared_ptr<lb::Brdf>(brdf);
 }

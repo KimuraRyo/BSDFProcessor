@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018 Kimura Ryo                                       //
+// Copyright (C) 2018-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -8,6 +8,8 @@
 
 #ifndef ANALYTIC_BSDF_DOCKWIDGET_H
 #define ANALYTIC_BSDF_DOCKWIDGET_H
+
+#include <memory>
 
 #include "ui_ReflectanceModelDockWidget.h"
 
@@ -26,10 +28,6 @@ public:
     explicit AnalyticBsdfDockWidget(QWidget* parent);
     virtual ~AnalyticBsdfDockWidget();
 
-signals:
-    void generated(lb::Brdf* brdf, lb::DataType dataType);
-    void generated();
-
 protected slots:
     void updateParameterWidget(int index);
     void updateCoordSysWidget(int index);
@@ -39,7 +37,7 @@ protected:
     Q_DISABLE_COPY(AnalyticBsdfDockWidget)
 
     virtual void initializeReflectanceModels() = 0;
-    lb::Brdf* initializeBrdf(bool isotropic);
+    std::shared_ptr<lb::Brdf> initializeBrdf(bool isotropic);
 
     std::map<std::string, lb::ReflectanceModel*> reflectanceModels_;
 

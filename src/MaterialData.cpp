@@ -35,9 +35,9 @@ MaterialData::~MaterialData()
     clearData();
 }
 
-void MaterialData::setBrdf(lb::Brdf* brdf)
+void MaterialData::setBrdf(std::shared_ptr<lb::Brdf> brdf)
 {
-    brdf_.reset(brdf);
+    brdf_ = brdf;
     updateBrdf();
 }
 
@@ -236,7 +236,7 @@ bool MaterialData::isInDirDependentCoordinateSystem() const
         brdf = brdf_.get();
     }
     else if (btdf_) {
-        brdf = btdf_->getBrdf();
+        brdf = btdf_->getBrdf().get();
     }
     else {
         return false;
@@ -253,7 +253,7 @@ void MaterialData::editBrdf(lb::Spectrum::Scalar    glossyIntensity,
     if (brdf_) {
         brdf = brdf_.get();
     } else if (btdf_) {
-        brdf = btdf_->getBrdf();
+        brdf = btdf_->getBrdf().get();
     }
     else {
         return;

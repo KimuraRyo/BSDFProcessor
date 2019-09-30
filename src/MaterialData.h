@@ -30,8 +30,8 @@ public:
     MaterialData();
     ~MaterialData();
 
-    lb::Brdf* getBrdf() { return brdf_.get(); }
-    void setBrdf(lb::Brdf* brdf);
+    std::shared_ptr<lb::Brdf> getBrdf() { return brdf_; }
+    void setBrdf(std::shared_ptr<lb::Brdf> brdf);
 
     lb::Btdf* getBtdf() { return btdf_.get(); }
     void setBtdf(lb::Btdf* btdf);

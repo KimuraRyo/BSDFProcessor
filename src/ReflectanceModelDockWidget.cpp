@@ -59,8 +59,8 @@ void ReflectanceModelDockWidget::generateBrdf()
     QString name = ui_->reflectanceModelComboBox->currentText();
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
 
-    lb::Brdf* brdf = initializeBrdf(model->isIsotropic());
-    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf);
+    std::shared_ptr<lb::Brdf> brdf = initializeBrdf(model->isIsotropic());
+    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf.get());
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);

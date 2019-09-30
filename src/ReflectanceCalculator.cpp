@@ -58,7 +58,7 @@ void ReflectanceCalculator::computeReflectances()
         brdf = brdf_.get();
     }
     else if (btdf_) {
-        brdf = btdf_->getBrdf();
+        brdf = btdf_->getBrdf().get();
     }
     else {
         return;

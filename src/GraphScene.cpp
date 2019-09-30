@@ -675,11 +675,11 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     lb::Brdf* brdf;
     lb::DataType dataType;
     if (data_->getBrdf()) {
-        brdf = data_->getBrdf();
+        brdf = data_->getBrdf().get();
         dataType = lb::BRDF_DATA;
     }
     else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf();
+        brdf = data_->getBtdf()->getBrdf().get();
         dataType = lb::BTDF_DATA;
     }
     else {

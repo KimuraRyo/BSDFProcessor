@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018 Kimura Ryo                                       //
+// Copyright (C) 2018-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -8,6 +8,8 @@
 
 #ifndef INCOMING_AZIMUTHAL_ANGLE_INSERTER_DOCKWIDGET_H
 #define INCOMING_AZIMUTHAL_ANGLE_INSERTER_DOCKWIDGET_H
+
+#include <memory>
 
 #include "ui_InsertIncomingAzimuthalAngleDockWidget.h"
 
@@ -28,7 +30,7 @@ public:
     void setBrdf(lb::Brdf* brdf);
 
 signals:
-    void processed(lb::Brdf* brdf);
+    void processed(std::shared_ptr<lb::Brdf> brdf);
 
 private slots:
     void setFileName();

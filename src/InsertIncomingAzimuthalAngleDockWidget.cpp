@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018 Kimura Ryo                                       //
+// Copyright (C) 2018-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -78,7 +78,7 @@ void InsertIncomingAzimuthalAngleDockWidget::process()
     if (brdf) {
         ui_->fileNameLineEdit->clear();
 
-        emit processed(brdf);
+        emit processed(std::shared_ptr<lb::Brdf>(brdf));
     }
     else {
         QMessageBox::warning(this, tr("BSDF Processor"),
