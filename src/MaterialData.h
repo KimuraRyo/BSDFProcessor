@@ -16,7 +16,6 @@
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/Btdf.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
-#include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 
 /*!
  * \class   MaterialData
@@ -33,8 +32,8 @@ public:
     std::shared_ptr<lb::Brdf> getBrdf() { return brdf_; }
     void setBrdf(std::shared_ptr<lb::Brdf> brdf);
 
-    lb::Btdf* getBtdf() { return btdf_.get(); }
-    void setBtdf(lb::Btdf* btdf);
+    std::shared_ptr<lb::Btdf> getBtdf() { return btdf_; }
+    void setBtdf(std::shared_ptr<lb::Btdf> btdf);
 
     lb::SampleSet2D* getSpecularReflectances() { return specularReflectances_; }
     void setSpecularReflectances(lb::SampleSet2D* reflectances);
@@ -45,7 +44,7 @@ public:
     lb::FileType getFileType() const { return fileType_; }
     void setFileType(lb::FileType type) { fileType_ = type; }
 
-    lb::SampleSet2D* getReflectances() { return reflectances_; }
+    lb::SampleSet2D* getReflectances() { return reflectances_.get(); }
 
     inline int getNumInTheta() const { return numInTheta_; }
     inline int getNumInPhi()   const { return numInPhi_; }
@@ -100,14 +99,14 @@ private:
 
     std::shared_ptr<lb::Brdf> brdf_;
     std::shared_ptr<lb::Btdf> btdf_;
-    lb::Brdf* origBrdf_;
+    std::unique_ptr<lb::Brdf> origBrdf_;
 
     lb::SampleSet2D* specularReflectances_;     /*!< The array of specular reflectance. */
     lb::SampleSet2D* specularTransmittances_;   /*!< The array of specular transmittance. */
 
-    lb::FileType fileType_; /*! File format. */
+    std::shared_ptr<lb::SampleSet2D> reflectances_; /*!< Reflectances at each incoming direction. */
 
-    lb::SampleSet2D* reflectances_; /*!< Reflectances at each incoming direction. */
+    lb::FileType fileType_; /*! File format. */
 
     lb::Spectrum maxPerWavelength_; /*!< Maximum values at each wavelength. */
 

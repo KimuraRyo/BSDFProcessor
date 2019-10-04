@@ -21,27 +21,22 @@
 #include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 
-ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
+ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   reflectances,
                                              const std::shared_ptr<lb::Brdf>    brdf)
                                              : reflectances_(reflectances),
                                                brdf_(brdf),
                                                stopped_(false)
 {
-    intialize(reflectances);
+    intialize(reflectances.get());
 }
 
-ReflectanceCalculator::ReflectanceCalculator(lb::SampleSet2D*                   reflectances,
+ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   reflectances,
                                              const std::shared_ptr<lb::Btdf>    btdf)
                                              : reflectances_(reflectances),
                                                btdf_(btdf),
                                                stopped_(false)
 {
-    intialize(reflectances);
-}
-
-ReflectanceCalculator::~ReflectanceCalculator()
-{
-    delete processedReflectances_;
+    intialize(reflectances.get());
 }
 
 void ReflectanceCalculator::stop()
@@ -51,7 +46,7 @@ void ReflectanceCalculator::stop()
 
 void ReflectanceCalculator::computeReflectances()
 {
-    lbInfo << "[ReflectanceCalculator::computeReflectances] thread: " << QThread::currentThread();
+    lbInfo << "[ReflectanceCalculator::computeReflectances] Thread: " << QThread::currentThread();
 
     lb::Brdf* brdf;
     if (brdf_) {
@@ -108,10 +103,10 @@ void ReflectanceCalculator::computeReflectances()
 
 void ReflectanceCalculator::intialize(lb::SampleSet2D* reflectances)
 {
-    processedReflectances_ = new lb::SampleSet2D(reflectances->getNumTheta(),
-                                                 reflectances->getNumPhi(),
-                                                 reflectances->getColorModel(),
-                                                 reflectances->getNumWavelengths());
+    processedReflectances_.reset(new lb::SampleSet2D(reflectances->getNumTheta(),
+                                                     reflectances->getNumPhi(),
+                                                     reflectances->getColorModel(),
+                                                     reflectances->getNumWavelengths()));
 
     processedReflectances_->getWavelengths() = reflectances->getWavelengths();
     processedReflectances_->getThetaArray()  = reflectances->getThetaArray();

@@ -261,7 +261,7 @@ bool MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType
         data_->setBrdf(brdf);
     }
     else if (dataType == lb::BTDF_DATA) {
-        data_->setBtdf(new lb::Btdf(brdf));
+        data_->setBtdf(std::shared_ptr<lb::Btdf>(new lb::Btdf(brdf)));
     }
     graphScene_->createBrdfGeode();
 
@@ -757,7 +757,7 @@ void MainWindow::displayPickedValue(const osg::Vec3& position)
         }
     }
     else {
-        lb::Btdf* btdf = data_->getBtdf();
+        lb::Btdf* btdf = data_->getBtdf().get();
         lb::SampleSet2D* st = data_->getSpecularTransmittances();
         if (btdf) {
             lb::Vec3 outDir = lb::toVec3(position).normalized();

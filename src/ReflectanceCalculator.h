@@ -26,13 +26,13 @@ class ReflectanceCalculator : public QObject
     Q_OBJECT
 
 public:
-    ReflectanceCalculator(lb::SampleSet2D*                  reflectances,
+    ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>  reflectances,
                           const std::shared_ptr<lb::Brdf>   brdf);
 
-    ReflectanceCalculator(lb::SampleSet2D*                  reflectances,
+    ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>  reflectances,
                           const std::shared_ptr<lb::Btdf>   btdf);
 
-    ~ReflectanceCalculator();
+    ~ReflectanceCalculator() {}
 
 public slots:
     void computeReflectances();
@@ -48,10 +48,11 @@ private:
     std::shared_ptr<lb::Brdf> brdf_;
     std::shared_ptr<lb::Btdf> btdf_;
 
-    lb::SampleSet2D* reflectances_; /*!< Reflectances at each incoming direction. */
+    /*! Reflectances at each incoming direction. */
+    std::shared_ptr<lb::SampleSet2D> reflectances_;
 
     /*! Reflectances at each incoming direction processed in another thread. */
-    lb::SampleSet2D* processedReflectances_;
+    std::unique_ptr<lb::SampleSet2D> processedReflectances_;
 
     bool stopped_;
 };

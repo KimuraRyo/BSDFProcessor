@@ -11,18 +11,15 @@
 #include <QThread>
 
 #include <libbsdf/Brdf/Analyzer.h>
-#include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Processor.h>
 
 #include <libbsdf/Common/Log.h>
 
 #include "ReflectanceCalculator.h"
 
-MaterialData::MaterialData() : origBrdf_(0),
-                               specularReflectances_(0),
-                               specularTransmittances_(0),
+MaterialData::MaterialData() : specularReflectances_(nullptr),
+                               specularTransmittances_(nullptr),
                                fileType_(lb::UNKNOWN_FILE),
-                               reflectances_(0),
                                numInTheta_(1),
                                numInPhi_(1),
                                numWavelengths_(1),
@@ -41,9 +38,9 @@ void MaterialData::setBrdf(std::shared_ptr<lb::Brdf> brdf)
     updateBrdf();
 }
 
-void MaterialData::setBtdf(lb::Btdf* btdf)
+void MaterialData::setBtdf(std::shared_ptr<lb::Btdf> btdf)
 {
-    btdf_.reset(btdf);
+    btdf_ = btdf;
     updateBtdf();
 }
 
@@ -61,7 +58,7 @@ void MaterialData::setSpecularReflectances(lb::SampleSet2D* reflectances)
         maxPerWavelength_.resize(0);
         diffuseThresholds_.resize(0);
 
-        reflectances_ = specularReflectances_;
+        reflectances_.reset(specularReflectances_);
     }
 }
 
@@ -79,7 +76,7 @@ void MaterialData::setSpecularTransmittances(lb::SampleSet2D* reflectances)
         maxPerWavelength_.resize(0);
         diffuseThresholds_.resize(0);
 
-        reflectances_ = specularTransmittances_;
+        reflectances_.reset(specularTransmittances_);
     }
 }
 
@@ -260,7 +257,7 @@ void MaterialData::editBrdf(lb::Spectrum::Scalar    glossyIntensity,
     }
 
     if (!origBrdf_) {
-        origBrdf_ = brdf->clone();
+        origBrdf_.reset(brdf->clone());
         diffuseThresholds_ = lb::findDiffuseThresholds(*origBrdf_, lb::toRadian(60.0f));
     }
 
@@ -295,19 +292,12 @@ lb::Spectrum MaterialData::findMaxPerWavelength(const lb::SampleSet& samples)
 
 void MaterialData::clearComputedData()
 {
-    if (origBrdf_) {
-        delete reflectances_;
-    }
-    reflectances_ = 0;
+    origBrdf_.reset();
 
-    delete origBrdf_;
-    origBrdf_ = 0;
+    specularReflectances_ = nullptr;
+    specularTransmittances_ = nullptr;
 
-    delete specularReflectances_;
-    specularReflectances_ = 0;
-
-    delete specularTransmittances_;
-    specularTransmittances_ = 0;
+    reflectances_.reset();
 
     maxPerWavelength_.resize(0);
     diffuseThresholds_.resize(0);
@@ -343,9 +333,9 @@ void MaterialData::computeReflectances()
     emit stopReflectanceCalculator();
 
     if (!reflectances_) {
-        reflectances_ = new lb::SampleSet2D(numInTheta_, numInPhi_,
-                                            ss->getColorModel(),
-                                            ss->getNumWavelengths());
+        reflectances_.reset(new lb::SampleSet2D(numInTheta_, numInPhi_,
+                                                ss->getColorModel(),
+                                                ss->getNumWavelengths()));
 
         reflectances_->getWavelengths() = ss->getWavelengths();
 
@@ -379,13 +369,13 @@ void MaterialData::computeReflectances()
     QThread* workerThread = new QThread;
     calc->moveToThread(workerThread);
 
-    connect(workerThread, SIGNAL(started()), calc, SLOT(computeReflectances()));
-    connect(this, SIGNAL(stopReflectanceCalculator()), calc, SLOT(stop()));
-    connect(calc, SIGNAL(finished()), this, SLOT(handleReflectances()));
-    connect(calc, SIGNAL(finished()), workerThread, SLOT(quit()));
-    connect(calc, SIGNAL(stopped()), workerThread, SLOT(quit()));
-    connect(workerThread, SIGNAL(finished()), calc, SLOT(deleteLater()));
-    connect(workerThread, SIGNAL(finished()), workerThread, SLOT(deleteLater()));
+    connect(workerThread,   SIGNAL(started()),                      calc,           SLOT(computeReflectances()));
+    connect(this,           SIGNAL(stopReflectanceCalculator()),    calc,           SLOT(stop()));
+    connect(calc,           SIGNAL(finished()),                     this,           SLOT(handleReflectances()));
+    connect(calc,           SIGNAL(finished()),                     workerThread,   SLOT(quit()));
+    connect(calc,           SIGNAL(stopped()),                      workerThread,   SLOT(quit()));
+    connect(workerThread,   SIGNAL(finished()),                     calc,           SLOT(deleteLater()));
+    connect(workerThread,   SIGNAL(finished()),                     workerThread,   SLOT(deleteLater()));
 
     workerThread->start(QThread::LowestPriority);
 }
