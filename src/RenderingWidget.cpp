@@ -233,6 +233,9 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
             }
 
             lb::Spectrum sp = brdf->getSpectrum(inDir, outDir);
+
+            lbDebug << "[RenderingWidget::mouseReleaseEvent] inDir: " << inDir.format(lb::LB_EIGEN_IO_FMT);
+            lbDebug << "[RenderingWidget::mouseReleaseEvent] outDir: " << outDir.format(lb::LB_EIGEN_IO_FMT);
             lbDebug << "[RenderingWidget::mouseReleaseEvent] Spectrum: " << sp.format(lb::LB_EIGEN_IO_FMT);
         }
         else if (ss2) {
