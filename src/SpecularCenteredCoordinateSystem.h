@@ -9,8 +9,6 @@
 #ifndef SPECULAR_CENTERED_COORDINATE_SYSTEM_H
 #define SPECULAR_CENTERED_COORDINATE_SYSTEM_H
 
-#include <Eigen/Geometry>
-
 #include <libbsdf/Common/SphericalCoordinateSystem.h>
 
 /*!
@@ -62,13 +60,15 @@ private:
                                 ScalarT specPhi)
     {
         lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
-        lb::Vec2::Scalar rotAngle = inTheta * (1.0 - specTheta / MAX_ANGLE2);
+        lb::Vec2::Scalar rotAngle = inTheta * (1 - specTheta / MAX_ANGLE2);
         lb::Vec2 rotThVec = Eigen::Rotation2D<lb::Vec2::Scalar>(rotAngle) * lb::Vec2(xyzVec[0], xyzVec[2]);
         lb::Vec2 rotPhVec = Eigen::Rotation2D<lb::Vec2::Scalar>(inPhi) * lb::Vec2(rotThVec[0], xyzVec[1]);
 
-        return lb::Vec3(static_cast<lb::Vec3::Scalar>(rotPhVec[0]),
+        lb::Vec3 rotDir(static_cast<lb::Vec3::Scalar>(rotPhVec[0]),
                         static_cast<lb::Vec3::Scalar>(rotPhVec[1]),
                         static_cast<lb::Vec3::Scalar>(rotThVec[1]));
+
+        return rotDir.normalized();
     }
 
     /*! Converts an outgoing direction from a specular-centered coordinate system to a Cartesian. */
@@ -78,12 +78,14 @@ private:
                                 ScalarT specPhi)
     {
         lb::Vec3 xyzVec = lb::SphericalCoordinateSystem::toXyz(specTheta, specPhi);
-        lb::Vec2::Scalar rotAngle = inTheta * (1.0 - specTheta / MAX_ANGLE2);
+        lb::Vec2::Scalar rotAngle = inTheta * (1 - specTheta / MAX_ANGLE2);
         lb::Vec2 rotVec = Eigen::Rotation2D<lb::Vec2::Scalar>(rotAngle) * lb::Vec2(xyzVec[0], xyzVec[2]);
 
-        return lb::Vec3(static_cast<lb::Vec3::Scalar>(rotVec[0]),
+        lb::Vec3 rotDir(static_cast<lb::Vec3::Scalar>(rotVec[0]),
                         static_cast<lb::Vec3::Scalar>(xyzVec[1]),
                         static_cast<lb::Vec3::Scalar>(rotVec[1]));
+
+        return rotDir.normalized();
     }
 };
 

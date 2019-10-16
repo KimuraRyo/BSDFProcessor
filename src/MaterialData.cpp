@@ -13,8 +13,6 @@
 #include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/Processor.h>
 
-#include <libbsdf/Common/Log.h>
-
 #include "ReflectanceCalculator.h"
 
 MaterialData::MaterialData() : specularReflectances_(nullptr),

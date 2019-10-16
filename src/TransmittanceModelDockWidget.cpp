@@ -14,8 +14,6 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
-#include <libbsdf/Common/Log.h>
-
 #include <libbsdf/ReflectanceModel/GGX.h>
 #include <libbsdf/ReflectanceModel/GgxAnisotropic.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>

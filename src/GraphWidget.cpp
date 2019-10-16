@@ -15,9 +15,6 @@
 #include <osgDB/WriteFile>
 #include <osgGA/TrackballManipulator>
 
-#include <libbsdf/Common/Log.h>
-
-#include "GraphScene.h"
 #include "SceneUtil.h"
 
 GraphWidget::GraphWidget(const QGLFormat&   format,

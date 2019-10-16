@@ -31,10 +31,7 @@
 
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
-#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/SpectrumUtility.h>
-#include <libbsdf/Common/SpecularCoordinateSystem.h>
-#include <libbsdf/Common/SphericalCoordinateSystem.h>
 
 #include "SpecularCenteredCoordinateSystem.h"
 
@@ -573,7 +570,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
 
     lb::Arrayf phiAngles = lb::Arrayf::LinSpaced(numPhi, 0.0, CoordSysT::MAX_ANGLE3);
 
-    std::vector<lb::Vec3, Eigen::aligned_allocator<lb::Vec3> > positions;
+    std::vector<lb::Vec3, Eigen::aligned_allocator<lb::Vec3>> positions;
     positions.reserve(numTheta * numPhi);
 
     // An incoming polar angle of zero is offset to validate an incoming azimuthal angle.

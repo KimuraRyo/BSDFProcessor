@@ -13,11 +13,6 @@
 
 #include "MaterialData.h"
 
-namespace lb
-{
-    class SampleSet;
-}
-
 /*!
  * \class   TableView
  * \brief   The TableView class provides the table view of sample points.

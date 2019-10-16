@@ -13,8 +13,6 @@
 #include <osg/Geometry>
 #include <osg/Texture2D>
 
-#include <libbsdf/Common/Log.h>
-
 #include "SceneUtil.h"
 
 RenderingScene::RenderingScene() : numMultiSamples_(0),

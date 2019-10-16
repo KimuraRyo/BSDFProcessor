@@ -16,7 +16,6 @@
 #include <osgGA/CameraManipulator>
 
 #include <libbsdf/Brdf/Brdf.h>
-#include <libbsdf/Common/Vector.h>
 
 #include "MaterialData.h"
 #include "SceneUtil.h"

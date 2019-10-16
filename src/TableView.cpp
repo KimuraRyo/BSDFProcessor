@@ -11,13 +11,7 @@
 #include <QtWidgets>
 #include <QGraphicsPixmapItem>
 
-#include <libbsdf/Brdf/Brdf.h>
-#include <libbsdf/Brdf/Btdf.h>
-#include <libbsdf/Brdf/SampleSet2D.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
-
-#include <libbsdf/Common/Utility.h>
-#include <libbsdf/Common/SpectrumUtility.h>
 
 #include "GraphicsAngleItem.h"
 #include "GraphicsSampleItem.h"

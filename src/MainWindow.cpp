@@ -15,31 +15,19 @@
 #include <osgDB/WriteFile>
 
 #include <libbsdf/Brdf/Analyzer.h>
-#include <libbsdf/Brdf/Brdf.h>
-#include <libbsdf/Brdf/Btdf.h>
-#include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Processor.h>
-#include <libbsdf/Brdf/SampleSet2D.h>
-#include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
-#include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/TwoSidedMaterial.h>
 
-#include <libbsdf/Common/Log.h>
-#include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
-#include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/Version.h>
 
 #include <libbsdf/Reader/AstmReader.h>
 #include <libbsdf/Reader/DdrReader.h>
 #include <libbsdf/Reader/LightToolsBsdfReader.h>
 #include <libbsdf/Reader/MerlBinaryReader.h>
-#include <libbsdf/Reader/ReaderUtility.h>
 #include <libbsdf/Reader/SdrReader.h>
 #include <libbsdf/Reader/ZemaxBsdfReader.h>
 
 #include <libbsdf/Writer/DdrWriter.h>
-
-#include <libbsdf/ReflectanceModel/Fresnel.h>
 
 #include "AboutDialog.h"
 #include "DoubleValidator.h"
@@ -1435,11 +1423,6 @@ bool MainWindow::updatePickedReflectanceUi()
     lb::ColorModel cm;
     lb::Arrayf wavelengths;
     if (brdf) {
-        // Compute reflectance/transmittance.
-        //lb::Integrator integrator(lb::PoissonDiskDistributionOnSphere::NUM_SAMPLES_ON_HEMISPHERE, true);
-        //lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(*inTheta, inPhi);
-        //refSp = integrator.computeReflectance(*brdf, inDir);
-
         // Interpolate precomputed reflectance/transmittance.
         refSp = data_->getReflectances()->getSpectrum(inTheta, inPhi);
 

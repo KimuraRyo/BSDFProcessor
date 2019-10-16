@@ -20,10 +20,7 @@
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
-#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/SpectrumUtility.h>
-#include <libbsdf/Common/SpecularCoordinateSystem.h>
-#include <libbsdf/Common/SphericalCoordinateSystem.h>
 
 #include "SpecularCenteredCoordinateSystem.h"
 

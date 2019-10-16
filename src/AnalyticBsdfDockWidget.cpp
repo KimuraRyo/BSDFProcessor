@@ -12,8 +12,6 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
-#include <libbsdf/Common/Log.h>
-
 #include "ColorButton.h"
 #include "Utility.h"
 

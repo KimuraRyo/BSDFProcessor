@@ -11,8 +11,8 @@
 
 #include "ui_DisplayDockWidget.h"
 
-class GraphScene;
-class MaterialData;
+#include "GraphScene.h"
+#include "MaterialData.h"
 
 /*!
  * \class   DisplayDockWidget

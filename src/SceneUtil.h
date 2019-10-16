@@ -23,7 +23,6 @@
 #include <QtGui/QColor>
 
 #include <libbsdf/Brdf/Brdf.h>
-#include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/Utility.h>
 
 /*! Node mask types. */

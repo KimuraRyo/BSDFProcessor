@@ -15,10 +15,7 @@
 
 #include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/Integrator.h>
-#include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
-#include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 
-#include <libbsdf/Common/Log.h>
 #include <libbsdf/Common/PoissonDiskDistributionOnSphere.h>
 
 ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   reflectances,
