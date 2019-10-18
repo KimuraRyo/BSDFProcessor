@@ -41,15 +41,15 @@ struct SpecularCenteredCoordinateSystem
         *outDir = toOutDirXyz(inTheta, inPhi, specTheta, specPhi);
     }
 
-    static constexpr char ANGLE0_NAME[] = "Incoming polar angle";     /*!< This attribute holds the name of inTheta. */
-    static constexpr char ANGLE1_NAME[] = "Incoming azimuthal angle"; /*!< This attribute holds the name of inPhi. */
-    static constexpr char ANGLE2_NAME[] = "Specular polar angle";     /*!< This attribute holds the name of specTheta. */
-    static constexpr char ANGLE3_NAME[] = "Specular azimuthal angle"; /*!< This attribute holds the name of specPhi. */
+    static const char ANGLE0_NAME[]; /*!< This attribute holds the name of inTheta. */
+    static const char ANGLE1_NAME[]; /*!< This attribute holds the name of inPhi. */
+    static const char ANGLE2_NAME[]; /*!< This attribute holds the name of specTheta. */
+    static const char ANGLE3_NAME[]; /*!< This attribute holds the name of specPhi. */
 
-    static constexpr float MAX_ANGLE0 = lb::decrease(lb::PI_2_F); /*!< This attribute holds the maximum value of inTheta. */
-    static constexpr float MAX_ANGLE1 = lb::decrease(lb::TAU_F);  /*!< This attribute holds the maximum value of inPhi. */
-    static constexpr float MAX_ANGLE2 = lb::decrease(lb::PI_2_F); /*!< This attribute holds the maximum value of specTheta. */
-    static constexpr float MAX_ANGLE3 = lb::decrease(lb::TAU_F);  /*!< This attribute holds the maximum value of specPhi. */
+    static const float MAX_ANGLE0; /*!< This attribute holds the maximum value of inTheta. */
+    static const float MAX_ANGLE1; /*!< This attribute holds the maximum value of inPhi. */
+    static const float MAX_ANGLE2; /*!< This attribute holds the maximum value of specTheta. */
+    static const float MAX_ANGLE3; /*!< This attribute holds the maximum value of specPhi. */
 
 private:
     /*! Converts an outgoing direction from a specular-centered coordinate system to a Cartesian. */
