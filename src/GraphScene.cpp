@@ -736,7 +736,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 
             for (int i = 0; i < numInPhi; ++i) {
                 curInPhi = data_->getIncomingAzimuthalAngle(i);
-                float inPhiRatio = curInPhi / (2.0f * lb::PI_F);
+                float inPhiRatio = curInPhi / lb::TAU_F;
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, curInPhi);
@@ -833,7 +833,7 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
         colorUpdate = true;
     }
     else if (displayMode_ == ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY && data_->getNumInPhi() > 1) {
-        float inPhiRatio = inPhi / (2.0f * lb::PI_F);
+        float inPhiRatio = inPhi / lb::TAU_F;
         color = osg::Vec4(scene_util::hueToRgb(inPhiRatio), alpha);
         colorUpdate = true;
     }
