@@ -208,51 +208,57 @@ lb::Vec3 MaterialData::getInDir(int inThetaIndex, int inPhiIndex)
     return inDir;
 }
 
-const lb::SampleSet* MaterialData::getSampleSet() const
+lb::Brdf* MaterialData::getBrdfData() const
 {
-    const lb::SampleSet* ss;
     if (brdf_) {
-        ss = brdf_->getSampleSet();
+        return brdf_.get();
     }
     else if (btdf_) {
-        ss = btdf_->getSampleSet();
+        return btdf_->getBrdf().get();
     }
     else {
-        return 0;
+        return nullptr;
     }
+}
 
-    return ss;
+lb::SampleSet* MaterialData::getSampleSet() const
+{
+    lb::Brdf* brdf = getBrdfData();
+    if (brdf) {
+        return brdf->getSampleSet();
+    }
+    else {
+        return nullptr;
+    }
 }
 
 bool MaterialData::isInDirDependentCoordinateSystem() const
 {
-    lb::Brdf* brdf;
-    if (brdf_) {
-        brdf = brdf_.get();
-    }
-    else if (btdf_) {
-        brdf = btdf_->getBrdf().get();
-    }
-    else {
-        return false;
-    }
+    const lb::Brdf* brdf = getBrdfData();
+    if (!brdf) return false;
 
     return lb::isInDirDependentCoordinateSystem(*brdf);
+}
+
+lb::DataType MaterialData::getDataType() const
+{
+    if (brdf_) {
+        return lb::BRDF_DATA;
+    }
+    else if (btdf_) {
+        return lb::BTDF_DATA;
+    }
+    else {
+        return lb::UNKNOWN_DATA;
+    }
 }
 
 void MaterialData::editBrdf(lb::Spectrum::Scalar    glossyIntensity,
                             lb::Spectrum::Scalar    glossyShininess,
                             lb::Spectrum::Scalar    diffuseIntensity)
 {
-    lb::Brdf* brdf;
-    if (brdf_) {
-        brdf = brdf_.get();
-    } else if (btdf_) {
-        brdf = btdf_->getBrdf().get();
-    }
-    else {
-        return;
-    }
+    lb::Brdf* brdf = getBrdfData();
+    if (!brdf) return;
 
     if (!origBrdf_) {
         origBrdf_.reset(brdf->clone());

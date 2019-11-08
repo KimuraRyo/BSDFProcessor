@@ -669,30 +669,21 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
     updateInDirLine(inDir);
 
-    lb::Brdf* brdf;
-    lb::DataType dataType;
-    if (data_->getBrdf()) {
-        brdf = data_->getBrdf().get();
-        dataType = lb::BRDF_DATA;
-    }
-    else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf().get();
-        dataType = lb::BTDF_DATA;
-    }
-    else {
-        return;
-    }
+    const lb::Brdf* brdf = data_->getBrdfData();
+    if (!brdf) return;
+
+    lb::DataType dataType = data_->getDataType();
 
     bxdfMeshGeode_->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::POLYGONOFFSET);
 
     switch (displayMode_) {
         case PHOTOMETRY_DISPLAY: {
-            setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType, true);
+            setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, wavelengthIndex, dataType, true);
             oitUsed_ = false;
             break;
         }
         case NORMAL_DISPLAY: {
-            setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
+            setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
             oitUsed_ = false;
             break;
         }
@@ -703,7 +694,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             #pragma omp parallel for private(curInTheta)
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
                 curInTheta = data_->getIncomingPolarAngle(i);
-                setupBrdfMeshGeometry(brdf, curInTheta, inPhi_, wavelengthIndex, dataType);
+                setupBrdfMeshGeometry(*brdf, curInTheta, inPhi_, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
@@ -731,7 +722,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             #pragma omp parallel for private(curInPhi)
             for (int i = 0; i < numInPhi; ++i) {
                 curInPhi = data_->getIncomingAzimuthalAngle(i);
-                setupBrdfMeshGeometry(brdf, inTheta_, curInPhi, wavelengthIndex, dataType);
+                setupBrdfMeshGeometry(*brdf, inTheta_, curInPhi, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < numInPhi; ++i) {
@@ -751,13 +742,13 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_WAVELENGTHS_DISPLAY: {
             #pragma omp parallel for
             for (int i = 0; i < data_->getNumWavelengths(); ++i) {
-                setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, i, dataType);
+                setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, i, dataType);
             }
             oitUsed_ = true;
             break;
         }
         case SAMPLE_POINTS_DISPLAY: {
-            setupBrdfMeshGeometry(brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
+            setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
             bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
                                                                         osg::StateAttribute::ON);
             if (!data_->isInDirDependentCoordinateSystem()) break;
@@ -787,7 +778,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     }
 }
 
-void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
+void GraphScene::setupBrdfMeshGeometry(const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
                                        lb::DataType dataType, bool photometric)
 {
     bool many = ((displayMode_ == ALL_INCOMING_POLAR_ANGLES_DISPLAY && data_->getNumInTheta() > 10) ||
@@ -804,21 +795,21 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
     }
 
     osg::Geometry* meshGeom;
-    if (dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
+    if (dynamic_cast<const lb::SphericalCoordinatesBrdf*>(&brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SphericalCoordinateSystem>(
-            *brdf, inTheta, inPhi, wavelengthIndex,
+            brdf, inTheta, inPhi, wavelengthIndex,
             logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
     }
-    else if (dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
+    else if (dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf)) {
         meshGeom = scene_util::createBrdfMeshGeometry<lb::SpecularCoordinateSystem>(
-            *brdf, inTheta, inPhi, wavelengthIndex,
+            brdf, inTheta, inPhi, wavelengthIndex,
             logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
     }
     else {
         meshGeom = scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
-            *brdf, inTheta, inPhi, wavelengthIndex,
+            brdf, inTheta, inPhi, wavelengthIndex,
             logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
     }
@@ -839,7 +830,7 @@ void GraphScene::setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPh
     }
     else if (displayMode_ == ALL_WAVELENGTHS_DISPLAY &&
              data_->getNumWavelengths() > 1) {
-        const lb::SampleSet* ss = brdf->getSampleSet();
+        const lb::SampleSet* ss = brdf.getSampleSet();
 
         if (ss->getColorModel() == lb::RGB_MODEL ||
             ss->getColorModel() == lb::XYZ_MODEL) {

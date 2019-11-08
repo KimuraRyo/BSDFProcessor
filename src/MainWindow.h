@@ -13,6 +13,8 @@
 #define M_PI 3.14159265358979323846 // pi
 #endif
 
+#include <memory>
+
 #include "ui_MainWindow.h"
 
 #include "DisplayDockWidget.h"
@@ -120,7 +122,7 @@ private:
     bool openMerlBinary(const QString& fileName);
 
     void exportFile(const QString& fileName);
-    void exportDdrDdt(const QString& fileName, lb::DataType dataType);
+    bool exportDdrDdt(const QString& fileName, lb::DataType dataType);
 
     osgViewer::View* getMainView() const { return ui_->mainViewerWidget->getView(0); }
     osgViewer::View* getRenderingView() const { return ui_->renderingViewerWidget->getView(0); }
@@ -131,9 +133,9 @@ private:
                   lb::Spectrum::Scalar  glossyShininess,
                   lb::Spectrum::Scalar  diffuseIntensity);
 
-    MaterialData*   data_;
-    GraphScene*     graphScene_;
-    RenderingScene* renderingScene_;
+    std::unique_ptr<MaterialData>   data_;
+    std::unique_ptr<GraphScene>     graphScene_;
+    std::unique_ptr<RenderingScene> renderingScene_;
 
     GraphWidget*        graphWidget_;
     RenderingWidget*    renderingWidget_;

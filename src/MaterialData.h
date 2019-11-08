@@ -70,10 +70,16 @@ public:
 
     inline lb::Spectrum& getMaxValuesPerWavelength() { return maxPerWavelength_; }
 
-    const lb::SampleSet* getSampleSet() const;
+    /*! Gets lb::Brdf in brdf_ or btdf_. If not found, nullptr is returned. */
+    lb::Brdf* getBrdfData() const;
+
+    /*! Gets lb::SampleSet in brdf_ or btdf_. If not found, nullptr is returned. */
+    lb::SampleSet* getSampleSet() const;
 
     /*! Returns true if a coordinate system has the angles of an incoming direction. */
     bool isInDirDependentCoordinateSystem() const;
+
+    lb::DataType getDataType() const;
 
     bool computedReflectances() { return reflectancesComputed_; }
 
@@ -127,3 +133,4 @@ private:
 };
 
 #endif // MATERIAL_DATA_H
+ 

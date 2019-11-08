@@ -109,7 +109,7 @@ private:
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
 
-    void setupBrdfMeshGeometry(lb::Brdf* brdf, float inTheta, float inPhi, int wavelengthIndex,
+    void setupBrdfMeshGeometry(const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
                                lb::DataType dataType, bool photometric = false);
 
     void updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);

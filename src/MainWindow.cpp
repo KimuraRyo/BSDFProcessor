@@ -104,7 +104,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     ui_->statusbar->hide();
 
-    data_ = new MaterialData;
+    data_.reset(new MaterialData);
 
     // Initialize a 3D graph view.
     {
@@ -112,19 +112,19 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
         graphWidget_->resize(1024, 1024);
         ui_->mainViewerWidget->addViewWidget(graphWidget_);
 
-        graphScene_ = new GraphScene;
-        graphScene_->setMaterialData(data_);
+        graphScene_.reset(new GraphScene);
+        graphScene_->setMaterialData(data_.get());
         graphScene_->setCamera(getMainView()->getCamera());
         graphScene_->setCameraManipulator(getMainView()->getCameraManipulator());
         graphScene_->createAxisAndScale();
 
         getMainView()->setSceneData(graphScene_->getRoot());
-        graphWidget_->setGraphScene(graphScene_);
+        graphWidget_->setGraphScene(graphScene_.get());
 
-        displayDockWidget_->setGraphScene(graphScene_);
-        displayDockWidget_->setMaterialData(data_);
+        displayDockWidget_->setGraphScene(graphScene_.get());
+        displayDockWidget_->setMaterialData(data_.get());
 
-        ui_->tableGraphicsView->setMaterialData(data_);
+        ui_->tableGraphicsView->setMaterialData(data_.get());
     }
 
     // Initialize a rendering view.
@@ -133,11 +133,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
         renderingWidget_->resize(1024, 1024);
         ui_->renderingViewerWidget->addViewWidget(renderingWidget_);
 
-        renderingScene_ = new RenderingScene;
+        renderingScene_.reset(new RenderingScene);
         renderingScene_->setCamera(getRenderingView()->getCamera());
         renderingScene_->setCameraManipulator(getRenderingView()->getCameraManipulator());
         getRenderingView()->setSceneData(renderingScene_->getRoot());
-        renderingWidget_->setRenderingScene(renderingScene_);
+        renderingWidget_->setRenderingScene(renderingScene_.get());
     }
 
     createActions();
@@ -151,8 +151,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
 MainWindow::~MainWindow()
 {
-    delete data_;
-    delete graphScene_;
     delete ui_;
 }
 
@@ -266,14 +264,8 @@ bool MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType
 
 void MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf)
 {
-    lb::DataType dataType;
-    if (data_->getBrdf()) {
-        dataType = lb::BRDF_DATA;
-    }
-    else if (data_->getBtdf()) {
-        dataType = lb::BTDF_DATA;
-    }
-    else {
+    lb::DataType dataType = data_->getDataType();
+    if (dataType == lb::UNKNOWN_DATA) {
         lbError << "[MainWindow::setupBrdf] Invalid data type.";
         return;
     }
@@ -289,8 +281,12 @@ void MainWindow::updateBrdf()
     else if (data_->getBtdf()) {
         data_->updateBtdf();
     }
+    else {
+        return;
+    }
 
     graphScene_->createBrdfGeode();
+    renderingScene_->setData(data_->getBrdfData(), data_->getReflectances(), data_->getDataType());
 
     initializeUi();
 }
@@ -1148,14 +1144,7 @@ void MainWindow::initializeUi()
     renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
     getRenderingView()->requestRedraw();
 
-    lb::Brdf* brdf = 0;
-    if (data_->getBrdf()) {
-        brdf = data_->getBrdf().get();
-    }
-    else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf().get();
-    }
-
+    lb::Brdf* brdf = data_->getBrdfData();
     if (brdf) {
         smoothDockWidget_->setBrdf(brdf);
         insertAngleDockWidget_->setBrdf(brdf);
@@ -1398,21 +1387,18 @@ bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
 
 bool MainWindow::updatePickedReflectanceUi()
 {
-    lb::Brdf* brdf = 0;
+    lb::Brdf* brdf = data_->getBrdfData();
     lb::SampleSet2D* ss2 = 0;
-    if (data_->getBrdf()) {
-        brdf = data_->getBrdf().get();
+    if (!brdf) {
+        if (data_->getSpecularReflectances()) {
+            ss2 = data_->getSpecularReflectances();
+        }
+        else if (data_->getSpecularTransmittances()) {
+            ss2 = data_->getSpecularTransmittances();
+        }
     }
-    else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf().get();
-    }
-    else if (data_->getSpecularReflectances()) {
-        ss2 = data_->getSpecularReflectances();
-    }
-    else if (data_->getSpecularTransmittances()) {
-        ss2 = data_->getSpecularTransmittances();
-    }
-    else {
+
+    if (!brdf && !ss2) {
         return false;
     }
 
@@ -1609,15 +1595,20 @@ bool MainWindow::openMerlBinary(const QString& fileName)
 
 void MainWindow::exportFile(const QString& fileName)
 {
+    lb::DataType dataType;
     if (fileName.endsWith(".ddr")) {
-        exportDdrDdt(fileName, lb::BRDF_DATA);
+        dataType = lb::BRDF_DATA;
     }
     else if (fileName.endsWith(".ddt")) {
-        exportDdrDdt(fileName, lb::BTDF_DATA);
+        dataType = lb::BTDF_DATA;
+    }
+
+    if (exportDdrDdt(fileName, dataType)) {
+        lbInfo << "[MainWindow::exportFile] fileName: " << fileName.toLocal8Bit().data();
     }
 }
 
-void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
+bool MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::Brdf* brdf;
     if (dataType == lb::BRDF_DATA && data_->getBrdf()) {
@@ -1628,14 +1619,11 @@ void MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
     }
     else {
         lbError << "[MainWindow::exportDdrDdt] Invalid data for export.";
-        return;
+        return false;
     }
 
     std::string comments("Software: BSDFProcessor-" + std::string(getVersion()));
-    lb::DdrWriter::write(fileName.toLocal8Bit().data(),
-                         *brdf,
-                         dataType,
-                         comments);
+    return lb::DdrWriter::write(fileName.toLocal8Bit().data(), *brdf, dataType, comments);
 }
 
 void MainWindow::updateCameraPosition()
@@ -1664,15 +1652,8 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
 {
     lbTrace << "[MainWindow::editBrdf]";
 
-    lb::Brdf* brdf;
-    if (data_->getBrdf()) {
-        brdf = data_->getBrdf().get();
-    } else if (data_->getBtdf()) {
-        brdf = data_->getBtdf()->getBrdf().get();
-    }
-    else {
-        return;
-    }
+    lb::Brdf* brdf = data_->getBrdfData();
+    if (!brdf) return;
 
     data_->editBrdf(glossyIntensity, glossyShininess, diffuseIntensity);
 

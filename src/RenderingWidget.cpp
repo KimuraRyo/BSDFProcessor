@@ -25,7 +25,7 @@ RenderingWidget::RenderingWidget(const QGLFormat&   format,
                                  Qt::WindowFlags    f,
                                  bool               forwardKeyEvents)
                                  : osgQt::GLWidget(format, parent, shareWidget, f, forwardKeyEvents),
-                                   renderingScene_(0),
+                                   renderingScene_(nullptr),
                                    mouseMoved_(false),
                                    pickedInDir_(0.0, 0.0, 0.0)
 {
@@ -57,48 +57,52 @@ void RenderingWidget::resetCameraPosition()
 {
     if (!renderingScene_) return;
 
-    osgGA::CameraManipulator* cm = renderingScene_->getCameraManipulator();
-
+    osg::Group* scene = renderingScene_->getScene();
     RenderingScene::fitCameraPosition(renderingScene_->getCamera(),
                                       osg::Vec3(0.0, -1.0, 0.0),
                                       osg::Vec3(0.0, 0.0, 1.0),
-                                      renderingScene_->getScene());
+                                      scene);
 
     osg::Vec3d eye, center, up;
     renderingScene_->getCamera()->getViewMatrixAsLookAt(eye, center, up);
-    center = scene_util::computeCenter(renderingScene_->getScene());
+    center = scene_util::computeCenter(scene);
+
+    osgGA::CameraManipulator* cm = renderingScene_->getCameraManipulator();
     cm->setHomePosition(eye, center, up);
     cm->home(0.0);
 }
 
 void RenderingWidget::showSphere()
 {
-    renderingScene_->getScene()->removeChildren(0, renderingScene_->getScene()->getNumChildren());
+    osg::Group* scene = renderingScene_->getScene();
+    scene->removeChildren(0, scene->getNumChildren());
 
     osg::Geode* geode = new osg::Geode;
     geode->addDrawable(new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(), 1.0f)));
-    renderingScene_->getScene()->addChild(geode);
+    scene->addChild(geode);
 }
 
 void RenderingWidget::showCylinder()
 {
-    renderingScene_->getScene()->removeChildren(0, renderingScene_->getScene()->getNumChildren());
+    osg::Group* scene = renderingScene_->getScene();
+    scene->removeChildren(0, scene->getNumChildren());
 
     osg::Geode* geode = new osg::Geode;
     osg::Cylinder* cylinder = new osg::Cylinder(osg::Vec3(), 1.0f, 2.0f);
     osg::Quat rotQuat(M_PI / 2.0, osg::Vec3(0.0, 1.0, 0.0));
     cylinder->setRotation(rotQuat);
     geode->addDrawable(new osg::ShapeDrawable(cylinder));
-    renderingScene_->getScene()->addChild(geode);
+    scene->addChild(geode);
 }
 
 void RenderingWidget::showBox()
 {
-    renderingScene_->getScene()->removeChildren(0, renderingScene_->getScene()->getNumChildren());
+    osg::Group* scene = renderingScene_->getScene();
+    scene->removeChildren(0, scene->getNumChildren());
 
     osg::Geode* geode = new osg::Geode;
     geode->addDrawable(new osg::ShapeDrawable(new osg::Box(osg::Vec3(), 1.5f)));
-    renderingScene_->getScene()->addChild(geode);
+    scene->addChild(geode);
 }
 
 void RenderingWidget::showLoadedModel()
@@ -322,9 +326,10 @@ void RenderingWidget::openModel(const QString& fileName)
         return;
     }
 
-    renderingScene_->getScene()->removeChildren(0, renderingScene_->getScene()->getNumChildren());
+    osg::Group* scene = renderingScene_->getScene();
+    scene->removeChildren(0, scene->getNumChildren());
 
     osgUtil::Optimizer optimzer;
     optimzer.optimize(loadedModel, osgUtil::Optimizer::ALL_OPTIMIZATIONS);
-    renderingScene_->getScene()->addChild(loadedModel);
+    scene->addChild(loadedModel);
 }
