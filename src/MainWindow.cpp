@@ -961,31 +961,36 @@ void MainWindow::createActions()
     connect(graphWidget_, SIGNAL(clearPickedValue()),   this, SLOT(clearPickedValue()));
     connect(graphWidget_, SIGNAL(viewFront()),          this, SLOT(viewFront()));
 
-    connect(graphWidget_, SIGNAL(logPlotToggled(bool)),
+    connect(graphWidget_,       SIGNAL(logPlotToggled(bool)),
             displayDockWidget_, SLOT(toggleLogPlotCheckBox(bool)));
 
-    connect(renderingWidget_, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
-            this, SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
-    connect(renderingWidget_, SIGNAL(inDirPicked(lb::Vec3)),
-            this, SLOT(updateInDirection(lb::Vec3)));
+    connect(renderingWidget_,   SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
+            this,               SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
+    connect(renderingWidget_,   SIGNAL(inDirPicked(lb::Vec3)),
+            this,               SLOT(updateInDirection(lb::Vec3)));
 
-    connect(reflectanceModelDockWidget_, SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
-            this, SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
-    connect(reflectanceModelDockWidget_, SIGNAL(generated()),
-            this, SLOT(clearFileType()));
+    connect(ui_->tableGraphicsView, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
+            this,                   SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
+    connect(ui_->tableGraphicsView, SIGNAL(inDirPicked(lb::Vec3)),
+            this,                   SLOT(updateInDirection(lb::Vec3)));
 
-    connect(transmittanceModelDockWidget_, SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
-            this, SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
-    connect(transmittanceModelDockWidget_, SIGNAL(generated()),
-            this, SLOT(clearFileType()));
+    connect(reflectanceModelDockWidget_,    SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
+            this,                           SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
+    connect(reflectanceModelDockWidget_,    SIGNAL(generated()),
+            this,                           SLOT(clearFileType()));
 
-    connect(smoothDockWidget_, SIGNAL(processed()),
-            this, SLOT(updateBrdf()));
+    connect(transmittanceModelDockWidget_,  SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
+            this,                           SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
+    connect(transmittanceModelDockWidget_,  SIGNAL(generated()),
+            this,                           SLOT(clearFileType()));
+
+    connect(smoothDockWidget_,  SIGNAL(processed()),
+            this,               SLOT(updateBrdf()));
 
     connect(insertAngleDockWidget_, SIGNAL(processed(std::shared_ptr<lb::Brdf>)),
-            this, SLOT(setupBrdf(std::shared_ptr<lb::Brdf>)));
+            this,                   SLOT(setupBrdf(std::shared_ptr<lb::Brdf>)));
 
-    connect(data_, SIGNAL(computed()), this, SLOT(updateViews()));
+    connect(data_.get(), SIGNAL(computed()), this, SLOT(updateViews()));
 
     connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), this, SLOT(requestRedrawGraph()));
     connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this, SLOT(createTable()));

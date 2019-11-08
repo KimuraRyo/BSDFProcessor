@@ -12,6 +12,7 @@
 #include <QtWidgets/QGraphicsView>
 
 #include "MaterialData.h"
+#include "TableScene.h"
 
 /*!
  * \class   TableView
@@ -22,18 +23,24 @@ class TableView : public QGraphicsView
     Q_OBJECT
 
 public:
-    explicit TableView(QWidget* parent = 0);
+    explicit TableView(QWidget* parent = nullptr);
 
     void createTable(int wavelengthIndex, float gamma = 1.0f, bool photometric = false);
 
     void setMaterialData(MaterialData* materialData) { data_ = materialData; }
 
+signals:
+    void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);
+    void inDirPicked(const lb::Vec3& inDir);
+
 public slots:
-    void fitView(qreal scaleFactor = 1.0)
-    {
-        fitInView(scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
-        scale(scaleFactor, scaleFactor);
-    }
+    void fitView(qreal scaleFactor = 1.0);
+
+private slots:
+    void changeBackSideVisibility();
+    void showToolTip(const QPointF& pos);
+    void updateInOutDirection(const QPointF& pos);
+    void updateInDirection(const QPointF& pos);
 
 private:
     Q_DISABLE_COPY(TableView)
@@ -41,16 +48,22 @@ private:
     void createBrdfTable(int wavelengthIndex);
     void createBrdfDataItems(int wavelengthIndex);
     void createBrdfDataPixmapItem(int wavelengthIndex);
-
-    void createBrdfAngleItems(const lb::SampleSet* ss);
+    void createBrdfAngleItems(const lb::SampleSet& ss);
 
     void createReflectanceTable(int wavelengthIndex);
+    void createReflectanceDataItems(const lb::SampleSet2D& ss2, int wavelengthIndex);
+    void createReflectanceAngleItems(const lb::SampleSet2D& ss2);
 
     /*! Gets the value of a sample point for a item. */
     float getSampleValue(const lb::Spectrum&    sp,
                          lb::ColorModel         colorModel,
                          const lb::Arrayf&      wavelengths,
                          int                    wavelengthIndex);
+
+    /*! Gets angle indices of lb::SampleSet at \a pos. */
+    bool getIndex(const QPointF& pos, int* i0, int* i1, int* i2, int* i3);
+
+    bool getInOutDir(const QPointF& pos, lb::Vec3* inDir, lb::Vec3* outDir);
 
     void addAngleItem(const QColor& color, float angle,
                       qreal posX, qreal posY,
@@ -60,7 +73,7 @@ private:
     void wheelEvent(QWheelEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
 
-    QGraphicsScene* graphicsScene_;
+    TableScene* graphicsScene_;
 
     QAction* actionFitView_;
     QAction* actionShowBackSide_;
@@ -71,13 +84,6 @@ private:
     float   gamma_;
     bool    photometric_;
     bool    backSideShown_;
-
-private slots:
-    void changeBackSideVisibility()
-    {
-        backSideShown_ = !backSideShown_;
-        createTable(wavelengthIndex_, gamma_, photometric_);
-    }
 };
 
 #endif // TABLE_VIEW_H
