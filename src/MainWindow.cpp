@@ -1607,6 +1607,10 @@ void MainWindow::exportFile(const QString& fileName)
     else if (fileName.endsWith(".ddt")) {
         dataType = lb::BTDF_DATA;
     }
+    else {
+        lbError << "[MainWindow::exportFile] Invalid file extension: " << fileName.toLocal8Bit().data();
+        return;
+    }
 
     if (exportDdrDdt(fileName, dataType)) {
         lbInfo << "[MainWindow::exportFile] fileName: " << fileName.toLocal8Bit().data();
