@@ -6,7 +6,7 @@
 ## file, You can obtain one at http://mozilla.org/MPL/2.0/.            ##
 ## =================================================================== ##
 
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.1.0)
 
 # Let AUTOMOC and AUTOUIC process GENERATED files.
 cmake_policy(SET CMP0071 NEW)
@@ -48,11 +48,9 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-
-find_package(Qt5Widgets REQUIRED)
-find_package(Qt5OpenGL REQUIRED)
+set(CMAKE_AUTOUIC ON)
+find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
 
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
