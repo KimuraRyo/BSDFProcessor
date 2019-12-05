@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -9,36 +9,26 @@
 #ifndef RENDERING_WIDGET_H
 #define RENDERING_WIDGET_H
 
-#include <QOpenGLContext>
-
-#include <QtGui/QResizeEvent>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-
-#include <osgQt/GraphicsWindowQt>
-
 #include "RenderingScene.h"
+#include "OsgQWidget.h"
 
 /*!
  * \class   RenderingWidget
- * \brief   The RenderingWidget class provides QGLWidget for a rendering view.
+ * \brief   The RenderingWidget class provides a OSG widget for a rendering view.
  */
-class RenderingWidget : public osgQt::GLWidget
+class RenderingWidget : public OsgQWidget
 {
     Q_OBJECT
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    explicit RenderingWidget(const QGLFormat&   format,
-                             QWidget*           parent = 0,
-                             const QGLWidget*   shareWidget = 0,
-                             Qt::WindowFlags    f = 0,
-                             bool               forwardKeyEvents = false);
+    explicit RenderingWidget(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
 
     void setRenderingScene(RenderingScene* scene)
     {
         renderingScene_ = scene;
+        viewer_->setSceneData(renderingScene_->getRoot());
         showSphere();
         resetCameraPosition();
     }
@@ -57,25 +47,21 @@ private slots:
 private:
     Q_DISABLE_COPY(RenderingWidget)
 
-    void resizeEvent(QResizeEvent* event);
+    void resizeGL(int w, int h) override;
 
-    void keyPressEvent(QKeyEvent* event);
-    void mouseMoveEvent(QMouseEvent* event);
-    void mousePressEvent(QMouseEvent* event);
-    void mouseReleaseEvent(QMouseEvent* event);
-    void mouseDoubleClickEvent(QMouseEvent* event);
-    void dragEnterEvent(QDragEnterEvent* event);
-    void dropEvent(QDropEvent* event);
-    void wheelEvent(QWheelEvent* event);
-    void contextMenuEvent(QContextMenuEvent* event);
+    void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
 
     void showContextMenu(const QPoint& pos);
 
     void openModel(const QString& fileName);
 
     RenderingScene* renderingScene_;
-
-    bool mouseMoved_;
 
     lb::Vec3 pickedInDir_;
 

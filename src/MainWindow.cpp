@@ -13,6 +13,7 @@
 #include <osg/io_utils>
 #include <osg/Version>
 #include <osgDB/WriteFile>
+#include <osgGA/TrackballManipulator>
 
 #include <libbsdf/Brdf/Analyzer.h>
 #include <libbsdf/Brdf/Processor.h>
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           ui_(new Ui::MainWindowBase)
 {
     lb::Log::setNotificationLevel(lb::Log::Level::TRACE_MSG);
+    osg::setNotifyLevel(osg::NOTICE);
 
     ui_->setupUi(this);
 
@@ -60,8 +62,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     osgDB::Registry::instance()->setBuildKdTreesHint(osgDB::ReaderWriter::Options::BUILD_KDTREES);
 
-    setCentralWidget(ui_->mainViewerWidget);
-    //ui_->mainViewerWidget->setFocus();
+    setCentralWidget(ui_->graphOpenGLWidget);
+    ui_->graphOpenGLWidget->setFocus();
 
     addDockWidget(Qt::RightDockWidgetArea, ui_->controlDockWidget);
 
@@ -107,38 +109,19 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     data_.reset(new MaterialData);
 
     // Initialize a 3D graph view.
-    {
-        graphWidget_ = new GraphWidget(ViewerWidget::createQGLFormat());
-        graphWidget_->resize(1024, 1024);
-        ui_->mainViewerWidget->addViewWidget(graphWidget_);
+    graphScene_.reset(new GraphScene);
+    graphScene_->setMaterialData(data_.get());
+    graphScene_->createAxisAndScale();
+    ui_->graphOpenGLWidget->setGraphScene(graphScene_.get());
 
-        graphScene_.reset(new GraphScene);
-        graphScene_->setMaterialData(data_.get());
-        graphScene_->setCamera(getMainView()->getCamera());
-        graphScene_->setCameraManipulator(getMainView()->getCameraManipulator());
-        graphScene_->createAxisAndScale();
+    displayDockWidget_->setGraphScene(graphScene_.get());
+    displayDockWidget_->setMaterialData(data_.get());
 
-        getMainView()->setSceneData(graphScene_->getRoot());
-        graphWidget_->setGraphScene(graphScene_.get());
-
-        displayDockWidget_->setGraphScene(graphScene_.get());
-        displayDockWidget_->setMaterialData(data_.get());
-
-        ui_->tableGraphicsView->setMaterialData(data_.get());
-    }
+    ui_->tableGraphicsView->setMaterialData(data_.get());
 
     // Initialize a rendering view.
-    {
-        renderingWidget_ = new RenderingWidget(ViewerWidget::createQGLFormat());
-        renderingWidget_->resize(1024, 1024);
-        ui_->renderingViewerWidget->addViewWidget(renderingWidget_);
-
-        renderingScene_.reset(new RenderingScene);
-        renderingScene_->setCamera(getRenderingView()->getCamera());
-        renderingScene_->setCameraManipulator(getRenderingView()->getCameraManipulator());
-        getRenderingView()->setSceneData(renderingScene_->getRoot());
-        renderingWidget_->setRenderingScene(renderingScene_.get());
-    }
+    renderingScene_.reset(new RenderingScene);
+    ui_->renderingOpenGLWidget->setRenderingScene(renderingScene_.get());
 
     createActions();
 
@@ -345,7 +328,7 @@ void MainWindow::exportBxdfUsingDialog()
 
 void MainWindow::viewFront()
 {
-    scene_util::fitCameraPosition(getMainView()->getCamera(),
+    scene_util::fitCameraPosition(getGraphView()->getCamera(),
                                   osg::Vec3(0.0, 1.0, 0.0),
                                   osg::Vec3(0.0, 0.0, 1.0),
                                   graphScene_->getBsdfGroup());
@@ -354,7 +337,7 @@ void MainWindow::viewFront()
 
 void MainWindow::viewBack()
 {
-    scene_util::fitCameraPosition(getMainView()->getCamera(),
+    scene_util::fitCameraPosition(getGraphView()->getCamera(),
                                   osg::Vec3(0.0, -1.0, 0.0),
                                   osg::Vec3(0.0, 0.0, 1.0),
                                   graphScene_->getBsdfGroup());
@@ -363,7 +346,7 @@ void MainWindow::viewBack()
 
 void MainWindow::viewRight()
 {
-    scene_util::fitCameraPosition(getMainView()->getCamera(),
+    scene_util::fitCameraPosition(getGraphView()->getCamera(),
                                   osg::Vec3(-1.0, 0.0, 0.0),
                                   osg::Vec3(0.0, 0.0, 1.0),
                                   graphScene_->getBsdfGroup());
@@ -372,7 +355,7 @@ void MainWindow::viewRight()
 
 void MainWindow::viewLeft()
 {
-    scene_util::fitCameraPosition(getMainView()->getCamera(),
+    scene_util::fitCameraPosition(getGraphView()->getCamera(),
                                   osg::Vec3(1.0, 0.0, 0.0),
                                   osg::Vec3(0.0, 0.0, 1.0),
                                   graphScene_->getBsdfGroup());
@@ -381,7 +364,7 @@ void MainWindow::viewLeft()
 
 void MainWindow::viewTop()
 {
-    scene_util::fitCameraPosition(getMainView()->getCamera(),
+    scene_util::fitCameraPosition(getGraphView()->getCamera(),
                                   osg::Vec3(0.0, 0.0, 1.0),
                                   osg::Vec3(0.0, -1.0, 0.0),
                                   graphScene_->getBsdfGroup());
@@ -390,7 +373,7 @@ void MainWindow::viewTop()
 
 void MainWindow::viewBottom()
 {
-    scene_util::fitCameraPosition(getMainView()->getCamera(),
+    scene_util::fitCameraPosition(getGraphView()->getCamera(),
                                   osg::Vec3(0.0, 0.0, -1.0),
                                   osg::Vec3(0.0, 1.0, 0.0),
                                   graphScene_->getBsdfGroup());
@@ -407,18 +390,13 @@ void MainWindow::updateViews()
 {
     graphScene_->updateInOutDirLine();
 
-    graphScene_->updateView(graphWidget_->width(), graphWidget_->height());
-    getMainView()->requestRedraw();
+    graphScene_->updateView(ui_->graphOpenGLWidget->width(), ui_->graphOpenGLWidget->height());
+    ui_->graphOpenGLWidget->update();
 
-    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
-    getRenderingView()->requestRedraw();
+    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
+    ui_->renderingOpenGLWidget->update();
 
     displayReflectance();
-}
-
-void MainWindow::requestRedrawGraph()
-{
-    getMainView()->requestRedraw();
 }
 
 void MainWindow::updateDisplayMode(QString modeName)
@@ -446,13 +424,11 @@ void MainWindow::updateDisplayMode(QString modeName)
                                          graphScene_->getInPhi(),
                                          ui_->wavelengthSlider->value());
     }
-    graphScene_->updateView(graphWidget_->width(), graphWidget_->height());
-
-    getMainView()->requestRedraw();
+    graphScene_->updateView(ui_->graphOpenGLWidget->width(), ui_->graphOpenGLWidget->height());
+    ui_->graphOpenGLWidget->update();
 
     clearPickedValue();
     displayReflectance();
-
     createTable();
 }
 
@@ -463,12 +439,11 @@ void MainWindow::updateIncomingPolarAngle(int index)
     graphScene_->updateGraphGeometry(index,
                                      ui_->incomingAzimuthalAngleSlider->value(),
                                      ui_->wavelengthSlider->value());
+    ui_->graphOpenGLWidget->update();
 
     float inPolarDegree = lb::toDegree(data_->getIncomingPolarAngle(index));
     ui_->incomingPolarAngleLineEdit->setText(QString::number(inPolarDegree));
     ui_->incomingPolarAngleLineEdit->home(false);
-
-    getMainView()->requestRedraw();
 
     clearPickedValue();
     displayReflectance();
@@ -482,8 +457,8 @@ void MainWindow::updateIncomingPolarAngle()
     if (inTheta == graphScene_->getInTheta()) return;
 
     graphScene_->updateGraphGeometry(inTheta, graphScene_->getInPhi(), ui_->wavelengthSlider->value());
+    ui_->graphOpenGLWidget->update();
 
-    getMainView()->requestRedraw();
     clearPickedValue();
 }
 
@@ -495,12 +470,11 @@ void MainWindow::updateIncomingAzimuthalAngle(int index)
                                      index,
                                      ui_->wavelengthSlider->value());
     graphScene_->updateScaleInPlaneOfIncidence();
+    ui_->graphOpenGLWidget->update();
 
     float inAzimuthalDegree = lb::toDegree(data_->getIncomingAzimuthalAngle(index));
     ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inAzimuthalDegree));
     ui_->incomingAzimuthalAngleLineEdit->home(false);
-
-    getMainView()->requestRedraw();
 
     clearPickedValue();
     displayReflectance();
@@ -515,15 +489,13 @@ void MainWindow::updateIncomingAzimuthalAngle()
 
     graphScene_->updateGraphGeometry(graphScene_->getInTheta(), inPhi, ui_->wavelengthSlider->value());
     graphScene_->updateScaleInPlaneOfIncidence();
+    ui_->graphOpenGLWidget->update();
 
-    getMainView()->requestRedraw();
     clearPickedValue();
 }
 
 void MainWindow::updateWavelength(int index)
 {
-    osg::Timer_t startTick = osg::Timer::instance()->tick();
-
     initializeWavelengthUi(index);
 
     GraphScene::DisplayMode dm = graphScene_->getDisplayMode();
@@ -538,23 +510,17 @@ void MainWindow::updateWavelength(int index)
                                          graphScene_->getInPhi(),
                                          index);
     }
-
-    getMainView()->requestRedraw();
+    ui_->graphOpenGLWidget->update();
 
     clearPickedValue();
     displayReflectance();
-
     createTable();
-
-    osg::Timer_t endTick = osg::Timer::instance()->tick();
-    double delta = osg::Timer::instance()->delta_s(startTick, endTick);
-    lbInfo << "[MainWindow::updateWavelength] " << delta << "(s)";
 }
 
 void MainWindow::updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir)
 {
     graphScene_->updateInOutDirLine(inDir, outDir, ui_->wavelengthSlider->value());
-    getMainView()->requestRedraw();
+    ui_->graphOpenGLWidget->update();
 
     clearPickedValue();
 }
@@ -587,10 +553,9 @@ void MainWindow::updateInDirection(const lb::Vec3& inDir)
 
     graphScene_->updateGraphGeometry(inTheta, inPhi, ui_->wavelengthSlider->value());
     graphScene_->updateScaleInPlaneOfIncidence();
+    ui_->graphOpenGLWidget->update();
 
     updatePickedReflectanceUi();
-
-    getMainView()->requestRedraw();
 }
 
 void MainWindow::updateLightPolarAngle(int angle)
@@ -615,8 +580,8 @@ void MainWindow::updateLightPolarAngle(double angle)
 
     lb::Vec3 dir = lb::SphericalCoordinateSystem::toXyz(theta, phi);
     renderingScene_->setLightDir(scene_util::toOsg(dir));
-    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
-    getRenderingView()->requestRedraw();
+    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
+    ui_->renderingOpenGLWidget->update();
 }
 
 void MainWindow::updateLightAzimuthalAngle(int angle)
@@ -641,8 +606,8 @@ void MainWindow::updateLightAzimuthalAngle(double angle)
 
     lb::Vec3 dir = lb::SphericalCoordinateSystem::toXyz(theta, phi);
     renderingScene_->setLightDir(scene_util::toOsg(dir));
-    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
-    getRenderingView()->requestRedraw();
+    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
+    ui_->renderingOpenGLWidget->update();
 }
 
 void MainWindow::updateLightIntensity(int intensity)
@@ -671,8 +636,8 @@ void MainWindow::updateLightIntensity(double intensity)
     }
 
     renderingScene_->setLightIntensity(intensity);
-    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
-    getRenderingView()->requestRedraw();
+    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
+    ui_->renderingOpenGLWidget->update();
 }
 
 void MainWindow::updateEnvironmentIntensity(int intensity)
@@ -701,9 +666,11 @@ void MainWindow::updateEnvironmentIntensity(double intensity)
     }
 
     renderingScene_->setEnvironmentIntensity(intensity);
-    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
-    getRenderingView()->getCamera()->setClearColor(osg::Vec4(intensity, intensity, intensity, 1.0));
-    getRenderingView()->requestRedraw();
+    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
+
+    osg::Camera* camera = ui_->renderingOpenGLWidget->getViewer()->getCamera();
+    camera->setClearColor(osg::Vec4(intensity, intensity, intensity, 1.0));
+    ui_->renderingOpenGLWidget->update();
 }
 
 void MainWindow::displayPickedValue(const osg::Vec3& position)
@@ -925,7 +892,7 @@ void MainWindow::clearFileType()
 
 void MainWindow::createActions()
 {
-    ui_->viewMenu->addAction(graphWidget_->getLogPlotAction());
+    ui_->viewMenu->addAction(ui_->graphOpenGLWidget->getLogPlotAction());
     ui_->viewMenu->addSeparator();
     ui_->viewMenu->addAction(ui_->controlDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(displayDockWidget_->toggleViewAction());
@@ -956,18 +923,18 @@ void MainWindow::createActions()
 
     connect(ui_->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 
-    connect(graphWidget_, SIGNAL(fileDropped(QString)), this, SLOT(openFile(QString)));
-    connect(graphWidget_, SIGNAL(picked(osg::Vec3)),    this, SLOT(displayPickedValue(osg::Vec3)));
-    connect(graphWidget_, SIGNAL(clearPickedValue()),   this, SLOT(clearPickedValue()));
-    connect(graphWidget_, SIGNAL(viewFront()),          this, SLOT(viewFront()));
+    connect(ui_->graphOpenGLWidget, SIGNAL(fileDropped(QString)), this, SLOT(openFile(QString)));
+    connect(ui_->graphOpenGLWidget, SIGNAL(picked(osg::Vec3)),    this, SLOT(displayPickedValue(osg::Vec3)));
+    connect(ui_->graphOpenGLWidget, SIGNAL(clearPickedValue()),   this, SLOT(clearPickedValue()));
+    connect(ui_->graphOpenGLWidget, SIGNAL(viewFront()),          this, SLOT(viewFront()));
 
-    connect(graphWidget_,       SIGNAL(logPlotToggled(bool)),
-            displayDockWidget_, SLOT(toggleLogPlotCheckBox(bool)));
+    connect(ui_->graphOpenGLWidget, SIGNAL(logPlotToggled(bool)),
+            displayDockWidget_,     SLOT(toggleLogPlotCheckBox(bool)));
 
-    connect(renderingWidget_,   SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
-            this,               SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
-    connect(renderingWidget_,   SIGNAL(inDirPicked(lb::Vec3)),
-            this,               SLOT(updateInDirection(lb::Vec3)));
+    connect(ui_->renderingOpenGLWidget, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
+            this,                       SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
+    connect(ui_->renderingOpenGLWidget, SIGNAL(inDirPicked(lb::Vec3)),
+            this,                       SLOT(updateInDirection(lb::Vec3)));
 
     connect(ui_->tableGraphicsView, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
             this,                   SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
@@ -992,8 +959,8 @@ void MainWindow::createActions()
 
     connect(data_.get(), SIGNAL(computed()), this, SLOT(updateViews()));
 
-    connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), this, SLOT(requestRedrawGraph()));
-    connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this, SLOT(createTable()));
+    connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), ui_->graphOpenGLWidget, SLOT(update()));
+    connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this,                   SLOT(createTable()));
 }
 
 void MainWindow::initializeUi()
@@ -1079,17 +1046,17 @@ void MainWindow::initializeUi()
 
     displayDockWidget_->updateScene();
 
-    osgGA::TrackballManipulator* trackball = dynamic_cast<osgGA::TrackballManipulator*>(getMainView()->getCameraManipulator());
+    auto trackball = dynamic_cast<osgGA::TrackballManipulator*>(getGraphView()->getCameraManipulator());
     if (trackball) {
         osg::Vec3d eye, center, up;
-        getMainView()->getCamera()->getViewMatrixAsLookAt(eye, center, up);
+        getGraphView()->getCamera()->getViewMatrixAsLookAt(eye, center, up);
         trackball->setHomePosition(eye, osg::Vec3d(0.0, 0.0, 0.0), up);
         trackball->home(0.0);
     }
 
     graphScene_->useOit(false);
-    graphScene_->updateView(graphWidget_->width(), graphWidget_->height());
-    getMainView()->requestRedraw();
+    graphScene_->updateView(ui_->graphOpenGLWidget->width(), ui_->graphOpenGLWidget->height());
+    ui_->graphOpenGLWidget->update();
 
     if (renderingScene_->getBrdf()) {
         ui_->lightPolarAngleSlider->setEnabled(true);
@@ -1146,8 +1113,8 @@ void MainWindow::initializeUi()
 
     updateInOutDirection(lb::Vec3::Zero(), lb::Vec3::Zero());
 
-    renderingScene_->updateView(renderingWidget_->width(), renderingWidget_->height());
-    getRenderingView()->requestRedraw();
+    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
+    ui_->renderingOpenGLWidget->update();
 
     lb::Brdf* brdf = data_->getBrdfData();
     if (brdf) {
@@ -1157,7 +1124,6 @@ void MainWindow::initializeUi()
 
     clearPickedValue();
     displayReflectance();
-
     createTable();
 }
 
@@ -1203,6 +1169,9 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
     ui_->wavelengthLineEdit->setEnabled(true);
 
     ui_->pickedValueLineEdit->setEnabled(true);
+
+    // Stop continuous update of the graph view.
+    timer_.stop();
 
     if (modeName == getDisplayModeName(GraphScene::PHOTOMETRY_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::PHOTOMETRY_DISPLAY);
@@ -1254,6 +1223,10 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->incomingAzimuthalAngleLineEdit->setReadOnly(true);
         ui_->incomingAzimuthalAngleLineEdit->setStyleSheet(readOnlyStyleSheet);
         ui_->pickedValueLineEdit->setDisabled(true);
+
+        // Start continuous update of the graph view for osgText::FadeText.
+        connect(&timer_, SIGNAL(timeout()), ui_->graphOpenGLWidget, SLOT(update()));
+        timer_.start(100);
     }
     else {
         lbError << "[MainWindow::initializeDisplayModeUi] Unknown mode: " << modeName.toStdString();
@@ -1637,15 +1610,15 @@ bool MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
 void MainWindow::updateCameraPosition()
 {
-    osgGA::CameraManipulator* cm = getMainView()->getCameraManipulator();
+    osgGA::CameraManipulator* cm = getGraphView()->getCameraManipulator();
     if (cm) {
         osg::Vec3d eye, center, up;
-        getMainView()->getCamera()->getViewMatrixAsLookAt(eye, center, up);
+        getGraphView()->getCamera()->getViewMatrixAsLookAt(eye, center, up);
         cm->setHomePosition(eye, osg::Vec3d(0.0, 0.0, 0.0), up);
         cm->home(0.0);
     }
 
-    getMainView()->requestRedraw();
+    ui_->graphOpenGLWidget->update();
 }
 
 void MainWindow::createTable()
@@ -1681,11 +1654,10 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
 
     graphScene_->updateInOutDirLine();
 
-    getMainView()->requestRedraw();
-    getRenderingView()->requestRedraw();
-
-    createTable();
+    ui_->graphOpenGLWidget->update();
+    ui_->renderingOpenGLWidget->update();
 
     clearPickedValue();
     displayReflectance();
+    createTable();
 }

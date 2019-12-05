@@ -35,6 +35,8 @@ enum NodeMask {
 
 const osg::Vec4 AXIS_COLOR(0.1, 0.1, 0.1, 1.0);
 
+const std::string ARIAL_FONT_FILE("fonts/arial.ttf");
+
 namespace scene_util {
 
 template <typename T>
@@ -134,16 +136,8 @@ osg::Camera* createHudText(const std::string& textString, int width, int height)
 /*! Creates a text label. */
 osgText::Text* createTextLabel(const std::string&           textString,
                                const osg::Vec3&             position,
-                               osgText::Text::AlignmentType alignment = osgText::Text::BASE_LINE,
-                               const osg::Vec4&             color = osg::Vec4(1.0, 1.0, 1.0, 1.0),
-                               bool                         useClusterCulling = false,
-                               const osg::Vec3&             normal = osg::Vec3(0.0, 0.0, 1.0),
-                               float                        deviation = 0.0f);
-
-/*! Creates a text label. */
-osgText::Text* createTextLabel(const std::string&           textString,
-                               const osg::Vec3&             position,
-                               osgText::Font*               font,
+                               const float                  fadeSpeed = 1.0f,
+                               const std::string&           fontFileName = ARIAL_FONT_FILE,
                                osgText::Text::AlignmentType alignment = osgText::Text::BASE_LINE,
                                const osg::Vec4&             color = osg::Vec4(1.0, 1.0, 1.0, 1.0),
                                bool                         useClusterCulling = false,

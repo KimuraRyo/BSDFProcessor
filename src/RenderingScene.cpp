@@ -16,8 +16,6 @@
 #include "SceneUtil.h"
 
 RenderingScene::RenderingScene() : numMultiSamples_(0),
-                                   camera_(0),
-                                   cameraManipulator_(0),
                                    brdf_(0),
                                    reflectances_(0),
                                    dataType_(lb::BRDF_DATA),
@@ -52,6 +50,8 @@ RenderingScene::RenderingScene() : numMultiSamples_(0),
     inDirUniform_ = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "lightDir");
     inDirUniform_->set(osg::Vec3(0.0, 0.0, 1.0));
     scene_->getOrCreateStateSet()->addUniform(inDirUniform_.get());
+
+    root_->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 }
 
 void RenderingScene::updateView(int width, int height)
@@ -63,9 +63,8 @@ void RenderingScene::updateView(int width, int height)
 
         postProcessingGroup_ = newGroup;
 
-        osg::Node::ParentList parents = oldGroup->getParents();
-        for (auto it = parents.begin(); it != parents.end(); ++it) {
-            (*it)->replaceChild(oldGroup, newGroup);
+        for (auto parents : oldGroup->getParents()) {
+            parents->replaceChild(oldGroup, newGroup);
         }
     }
 
@@ -76,9 +75,8 @@ void RenderingScene::updateView(int width, int height)
 
         renderingGroup_ = newGroup;
 
-        osg::Node::ParentList parents = oldGroup->getParents();
-        for (auto it = parents.begin(); it != parents.end(); ++it) {
-            (*it)->replaceChild(oldGroup, newGroup);
+        for (auto parents : oldGroup->getParents()) {
+            parents->replaceChild(oldGroup, newGroup);
         }
     }
 }

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2018 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -9,9 +9,7 @@
 #ifndef RENDERING_SCENE_H
 #define RENDERING_SCENE_H
 
-#include <osg/Camera>
 #include <osg/Group>
-#include <osgGA/CameraManipulator>
 
 #include <libbsdf/Brdf/Brdf.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
@@ -32,12 +30,6 @@ public:
     osg::Group* getScene() { return scene_.get(); }
 
     void updateView(int width, int height);
-
-    inline osg::Camera* getCamera() { return camera_; }
-    inline void setCamera(osg::Camera* camera) { camera_ = camera; }
-
-    inline osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
-    inline void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
 
     void setData(lb::Brdf* brdf, lb::SampleSet2D* reflectances, lb::DataType dataType)
     {
@@ -96,9 +88,6 @@ private:
     osg::ref_ptr<osg::Group> scene_; /*!< The group for rendered geometry. */
 
     int numMultiSamples_;
-
-    osg::Camera*                camera_;
-    osgGA::CameraManipulator*   cameraManipulator_;
 
     osg::ref_ptr<RenderingDrawCallback> drawCallback_;
 

@@ -12,6 +12,7 @@
 #include <QString>
 
 #include <osg/BlendEquation>
+#include <osg/BlendFunc>
 #include <osg/ClipPlane>
 #include <osg/ClusterCullingCallback>
 #include <osg/ComputeBoundsVisitor>
@@ -24,7 +25,6 @@
 #include <osg/Texture2D>
 #include <osg/io_utils>
 #include <osgDB/WriteFile>
-#include <osgQt/QFontImplementation>
 #include <osgText/FadeText>
 #include <osgText/Font>
 #include <osgUtil/SmoothingVisitor>
@@ -293,45 +293,48 @@ osg::Group* scene_util::createOitGroup(osg::Group*  subgraph,
         colorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
         colorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
 
-        osg::Camera* peelFboCamera = new osg::Camera;
-        peelFboCamera->setName("peelFboCamera");
-        peelFboCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        peelFboCamera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
-        peelFboCamera->setReferenceFrame(osg::Transform::RELATIVE_RF);
-        peelFboCamera->setProjectionMatrix(osg::Matrixd::identity());
-        peelFboCamera->setViewMatrix(osg::Matrixd::identity());
-        peelFboCamera->setViewport(0, 0, width, height);
-        peelFboCamera->setRenderOrder(osg::Camera::PRE_RENDER, peelFboRenderOrder + i);
-        peelFboCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+        // Peeling
+        {
+            osg::Camera* peelFboCamera = new osg::Camera;
+            peelFboCamera->setName("peelFboCamera");
+            peelFboCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            peelFboCamera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
+            peelFboCamera->setReferenceFrame(osg::Transform::RELATIVE_RF);
+            peelFboCamera->setProjectionMatrix(osg::Matrixd::identity());
+            peelFboCamera->setViewMatrix(osg::Matrixd::identity());
+            peelFboCamera->setViewport(0, 0, width, height);
+            peelFboCamera->setRenderOrder(osg::Camera::PRE_RENDER, peelFboRenderOrder + i);
+            peelFboCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 
-        // Use multiple render targets.
-        peelFboCamera->attach(osg::Camera::COLOR_BUFFER, colorTexture,
-                              0, 0, false, numFboSamples, numFboColorSamples);
-        peelFboCamera->attach(osg::Camera::DEPTH_BUFFER, depthTextures[currId],
-                              0, 0, false, numFboSamples, numFboColorSamples);
+            // Use multiple render targets.
+            peelFboCamera->attach(osg::Camera::COLOR_BUFFER, colorTexture,
+                                  0, 0, false, numFboSamples, numFboColorSamples);
+            peelFboCamera->attach(osg::Camera::DEPTH_BUFFER, depthTextures[currId],
+                                  0, 0, false, numFboSamples, numFboColorSamples);
 
-        osg::StateSet* stateSet = peelFboCamera->getOrCreateStateSet();
+            osg::StateSet* stateSet = peelFboCamera->getOrCreateStateSet();
 
-        osg::Uniform* firstPassUniform = new osg::Uniform(osg::Uniform::BOOL, "oitFirstPass");
-        stateSet->addUniform(firstPassUniform);
+            osg::Uniform* firstPassUniform = new osg::Uniform(osg::Uniform::BOOL, "oitFirstPass");
+            stateSet->addUniform(firstPassUniform);
 
-        if (i == 0) {
-            firstPassUniform->set(true);
+            if (i == 0) {
+                firstPassUniform->set(true);
+            }
+            else {
+                firstPassUniform->set(false);
+
+                stateSet->setTextureAttributeAndModes(prevDepthTextureUnit, depthTextures[prevId]);
+                osg::Uniform* prevDepthTexUniform = new osg::Uniform("oitPrevDepthTexture", prevDepthTextureUnit);
+                stateSet->addUniform(prevDepthTexUniform);
+            }
+
+            osg::Group* peelScene = new osg::Group;
+            peelScene->setName("peelScene");
+            peelScene->addChild(subgraph);
+
+            oitGroup->addChild(peelFboCamera);
+            peelFboCamera->addChild(peelScene);
         }
-        else {
-            firstPassUniform->set(false);
-
-            stateSet->setTextureAttributeAndModes(prevDepthTextureUnit, depthTextures[prevId]);
-            osg::Uniform* prevDepthTexUniform = new osg::Uniform("oitPrevDepthTexture", prevDepthTextureUnit);
-            stateSet->addUniform(prevDepthTexUniform);
-        }
-
-        osg::Group* peelScene = new osg::Group;
-        peelScene->setName("peelScene");
-        peelScene->addChild(subgraph);
-
-        oitGroup->addChild(peelFboCamera);
-        peelFboCamera->addChild(peelScene);
 
         // Blending
         {
@@ -344,9 +347,13 @@ osg::Group* scene_util::createOitGroup(osg::Group*  subgraph,
             osg::Geometry* hudGeom = osg::createTexturedQuadGeometry(osg::Vec3(0.0,   0.0,    depth),
                                                                      osg::Vec3(width, 0.0,    depth),
                                                                      osg::Vec3(0.0,   height, depth));
-            hudGeom->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
-            hudGeom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-            hudGeom->getOrCreateStateSet()->setTextureAttributeAndModes(0, colorTexture);
+
+            osg::StateSet* stateSet = hudGeom->getOrCreateStateSet();
+            stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+            stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+            stateSet->setAttribute(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), osg::StateAttribute::ON);
+            stateSet->setTextureAttributeAndModes(0, colorTexture);
+
             hudGeode->addDrawable(hudGeom);
         }
     }
@@ -362,10 +369,8 @@ osg::Camera* scene_util::createHudText(const std::string& textString, int width,
     geode->setName("hudTextGeode");
     geode->setNodeMask(HUD_MASK);
 
-    osgText::Font* font = new osgText::Font(new osgQt::QFontImplementation(QFont("Arial")));
-
     osgText::Text* text = new osgText::Text;
-    text->setFont(font);
+    text->setFont(ARIAL_FONT_FILE);
     text->setCharacterSize(20.0f);
     text->setColor(osg::Vec4(1.0, 1.0, 1.0, 1.0));
 
@@ -390,20 +395,8 @@ osg::Camera* scene_util::createHudText(const std::string& textString, int width,
 
 osgText::Text* scene_util::createTextLabel(const std::string&           textString,
                                            const osg::Vec3&             position,
-                                           osgText::Text::AlignmentType alignment,
-                                           const osg::Vec4&             color,
-                                           bool                         useClusterCulling,
-                                           const osg::Vec3&             normal,
-                                           float                        deviation)
-{
-    osgText::Font* font = new osgText::Font(new osgQt::QFontImplementation(QFont("Times")));
-
-    return createTextLabel(textString, position, font, alignment, color, useClusterCulling, normal, deviation);
-}
-
-osgText::Text* scene_util::createTextLabel(const std::string&           textString,
-                                           const osg::Vec3&             position,
-                                           osgText::Font*               font,
+                                           const float                  fadeSpeed,
+                                           const std::string&           fontFileName,
                                            osgText::Text::AlignmentType alignment,
                                            const osg::Vec4&             color,
                                            bool                         useClusterCulling,
@@ -411,13 +404,13 @@ osgText::Text* scene_util::createTextLabel(const std::string&           textStri
                                            float                        deviation)
 {
     osg::ref_ptr<osgText::FadeText> text = new osgText::FadeText;
-    text->setFadeSpeed(0.1f);
+    text->setFadeSpeed(fadeSpeed);
 
     text->setText(textString);
     text->setPosition(position);
     text->setAlignment(alignment);
     text->setColor(color);
-    text->setFont(font);
+    text->setFont(fontFileName);
 
 #if OSG_VERSION_GREATER_OR_EQUAL(3, 6, 0)
     text->setCharacterSize(18.0f);
@@ -446,58 +439,63 @@ osg::Node* scene_util::pickNode(osgViewer::View*    view,
 {
     if (!view->getScene()) return 0;
 
-    osgUtil::PolytopeIntersector* picker;
+    osgUtil::PolytopeIntersector* intersector;
     if (useWindowCoordinates) {
-        // Use window coordinates
-        const double w = 0.5;
-        const double h = 0.5;
-        picker = new osgUtil::PolytopeIntersector(osgUtil::Intersector::WINDOW,
-                                                  cursorPosition.x() - w,
-                                                  cursorPosition.y() - h,
-                                                  cursorPosition.x() + w,
-                                                  cursorPosition.y() + h);
+        // Use window coordinates.
+        constexpr double w = 0.5;
+        constexpr double h = 0.5;
+        intersector = new osgUtil::PolytopeIntersector(osgUtil::Intersector::WINDOW,
+                                                       cursorPosition.x() - w,
+                                                       cursorPosition.y() - h,
+                                                       cursorPosition.x() + w,
+                                                       cursorPosition.y() + h);
     }
     else {
-        // Use projection/clip space
+        // Use projection/clip space.
         osg::Viewport* viewport = view->getCamera()->getViewport();
-        double mx = cursorPosition.x() / viewport->width() * 2.0 - 1.0;
-        double my = cursorPosition.y() / viewport->height() * 2.0 - 1.0;
+        double x = cursorPosition.x() / viewport->width()  * 2.0 - 1.0;
+        double y = cursorPosition.y() / viewport->height() * 2.0 - 1.0;
 
-        const double w = 0.005;
-        const double h = 0.005;
-        picker = new osgUtil::PolytopeIntersector(osgUtil::Intersector::PROJECTION, mx-w, my-h, mx+w, my+h);
+        constexpr double w = 0.005;
+        constexpr double h = 0.005;
+        intersector = new osgUtil::PolytopeIntersector(osgUtil::Intersector::PROJECTION,
+                                                       x - w,
+                                                       y - h,
+                                                       x + w,
+                                                       y + h);
     }
 
-    osgUtil::IntersectionVisitor iv(picker);
+    // Remove the near plane of a polytope, because it is a different distance from the near plane of frustum in some cases.
+    auto& planes = intersector->getPolytope().getPlaneList();
+    planes.erase(planes.begin() + 4);
+
+    osgUtil::IntersectionVisitor iv(intersector);
     iv.setTraversalMask(traversalMask);
     view->getCamera()->accept(iv);
 
-    if (picker->containsIntersections()) {
-        osgUtil::PolytopeIntersector::Intersections intersections = picker->getIntersections();
-
-        for (auto it = intersections.begin();
-             it != intersections.end();
-             ++it) {
-            if (!it->nodePath.empty()) {
+    if (intersector->containsIntersections()) {
+        for (auto intersection : intersector->getIntersections()) {
+            if (!intersection.nodePath.empty() &&
+                intersection.distance > -1.0) {
                 lbDebug
                     << "[scene_util::pickNode]"
-                    << "\n\tpicked node: "                      << it->nodePath.back()->getName()
-                    << "\n\tposition: "                         << it->localIntersectionPoint
-                    << "\n\tnode type: "                        << it->nodePath.back()->className()
-                    << "\n\tdistance from reference plane: "    << it->distance
-                    << "\n\tmax distance: "                     << it->maxDistance
-                    << "\n\tprimitive index: "                  << it->primitiveIndex
-                    << "\n\tnumIntersectionPoints: "            << it->numIntersectionPoints;
+                    << "\n\tpicked node: "                      << intersection.nodePath.back()->getName()
+                    << "\n\tposition: "                         << intersection.localIntersectionPoint
+                    << "\n\tnode type: "                        << intersection.nodePath.back()->className()
+                    << "\n\tdistance from reference plane: "    << intersection.distance
+                    << "\n\tmax distance: "                     << intersection.maxDistance
+                    << "\n\tprimitive index: "                  << intersection.primitiveIndex
+                    << "\n\tnumIntersectionPoints: "            << intersection.numIntersectionPoints;
 
-                osg::Geode* geode = dynamic_cast<osg::Geode*>(it->nodePath.back());
+                auto geode = dynamic_cast<osg::Geode*>(intersection.nodePath.back());
                 if (geode) {
-                    if (it->matrix.valid()) {
-                        worldIntersectPosition = it->localIntersectionPoint * (*it->matrix);
+                    if (intersection.matrix.valid()) {
+                        worldIntersectPosition = intersection.localIntersectionPoint * (*intersection.matrix);
                     }
                     else {
-                        worldIntersectPosition = it->localIntersectionPoint;
+                        worldIntersectPosition = intersection.localIntersectionPoint;
                     }
-                    return it->nodePath.back();
+                    return intersection.nodePath.back();
                 }
             }
         }
@@ -803,8 +801,6 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
 
     const int maxSamples = 5000; // reduction threshold of samples
 
-    osgText::Font* font = new osgText::Font(new osgQt::QFontImplementation(QFont("Times")));
-
     osg::Vec3Array* pointVertices = new osg::Vec3Array;
 
     // Add labels.
@@ -853,7 +849,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
                 alignment = osgText::Text::BASE_LINE;
             }
             std::string textString = QString::number(brdfValue).toLocal8Bit().data();
-            osgText::Text* text = createTextLabel(textString + "   ", pos, font, alignment);
+            osgText::Text* text = createTextLabel(textString + "   ", pos, 0.1f, ARIAL_FONT_FILE, alignment);
             text->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
             geode->addDrawable(text);

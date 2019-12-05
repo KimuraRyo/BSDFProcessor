@@ -19,18 +19,26 @@
 
 #include "SceneUtil.h"
 
-RenderingWidget::RenderingWidget(const QGLFormat&   format,
-                                 QWidget*           parent,
-                                 const QGLWidget*   shareWidget,
-                                 Qt::WindowFlags    f,
-                                 bool               forwardKeyEvents)
-                                 : osgQt::GLWidget(format, parent, shareWidget, f, forwardKeyEvents),
+RenderingWidget::RenderingWidget(QWidget*           parent,
+                                 Qt::WindowFlags    f)
+                                 : OsgQWidget(parent, f),
                                    renderingScene_(nullptr),
-                                   mouseMoved_(false),
                                    pickedInDir_(0.0, 0.0, 0.0)
 {
-    //setAcceptDrops(true);
-    setMinimumSize(1, 1);
+    osg::Camera* camera = new osg::Camera;
+    camera->setViewport(0, 0, width(), height());
+    camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
+    double aspectRatio = static_cast<double>(width()) / height();
+    camera->setProjectionMatrixAsPerspective(30.0, aspectRatio, 0.00001, 100000.0);
+    viewer_->setCamera(camera);
+
+    osgGA::TrackballManipulator* trackball = new osgGA::TrackballManipulator;
+    trackball->setHomePosition(osg::Vec3d(0.0, 10.0, 0.0), osg::Vec3d(0.0, 0.0, 0.0), osg::Vec3d(0.0, 0.0, 1.0));
+    trackball->home(0.0);
+    trackball->setMinimumDistance(0.0001);
+    trackball->setAllowThrow(false);
+    viewer_->setCameraManipulator(trackball);
+
 
     actionResetCamera_ = new QAction(this);
     actionResetCamera_->setText(QApplication::translate("RenderingWidget", "Reset camera position", 0));
@@ -58,16 +66,16 @@ void RenderingWidget::resetCameraPosition()
     if (!renderingScene_) return;
 
     osg::Group* scene = renderingScene_->getScene();
-    RenderingScene::fitCameraPosition(renderingScene_->getCamera(),
+    RenderingScene::fitCameraPosition(viewer_->getCamera(),
                                       osg::Vec3(0.0, -1.0, 0.0),
                                       osg::Vec3(0.0, 0.0, 1.0),
                                       scene);
 
     osg::Vec3d eye, center, up;
-    renderingScene_->getCamera()->getViewMatrixAsLookAt(eye, center, up);
+    viewer_->getCamera()->getViewMatrixAsLookAt(eye, center, up);
     center = scene_util::computeCenter(scene);
 
-    osgGA::CameraManipulator* cm = renderingScene_->getCameraManipulator();
+    osgGA::CameraManipulator* cm = viewer_->getCameraManipulator();
     cm->setHomePosition(eye, center, up);
     cm->home(0.0);
 }
@@ -89,7 +97,7 @@ void RenderingWidget::showCylinder()
 
     osg::Geode* geode = new osg::Geode;
     osg::Cylinder* cylinder = new osg::Cylinder(osg::Vec3(), 1.0f, 2.0f);
-    osg::Quat rotQuat(M_PI / 2.0, osg::Vec3(0.0, 1.0, 0.0));
+    osg::Quat rotQuat(lb::PI_D / 2.0, osg::Vec3(0.0, 1.0, 0.0));
     cylinder->setRotation(rotQuat);
     geode->addDrawable(new osg::ShapeDrawable(cylinder));
     scene->addChild(geode);
@@ -109,33 +117,41 @@ void RenderingWidget::showLoadedModel()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Model File"), QString(),
                                                     tr("Obj Files (*.obj)"));
-
     if (fileName.isEmpty()) return;
 
     openModel(fileName);
     resetCameraPosition();
 }
 
-void RenderingWidget::resizeEvent(QResizeEvent* event)
+void RenderingWidget::resizeGL(int w, int h)
 {
-    osgQt::GLWidget::resizeEvent(event);
+    OsgQWidget::resizeGL(w, h);
 
     if (renderingScene_) {
-        renderingScene_->updateView(event->size().width(), event->size().height());
+        renderingScene_->updateView(w, h);
     }
+}
+
+void RenderingWidget::resizeEvent(QResizeEvent *event)
+{
+    OsgQWidget::resizeEvent(event);
+
+    // This is a workaround for the instability of resizing. The OpenGL context of QOpenGLWidget
+    // in QDockWidget is rarely broken while resizing.
+    initializeGL();
 }
 
 void RenderingWidget::keyPressEvent(QKeyEvent* event)
 {
-    osgQt::GLWidget::keyPressEvent(event);
+    OsgQWidget::keyPressEvent(event);
 
     if (!renderingScene_) return;
 
-    osgGA::CameraManipulator* cm = renderingScene_->getCameraManipulator();
-    osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+    auto tm = dynamic_cast<osgGA::TrackballManipulator*>(viewer_->getCameraManipulator());
+    if (!tm) return;
 
     osg::Vec3 camPos, camCenter, camUp;
-    renderingScene_->getCamera()->getViewMatrixAsLookAt(camPos, camCenter, camUp);
+    viewer_->getCamera()->getViewMatrixAsLookAt(camPos, camCenter, camUp);
     osg::Vec3 camDir = camPos - camCenter;
     camDir.normalize();
 
@@ -144,7 +160,7 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
             if (!tm) break;
 
             osg::Vec3 rotAxis = camDir ^ camUp;
-            osg::Quat rotQuat(M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
@@ -153,7 +169,7 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
             if (!tm) break;
 
             osg::Vec3 rotAxis = camDir ^ camUp;
-            osg::Quat rotQuat(-M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(-lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
@@ -162,7 +178,7 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
             if (!tm) break;
 
             osg::Vec3 rotAxis(0.0, 0.0, 1.0);
-            osg::Quat rotQuat(-M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(-lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
@@ -171,7 +187,7 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
             if (!tm) break;
 
             osg::Vec3 rotAxis(0.0, 0.0, 1.0);
-            osg::Quat rotQuat(M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
@@ -196,21 +212,9 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
     }
 }
 
-void RenderingWidget::mouseMoveEvent(QMouseEvent* event)
-{
-    osgQt::GLWidget::mouseMoveEvent(event);
-    mouseMoved_ = true;
-}
-
-void RenderingWidget::mousePressEvent(QMouseEvent* event)
-{
-    osgQt::GLWidget::mousePressEvent(event);
-    mouseMoved_ = false;
-}
-
 void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 {
-    osgQt::GLWidget::mouseReleaseEvent(event);
+    OsgQWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
         if (!renderingScene_) return;
@@ -264,7 +268,7 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 
 void RenderingWidget::mouseDoubleClickEvent(QMouseEvent* event)
 {
-    osgQt::GLWidget::mouseDoubleClickEvent(event);
+    OsgQWidget::mouseDoubleClickEvent(event);
 
     if (!pickedInDir_.isZero()) {
         emit inDirPicked(pickedInDir_);
@@ -285,21 +289,15 @@ void RenderingWidget::dropEvent(QDropEvent* event)
     openModel(fileName);
 }
 
-void RenderingWidget::wheelEvent(QWheelEvent* event)
-{
-    osgQt::GLWidget::wheelEvent(event);
-    mouseMoved_ = true;
-}
-
 void RenderingWidget::contextMenuEvent(QContextMenuEvent* event)
 {
-    osgQt::GLWidget::contextMenuEvent(event);
-
 #ifndef __APPLE__
     if (mouseMoved_) return;
 
     showContextMenu(event->globalPos());
 #endif
+
+    update();
 }
 
 void RenderingWidget::showContextMenu(const QPoint& pos)

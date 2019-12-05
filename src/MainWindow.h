@@ -9,11 +9,9 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846 // pi
-#endif
-
 #include <memory>
+
+#include <QTimer>
 
 #include "ui_MainWindow.h"
 
@@ -27,7 +25,6 @@
 #include "SmoothDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
-#include "Utility.h"
 
 /*!
  * \class   MainWindow
@@ -64,7 +61,6 @@ private slots:
     void about();
 
     void updateViews();
-    void requestRedrawGraph();
 
     void updateDisplayMode(QString modeName);
     void updateIncomingPolarAngle(int index);
@@ -124,8 +120,7 @@ private:
     void exportFile(const QString& fileName);
     bool exportDdrDdt(const QString& fileName, lb::DataType dataType);
 
-    osgViewer::View* getMainView() const { return ui_->mainViewerWidget->getView(0); }
-    osgViewer::View* getRenderingView() const { return ui_->renderingViewerWidget->getView(0); }
+    osgViewer::View* getGraphView() const { return ui_->graphOpenGLWidget->getViewer(); }
 
     void updateCameraPosition();
 
@@ -136,9 +131,6 @@ private:
     std::unique_ptr<MaterialData>   data_;
     std::unique_ptr<GraphScene>     graphScene_;
     std::unique_ptr<RenderingScene> renderingScene_;
-
-    GraphWidget*        graphWidget_;
-    RenderingWidget*    renderingWidget_;
 
     bool cosineCorrected_;
 
@@ -154,6 +146,8 @@ private:
     TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;
     InsertIncomingAzimuthalAngleDockWidget* insertAngleDockWidget_;
+
+    QTimer timer_;
 
     Ui::MainWindowBase* ui_;
 };

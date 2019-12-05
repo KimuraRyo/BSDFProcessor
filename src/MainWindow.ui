@@ -29,28 +29,6 @@
      <height>1</height>
     </size>
    </property>
-   <widget class="ViewerWidget" name="mainViewerWidget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>21</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>1</width>
-      <height>1</height>
-     </size>
-    </property>
-   </widget>
    <widget class="QDockWidget" name="controlDockWidget">
     <property name="geometry">
      <rect>
@@ -489,12 +467,21 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="ViewerWidget" name="renderingViewerWidget" native="true">
+       <widget class="RenderingWidget" name="renderingOpenGLWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>1</width>
+          <height>1</height>
+         </size>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
         </property>
        </widget>
       </item>
@@ -868,6 +855,25 @@
      </layout>
     </widget>
    </widget>
+   <widget class="GraphWidget" name="graphOpenGLWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>1</width>
+      <height>1</height>
+     </size>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::StrongFocus</enum>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -997,10 +1003,14 @@
    </slots>
   </customwidget>
   <customwidget>
-   <class>ViewerWidget</class>
-   <extends>QWidget</extends>
-   <header>ViewerWidget.h</header>
-   <container>1</container>
+   <class>GraphWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>GraphWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RenderingWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>RenderingWidget.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

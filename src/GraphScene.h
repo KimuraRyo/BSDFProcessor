@@ -9,16 +9,13 @@
 #ifndef GRAPH_SCENE_H
 #define GRAPH_SCENE_H
 
-#include <osg/Camera>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Group>
-#include <osgGA/CameraManipulator>
 
 #include <libbsdf/Brdf/Brdf.h>
 
 #include "MaterialData.h"
-#include "SceneUtil.h"
 
 /*!
  * \class   GraphScene
@@ -75,12 +72,6 @@ public:
 
     DisplayMode getDisplayMode() const { return displayMode_; }
     void setDisplayMode(DisplayMode mode) { displayMode_ = mode; }
-
-    osg::Camera* getCamera() { return camera_; }
-    void setCamera(osg::Camera* camera);
-
-    osgGA::CameraManipulator* getCameraManipulator() { return cameraManipulator_; }
-    void setCameraManipulator(osgGA::CameraManipulator* manipulator) { cameraManipulator_ = manipulator; }
 
     float getInTheta() const { return inTheta_; }
     float getInPhi() const { return inPhi_; }
@@ -142,9 +133,6 @@ private:
 
     osg::ref_ptr<osg::Geode> inDirGeode_;
     osg::ref_ptr<osg::Geode> inOutDirGeode_;
-
-    osg::Camera*                camera_;
-    osgGA::CameraManipulator*   cameraManipulator_;
 
     int     numMultiSamples_;
     bool    oitUsed_;

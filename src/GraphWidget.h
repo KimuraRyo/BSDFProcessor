@@ -9,32 +9,21 @@
 #ifndef GRAPH_WIDGET_H
 #define GRAPH_WIDGET_H
 
-#include <QOpenGLContext>
-
-#include <QtGui/QResizeEvent>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-
-#include <osgQt/GraphicsWindowQt>
-
 #include "GraphScene.h"
+#include "OsgQWidget.h"
 
 /*!
  * \class   GraphWidget
- * \brief   The GraphWidget class provides QGLWidget for 3D graph.
+ * \brief   The GraphWidget class provides a OSG widget for 3D graph.
  */
-class GraphWidget : public osgQt::GLWidget
+class GraphWidget : public OsgQWidget
 {
     Q_OBJECT
 
 public:
-    explicit GraphWidget(const QGLFormat&   format,
-                         QWidget*           parent = 0,
-                         const QGLWidget*   shareWidget = 0,
-                         Qt::WindowFlags    f = 0,
-                         bool               forwardKeyEvents = false);
+    explicit GraphWidget(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
 
-    void setGraphScene(GraphScene* scene) { graphScene_ = scene; }
+    void setGraphScene(GraphScene* scene);
 
     QAction* getLogPlotAction() { return actionLogPlot_; }
 
@@ -54,25 +43,20 @@ private slots:
 private:
     Q_DISABLE_COPY(GraphWidget)
 
-    void resizeEvent(QResizeEvent* event);
+    void initializeGL() override;
+    void resizeGL(int w, int h) override;
 
-    void keyPressEvent(QKeyEvent* event);
-    void keyReleaseEvent(QKeyEvent* event);
-    void mouseMoveEvent(QMouseEvent* event);
-    void mousePressEvent(QMouseEvent* event);
-    void mouseReleaseEvent(QMouseEvent* event);
-    void dragEnterEvent(QDragEnterEvent* event);
-    void dropEvent(QDropEvent* event);
-    void wheelEvent(QWheelEvent* event);
-    void contextMenuEvent(QContextMenuEvent* event);
+    void keyPressEvent(QKeyEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
 
     void showContextMenu(const QPoint& pos);
 
     static bool getParameters(const QStringList& paramList, const QString& name, osg::Vec3d* params);
 
     GraphScene* graphScene_;
-
-    bool mouseMoved_;
 
     QAction* actionResetCamera_;
     QAction* actionCopyCameraSettings_;

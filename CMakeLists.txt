@@ -34,9 +34,6 @@ file(GLOB SOURCES
 
 include_directories(${SOURCE_PATH})
 
-# Macro for developers
-#add_definitions(-DDEVELOPMENT)
-
 # Enable all warnings
 #add_definitions(-Wall)
 
@@ -46,7 +43,7 @@ endif()
 include_directories("${EIGEN3_INCLUDE_DIR}")
 
 set(OpenSceneGraph_MARK_AS_ADVANCED ON)
-find_package(OpenSceneGraph 3.4.0 REQUIRED osgDB osgGA osgManipulator osgQt osgText osgUtil osgViewer osgWidget)
+find_package(OpenSceneGraph 3.4.0 REQUIRED osgDB osgGA osgText osgUtil osgViewer)
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

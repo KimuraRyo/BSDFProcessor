@@ -22,6 +22,7 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 
+#include "SceneUtil.h"
 #include "SpecularCenteredCoordinateSystem.h"
 
 GraphScene::GraphScene() : data_(0),
@@ -33,8 +34,6 @@ GraphScene::GraphScene() : data_(0),
                            scaleLength1_(0.5f),
                            scaleLength2_(1.0f),
                            displayMode_(NORMAL_DISPLAY),
-                           camera_(0),
-                           cameraManipulator_(0),
                            inThetaIndex_(0),
                            inPhiIndex_(0),
                            wavelengthIndex_(0),
@@ -76,6 +75,8 @@ GraphScene::GraphScene() : data_(0),
     scene_->addChild(bsdfGroup_.get());
     scene_->addChild(accessoryGroup_.get());
 
+    root_->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+
     initializeInDirLine();
     initializeInOutDirLine();
 }
@@ -96,9 +97,8 @@ void GraphScene::updateView(int width, int height)
 
         postProcessingGroup_ = newGroup;
 
-        osg::Node::ParentList parents = oldGroup->getParents();
-        for (auto it = parents.begin(); it != parents.end(); ++it) {
-            (*it)->replaceChild(oldGroup, postProcessingGroup_.get());
+        for (auto parents : oldGroup->getParents()) {
+            parents->replaceChild(oldGroup, newGroup);
         }
     }
 
@@ -110,9 +110,8 @@ void GraphScene::updateView(int width, int height)
 
         oitGroup_ = newGroup;
 
-        osg::Node::ParentList parents = oldGroup->getParents();
-        for (auto it = parents.begin(); it != parents.end(); ++it) {
-            (*it)->replaceChild(oldGroup, oitGroup_.get());
+        for (auto parents : oldGroup->getParents()) {
+            parents->replaceChild(oldGroup, newGroup);
         }
     }
 }
@@ -411,12 +410,6 @@ void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
 void GraphScene::updateInOutDirLine()
 {
     updateInOutDirLine(pickedInDir_, pickedOutDir_, wavelengthIndex_);
-}
-
-void GraphScene::setCamera(osg::Camera* camera)
-{
-    camera_ = camera;
-    camera_->setNearFarRatio(0.00005);
 }
 
 bool GraphScene::isLogPlotAcceptable()

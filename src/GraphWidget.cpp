@@ -12,22 +12,32 @@
 #include <QtCore/QMimeData>
 #include <QtCore/QUrl>
 
-#include <osgDB/WriteFile>
 #include <osgGA/TrackballManipulator>
 
 #include "SceneUtil.h"
 
-GraphWidget::GraphWidget(const QGLFormat&   format,
-                         QWidget*           parent,
-                         const QGLWidget*   shareWidget,
-                         Qt::WindowFlags    f,
-                         bool               forwardKeyEvents)
-                         : osgQt::GLWidget(format, parent, shareWidget, f, forwardKeyEvents),
-                           graphScene_(0),
-                           mouseMoved_(false)
+GraphWidget::GraphWidget(QWidget*           parent,
+                         Qt::WindowFlags    f)
+                         : OsgQWidget(parent, f),
+                           graphScene_(nullptr)
 {
     setAcceptDrops(true);
-    setMinimumSize(1, 1);
+
+    osg::Camera* camera = new osg::Camera;
+    camera->setViewport(0, 0, width(), height());
+    camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
+    double aspectRatio = static_cast<double>(width()) / height();
+    camera->setProjectionMatrixAsPerspective(30.0, aspectRatio, 0.00001, 100000.0);
+    camera->setComputeNearFarMode(osg::Camera::COMPUTE_NEAR_FAR_USING_BOUNDING_VOLUMES);
+    camera->setNearFarRatio(0.00005);
+    viewer_->setCamera(camera);
+
+    osgGA::TrackballManipulator* trackball = new osgGA::TrackballManipulator;
+    trackball->setHomePosition(osg::Vec3d(0.0, 10.0, 0.0), osg::Vec3d(0.0, 0.0, 0.0), osg::Vec3d(0.0, 0.0, 1.0));
+    trackball->home(0.0);
+    trackball->setMinimumDistance(0.0001);
+    trackball->setAllowThrow(false);
+    viewer_->setCameraManipulator(trackball);
 
     actionResetCamera_ = new QAction(this);
     actionResetCamera_->setText(QApplication::translate("GraphWidget", "Reset camera position", 0));
@@ -47,10 +57,15 @@ GraphWidget::GraphWidget(const QGLFormat&   format,
     connect(actionLogPlot_, SIGNAL(toggled(bool)), this, SLOT(toggleLogPlot(bool)));
 }
 
+void GraphWidget::setGraphScene(GraphScene* scene)
+{
+    graphScene_ = scene;
+    viewer_->setSceneData(graphScene_->getRoot());
+}
+
 void GraphWidget::copyCameraSettings()
 {
-    osgGA::CameraManipulator* cm = graphScene_->getCameraManipulator();
-    osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+    auto tm = dynamic_cast<osgGA::TrackballManipulator*>(viewer_->getCameraManipulator());
     if (!tm) return;
 
     osg::Vec3d pos, center, up;
@@ -82,63 +97,68 @@ void GraphWidget::pasteCameraSettings()
     if (getParameters(paramList, "CameraPosition",  &pos) &&
         getParameters(paramList, "CameraCenter",    &center) &&
         getParameters(paramList, "CameraUp",        &up)) {
-        osgGA::CameraManipulator* cm = graphScene_->getCameraManipulator();
-        osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+        auto tm = dynamic_cast<osgGA::TrackballManipulator*>(viewer_->getCameraManipulator());
         if (!tm) return;
 
         tm->setTransformation(pos, center, up);
     }
 }
 
-void GraphWidget::resizeEvent(QResizeEvent* event)
+void GraphWidget::initializeGL()
 {
-    osgQt::GLWidget::resizeEvent(event);
+    OsgQWidget::initializeGL();
+
+    scene_util::displayGlInformation(graphicsWindow_);
+}
+
+void GraphWidget::resizeGL(int w, int h)
+{
+    OsgQWidget::resizeGL(w, h);
 
     if (graphScene_) {
-        graphScene_->updateView(event->size().width(), event->size().height());
+        graphScene_->updateView(w, h);
     }
 }
 
 void GraphWidget::keyPressEvent(QKeyEvent* event)
 {
-    osgQt::GLWidget::keyPressEvent(event);
+    OsgQWidget::keyPressEvent(event);
 
     if (!graphScene_) return;
 
-    osgGA::CameraManipulator* cm = graphScene_->getCameraManipulator();
-    osgGA::TrackballManipulator* tm = dynamic_cast<osgGA::TrackballManipulator*>(cm);
+    auto tm = dynamic_cast<osgGA::TrackballManipulator*>(viewer_->getCameraManipulator());
     if (!tm) return;
 
     osg::Vec3 camPos, camCenter, camUp;
-    graphScene_->getCamera()->getViewMatrixAsLookAt(camPos, camCenter, camUp);
+    viewer_->getCamera()->getViewMatrixAsLookAt(camPos, camCenter, camUp);
     osg::Vec3 camDir = camPos - camCenter;
     camDir.normalize();
 
     switch (event->key()) {
         case Qt::Key_Up: {
             osg::Vec3 rotAxis = camDir ^ camUp;
-            osg::Quat rotQuat(M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
         }
         case Qt::Key_Down: {
             osg::Vec3 rotAxis = camDir ^ camUp;
-            osg::Quat rotQuat(-M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(-lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
         }
         case Qt::Key_Left: {
             osg::Vec3 rotAxis(0.0, 0.0, 1.0);
-            osg::Quat rotQuat(-M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(-lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
         }
         case Qt::Key_Right: {
             osg::Vec3 rotAxis(0.0, 0.0, 1.0);
-            osg::Quat rotQuat(M_PI / 180.0, rotAxis);
+            osg::Quat rotQuat(lb::PI_D / 180.0, rotAxis);
             tm->setRotation(tm->getRotation() * rotQuat);
 
             break;
@@ -159,33 +179,13 @@ void GraphWidget::keyPressEvent(QKeyEvent* event)
     }
 }
 
-void GraphWidget::keyReleaseEvent(QKeyEvent* event)
-{
-    osgQt::GLWidget::keyReleaseEvent(event);
-}
-
-void GraphWidget::mouseMoveEvent(QMouseEvent* event)
-{
-    osgQt::GLWidget::mouseMoveEvent(event);
-    mouseMoved_ = true;
-}
-
-void GraphWidget::mousePressEvent(QMouseEvent* event)
-{
-    osgQt::GLWidget::mousePressEvent(event);
-    mouseMoved_ = false;
-}
-
 void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
 {
-    osgQt::GLWidget::mouseReleaseEvent(event);
+    OsgQWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
-        osgViewer::GraphicsWindow::Views views;
-        getGraphicsWindow()->getViews(views);
-
         osg::Vec3 intersectPosition;
-        osg::Node* pickedNode = scene_util::pickNode(views.front(), osg::Vec2(event->x(), height() - event->y()),
+        osg::Node* pickedNode = scene_util::pickNode(viewer_, osg::Vec2(event->x(), height() - event->y()),
                                                      intersectPosition,
                                                      BRDF_MASK | SPECULAR_REFLECTANCE_MASK,
                                                      false);
@@ -220,21 +220,15 @@ void GraphWidget::dropEvent(QDropEvent* event)
     emit fileDropped(fileName);
 }
 
-void GraphWidget::wheelEvent(QWheelEvent* event)
-{
-    osgQt::GLWidget::wheelEvent(event);
-    mouseMoved_ = true;
-}
-
 void GraphWidget::contextMenuEvent(QContextMenuEvent* event)
 {
-    osgQt::GLWidget::contextMenuEvent(event);
-
 #ifndef __APPLE__
     if (mouseMoved_) return;
 
     showContextMenu(event->globalPos());
 #endif
+
+    update();
 }
 
 void GraphWidget::showContextMenu(const QPoint& pos)
