@@ -170,7 +170,9 @@ void TableView::createBrdfDataItems(int wavelengthIndex)
             color = 0;
         }
         else {
-            float maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex];
+            const lb::Spectrum maxSp = data_->getMaxValuesPerWavelength();
+            float maxValue = photometric_ ? scene_util::spectrumToY(maxSp, ss->getColorModel(), ss->getWavelengths())
+                                          : maxSp[wavelengthIndex];
             float ratio = sampleValue / maxValue;
             color = static_cast<int>(std::pow(ratio, 1 / gamma_) * 255);
             color = std::min(color, 255);
