@@ -52,7 +52,7 @@ void TransmittanceModelDockWidget::generateBrdf()
                     dynamic_cast<lb::GgxAnisotropic*>(model) ||
                     dynamic_cast<lb::MultipleScatteringSmith*>(model));
 
-    lb::SpecularCoordinatesBrdf* specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
+    auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
 
     // Offset specular directions for refraction.
     if (iorUsed && specBrdf) {

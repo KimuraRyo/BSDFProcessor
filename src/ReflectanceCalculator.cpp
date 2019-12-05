@@ -78,10 +78,10 @@ void ReflectanceCalculator::computeReflectances()
 #if defined(USE_INTEGRATOR)
         sp = integrator.computeReflectance(*brdf, inDir);
 #else
-        if (lb::SphericalCoordinatesBrdf* spheBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
+        if (auto spheBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
             sp = lb::computeReflectance(*spheBrdf, inThIndex, inPhIndex);
         }
-        else if (lb::SpecularCoordinatesBrdf* specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
+        else if (auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
             sp = lb::computeReflectance(*specBrdf, inThIndex, inPhIndex);
         }
         else {

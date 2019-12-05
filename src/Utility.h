@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2016 Kimura Ryo                                  //
+// Copyright (C) 2014-2019 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -14,7 +14,7 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
-#include <QtWidgets/QPushButton>
+#include <QColor>
 
 #include <osg/Vec3>
 #include <osg/Vec4>
@@ -54,21 +54,6 @@ inline QColor lbToQt(const lb::Vec3& color)
 {
     return QColor::fromRgbF(color[0], color[1], color[2]);
 }
-
-/*!
- * Gets the background color of QPushButton in a style sheet.
- * If a color is not found, QColor::isValid() is false.
- */
-QColor getBackgroundColor(QPushButton* button);
-
-/*! Sets the background color of QPushButton. */
-void setBackgroundColor(QPushButton* button, const QColor& color);
-
-/*!
- * Sets the background color of QPushButton with a color dialog.
- * If a color is not set, QColor::isValid() is false.
- */
-QColor setBackgroundColor(QPushButton* button);
 
 } // namespace util
 

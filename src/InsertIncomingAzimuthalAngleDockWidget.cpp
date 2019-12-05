@@ -61,9 +61,8 @@ void InsertIncomingAzimuthalAngleDockWidget::process()
 
     if (!baseBrdf_ || !insertedBrdf_) return;
 
-    using SpheBrdf = lb::SphericalCoordinatesBrdf;
-    SpheBrdf* baseBrdf      = dynamic_cast<SpheBrdf*>(baseBrdf_);
-    SpheBrdf* insertedBrdf  = dynamic_cast<SpheBrdf*>(insertedBrdf_);
+    auto baseBrdf     = dynamic_cast<lb::SphericalCoordinatesBrdf*>(baseBrdf_);
+    auto insertedBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(insertedBrdf_);
 
     if (!baseBrdf || !insertedBrdf) {
         QMessageBox::warning(this, tr("BSDF Processor"),
