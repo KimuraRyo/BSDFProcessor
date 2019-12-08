@@ -41,6 +41,11 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
 
+    double getPixelRatio() const { return devicePixelRatioF(); }
+
+    /*! Gets the position taking into account the device pixel ratio. */
+    osg::Vec2f getPosition(const QMouseEvent& event) const;
+
     bool mouseMoved_;
 
     osg::ref_ptr<osgViewer::Viewer> viewer_;
@@ -49,7 +54,6 @@ protected:
 private:
     Q_DISABLE_COPY(OsgQWidget)
 
-    osg::Vec2f getPosition(const QMouseEvent& event);
     static int getOsgMouseButton(const QMouseEvent& event);
 
     bool osgFboIdInitialized_;

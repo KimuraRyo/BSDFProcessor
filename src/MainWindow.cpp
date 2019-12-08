@@ -390,11 +390,8 @@ void MainWindow::updateViews()
 {
     graphScene_->updateInOutDirLine();
 
-    graphScene_->updateView(ui_->graphOpenGLWidget->width(), ui_->graphOpenGLWidget->height());
-    ui_->graphOpenGLWidget->update();
-
-    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
-    ui_->renderingOpenGLWidget->update();
+    ui_->graphOpenGLWidget->updateView();
+    ui_->renderingOpenGLWidget->updateView();
 
     displayReflectance();
 }
@@ -424,8 +421,7 @@ void MainWindow::updateDisplayMode(QString modeName)
                                          graphScene_->getInPhi(),
                                          ui_->wavelengthSlider->value());
     }
-    graphScene_->updateView(ui_->graphOpenGLWidget->width(), ui_->graphOpenGLWidget->height());
-    ui_->graphOpenGLWidget->update();
+    ui_->graphOpenGLWidget->updateView();
 
     clearPickedValue();
     displayReflectance();
@@ -580,8 +576,7 @@ void MainWindow::updateLightPolarAngle(double angle)
 
     lb::Vec3 dir = lb::SphericalCoordinateSystem::toXyz(theta, phi);
     renderingScene_->setLightDir(scene_util::toOsg(dir));
-    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
-    ui_->renderingOpenGLWidget->update();
+    ui_->renderingOpenGLWidget->updateView();
 }
 
 void MainWindow::updateLightAzimuthalAngle(int angle)
@@ -606,8 +601,7 @@ void MainWindow::updateLightAzimuthalAngle(double angle)
 
     lb::Vec3 dir = lb::SphericalCoordinateSystem::toXyz(theta, phi);
     renderingScene_->setLightDir(scene_util::toOsg(dir));
-    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
-    ui_->renderingOpenGLWidget->update();
+    ui_->renderingOpenGLWidget->updateView();
 }
 
 void MainWindow::updateLightIntensity(int intensity)
@@ -636,8 +630,7 @@ void MainWindow::updateLightIntensity(double intensity)
     }
 
     renderingScene_->setLightIntensity(intensity);
-    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
-    ui_->renderingOpenGLWidget->update();
+    ui_->renderingOpenGLWidget->updateView();
 }
 
 void MainWindow::updateEnvironmentIntensity(int intensity)
@@ -666,11 +659,11 @@ void MainWindow::updateEnvironmentIntensity(double intensity)
     }
 
     renderingScene_->setEnvironmentIntensity(intensity);
-    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
 
     osg::Camera* camera = ui_->renderingOpenGLWidget->getViewer()->getCamera();
     camera->setClearColor(osg::Vec4(intensity, intensity, intensity, 1.0));
-    ui_->renderingOpenGLWidget->update();
+
+    ui_->renderingOpenGLWidget->updateView();
 }
 
 void MainWindow::displayPickedValue(const osg::Vec3& position)
@@ -1055,8 +1048,7 @@ void MainWindow::initializeUi()
     }
 
     graphScene_->useOit(false);
-    graphScene_->updateView(ui_->graphOpenGLWidget->width(), ui_->graphOpenGLWidget->height());
-    ui_->graphOpenGLWidget->update();
+    ui_->graphOpenGLWidget->updateView();
 
     if (renderingScene_->getBrdf()) {
         ui_->lightPolarAngleSlider->setEnabled(true);
@@ -1113,8 +1105,7 @@ void MainWindow::initializeUi()
 
     updateInOutDirection(lb::Vec3::Zero(), lb::Vec3::Zero());
 
-    renderingScene_->updateView(ui_->renderingOpenGLWidget->width(), ui_->renderingOpenGLWidget->height());
-    ui_->renderingOpenGLWidget->update();
+    ui_->renderingOpenGLWidget->updateView();
 
     lb::Brdf* brdf = data_->getBrdfData();
     if (brdf) {

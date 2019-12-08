@@ -25,13 +25,9 @@ public:
 
     explicit RenderingWidget(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
 
-    void setRenderingScene(RenderingScene* scene)
-    {
-        renderingScene_ = scene;
-        viewer_->setSceneData(renderingScene_->getRoot());
-        showSphere();
-        resetCameraPosition();
-    }
+    void setRenderingScene(RenderingScene* scene);
+
+    void updateView();
 
 signals:
     void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);

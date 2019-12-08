@@ -26,7 +26,8 @@ RenderingWidget::RenderingWidget(QWidget*           parent,
                                    pickedInDir_(0.0, 0.0, 0.0)
 {
     osg::Camera* camera = new osg::Camera;
-    camera->setViewport(0, 0, width(), height());
+    int pr = static_cast<int>(getPixelRatio());
+    camera->setViewport(0, 0, width() * pr, height() * pr);
     camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
     double aspectRatio = static_cast<double>(width()) / height();
     camera->setProjectionMatrixAsPerspective(30.0, aspectRatio, 0.00001, 100000.0);
@@ -38,7 +39,6 @@ RenderingWidget::RenderingWidget(QWidget*           parent,
     trackball->setMinimumDistance(0.0001);
     trackball->setAllowThrow(false);
     viewer_->setCameraManipulator(trackball);
-
 
     actionResetCamera_ = new QAction(this);
     actionResetCamera_->setText(QApplication::translate("RenderingWidget", "Reset camera position", 0));
@@ -59,6 +59,21 @@ RenderingWidget::RenderingWidget(QWidget*           parent,
     actionShapeOpen_ = new QAction(this);
     actionShapeOpen_->setText(QApplication::translate("RenderingWidget", "Open...", 0));
     connect(actionShapeOpen_, SIGNAL(triggered()), this, SLOT(showLoadedModel()));
+}
+
+void RenderingWidget::setRenderingScene(RenderingScene* scene)
+{
+    renderingScene_ = scene;
+    viewer_->setSceneData(renderingScene_->getRoot());
+    showSphere();
+    resetCameraPosition();
+}
+
+void RenderingWidget::updateView()
+{
+    int pr = static_cast<int>(getPixelRatio());
+    renderingScene_->updateView(width() * pr, height() * pr);
+    update();
 }
 
 void RenderingWidget::resetCameraPosition()
@@ -128,7 +143,8 @@ void RenderingWidget::resizeGL(int w, int h)
     OsgQWidget::resizeGL(w, h);
 
     if (renderingScene_) {
-        renderingScene_->updateView(w, h);
+        int pr = static_cast<int>(getPixelRatio());
+        renderingScene_->updateView(w * pr, h * pr);
     }
 }
 
@@ -219,10 +235,11 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
         if (!renderingScene_) return;
 
-        int x = event->pos().x();
-        int y = event->pos().y();
+        int pr = static_cast<int>(getPixelRatio());
+        int x = event->pos().x() * pr;
+        int y = event->pos().y() * pr;
 
-        lb::Vec3 inDir = renderingScene_->getInDir(x, y);
+        lb::Vec3 inDir  = renderingScene_->getInDir(x, y);
         lb::Vec3 outDir = renderingScene_->getOutDir(x, y);
         if (inDir.isZero() || outDir.isZero()) {
             pickedInDir_ = lb::Vec3::Zero();
@@ -242,8 +259,8 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 
             lb::Spectrum sp = brdf->getSpectrum(inDir, outDir);
 
-            lbDebug << "[RenderingWidget::mouseReleaseEvent] inDir: " << inDir.format(lb::LB_EIGEN_IO_FMT);
-            lbDebug << "[RenderingWidget::mouseReleaseEvent] outDir: " << outDir.format(lb::LB_EIGEN_IO_FMT);
+            lbDebug << "[RenderingWidget::mouseReleaseEvent] inDir: "    << inDir.format(lb::LB_EIGEN_IO_FMT);
+            lbDebug << "[RenderingWidget::mouseReleaseEvent] outDir: "   << outDir.format(lb::LB_EIGEN_IO_FMT);
             lbDebug << "[RenderingWidget::mouseReleaseEvent] Spectrum: " << sp.format(lb::LB_EIGEN_IO_FMT);
         }
         else if (ss2) {

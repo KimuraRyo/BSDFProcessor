@@ -25,6 +25,8 @@ public:
 
     void setGraphScene(GraphScene* scene);
 
+    void updateView();
+
     QAction* getLogPlotAction() { return actionLogPlot_; }
 
 signals:

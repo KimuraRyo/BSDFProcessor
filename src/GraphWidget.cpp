@@ -24,7 +24,8 @@ GraphWidget::GraphWidget(QWidget*           parent,
     setAcceptDrops(true);
 
     osg::Camera* camera = new osg::Camera;
-    camera->setViewport(0, 0, width(), height());
+    int pr = static_cast<int>(getPixelRatio());
+    camera->setViewport(0, 0, width() * pr, height() * pr);
     camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
     double aspectRatio = static_cast<double>(width()) / height();
     camera->setProjectionMatrixAsPerspective(30.0, aspectRatio, 0.00001, 100000.0);
@@ -61,6 +62,13 @@ void GraphWidget::setGraphScene(GraphScene* scene)
 {
     graphScene_ = scene;
     viewer_->setSceneData(graphScene_->getRoot());
+}
+
+void GraphWidget::updateView()
+{
+    int pr = static_cast<int>(getPixelRatio());
+    graphScene_->updateView(width() * pr, height() * pr);
+    update();
 }
 
 void GraphWidget::copyCameraSettings()
@@ -116,7 +124,8 @@ void GraphWidget::resizeGL(int w, int h)
     OsgQWidget::resizeGL(w, h);
 
     if (graphScene_) {
-        graphScene_->updateView(w, h);
+        int pr = static_cast<int>(getPixelRatio());
+        graphScene_->updateView(w * pr, h * pr);
     }
 }
 
@@ -184,11 +193,10 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
     OsgQWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
+        osg::Vec2f pos = osg::Vec2(event->x(), height() - event->y()) * getPixelRatio();
         osg::Vec3 intersectPosition;
-        osg::Node* pickedNode = scene_util::pickNode(viewer_, osg::Vec2(event->x(), height() - event->y()),
-                                                     intersectPosition,
-                                                     BRDF_MASK | SPECULAR_REFLECTANCE_MASK,
-                                                     false);
+        osg::Node::NodeMask mask = BRDF_MASK | SPECULAR_REFLECTANCE_MASK;
+        osg::Node* pickedNode = scene_util::pickNode(viewer_, pos, intersectPosition, mask, false);
 
         if (pickedNode) {
             lbInfo << "[GraphWidget::mouseReleaseEvent] " << pickedNode->getName();

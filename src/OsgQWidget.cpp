@@ -26,7 +26,8 @@ void OsgQWidget::initializeGL()
 {
     // An OpenGL context is set up in initializeGL(), not the constructor. Because the OpenGL context of QOpenGLWidget in QDockWidget is
     // reinitialized while docking/undoking.
-    graphicsWindow_ = viewer_->setUpViewerAsEmbeddedInWindow(x(), y(), width(), height());
+    int pr = static_cast<int>(getPixelRatio());
+    graphicsWindow_ = viewer_->setUpViewerAsEmbeddedInWindow(x() * pr, y() * pr, width() * pr, height() * pr);
     viewer_->getCamera()->setGraphicsContext(graphicsWindow_);
     viewer_->realize();
 
@@ -48,11 +49,12 @@ void OsgQWidget::paintGL()
 
 void OsgQWidget::resizeGL(int w, int h)
 {
-    graphicsWindow_->getEventQueue()->windowResize(x(), y() , w, h);
-    graphicsWindow_->resized(x(), y(), w, h);
+    int pr = static_cast<int>(getPixelRatio());
 
-    int pixelRatio = devicePixelRatio();
-    viewer_->getCamera()->setViewport(0, 0, w * pixelRatio, h * pixelRatio);
+    graphicsWindow_->getEventQueue()->windowResize(x() * pr, y() * pr, w * pr, h * pr);
+    graphicsWindow_->resized(x() * pr, y() * pr, w * pr, h * pr);
+
+    viewer_->getCamera()->setViewport(0, 0, w * pr, h * pr);
 }
 
 void OsgQWidget::paintEvent(QPaintEvent* event)
@@ -132,12 +134,9 @@ void OsgQWidget::wheelEvent(QWheelEvent* event)
     update();
 }
 
-osg::Vec2f OsgQWidget::getPosition(const QMouseEvent& event)
+osg::Vec2f OsgQWidget::getPosition(const QMouseEvent& event) const
 {
-    osg::Vec2f pos(event.pos().x(),
-                   event.pos().y());
-
-    return pos * devicePixelRatio();
+    return osg::Vec2f(event.x(), event.y()) * getPixelRatio();
 }
 
 int OsgQWidget::getOsgMouseButton(const QMouseEvent& event)
