@@ -55,7 +55,7 @@ void GraphicsAngleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem*
             int precision = std::min(static_cast<int>(lod / 8.0), 5);
             QString text = QString::number(value_, 'g', precision);
 
-            QFont font("Times");
+            QFont font("Helvetica");
             font.setStyleStrategy(QFont::ForceOutline);
             painter->setFont(font);
 

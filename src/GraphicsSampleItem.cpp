@@ -72,7 +72,7 @@ void GraphicsSampleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem
             text = textf;
         }
 
-        QFont font("Times");
+        QFont font("Helvetica");
         font.setStyleStrategy(QFont::ForceOutline);
         painter->setFont(font);
 

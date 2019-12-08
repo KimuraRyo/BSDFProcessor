@@ -496,7 +496,7 @@ void TableView::paintEvent(QPaintEvent* event)
 
     painter.save();
 
-    QFont font("Times");
+    QFont font("Helvetica");
     font.setStyleStrategy(QFont::ForceOutline);
     painter.setFont(font);
 
