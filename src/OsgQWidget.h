@@ -9,9 +9,16 @@
 #ifndef OSG_QWIDGET_H
 #define OSG_QWIDGET_H
 
-#include <QOpenGLWidget>
+#ifdef __APPLE__
+#define __glext_h_
+#include <QtGui/qopengl.h>
+#undef __glext_h_
+#include <QtGui/qopenglext.h>
+#endif
+
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
+#include <QtWidgets/QOpenGLWidget>
 
 #include <osgViewer/Viewer>
 
