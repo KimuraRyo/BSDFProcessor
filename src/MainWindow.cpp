@@ -954,7 +954,7 @@ void MainWindow::createActions()
 
 void MainWindow::initializeUi()
 {
-    this->setWindowTitle("BSDF Processor");
+    this->setWindowTitle(qApp->applicationName());
 
     QComboBox* comboBox = ui_->graphModeComboBox;
 

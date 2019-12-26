@@ -19,6 +19,9 @@ int main(int argc, char** argv)
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     QApplication app(argc, argv);
+    app.setOrganizationName("BSDFProcessorProject");
+    app.setApplicationName("BSDF Processor");
+
     MainWindow* mainWindow = new MainWindow;
     mainWindow->show();
 
