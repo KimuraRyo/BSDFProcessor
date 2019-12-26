@@ -124,6 +124,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     ui_->renderingOpenGLWidget->setRenderingScene(renderingScene_.get());
 
     createActions();
+    readSettings();
 
     lbInfo << "libbsdf-" << lb::getVersion();
     lbInfo << "OpenSceneGraph-" << osgGetVersion();
@@ -877,6 +878,26 @@ void MainWindow::updateDiffuseIntensity(double intensity)
 void MainWindow::clearFileType()
 {
     data_->setFileType(lb::UNKNOWN_FILE);
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    QSettings settings;
+    settings.setValue("MainWindow/geometry", saveGeometry());
+    settings.setValue("MainWindow/windowState", saveState());
+    settings.setValue("GraphWidget/logPlot", ui_->graphOpenGLWidget->getLogPlotAction()->isChecked());
+
+    QMainWindow::closeEvent(event);
+}
+
+void MainWindow::readSettings()
+{
+    QSettings settings;
+    restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
+    restoreState(settings.value("MainWindow/windowState").toByteArray());
+
+    bool logPlotUsed = settings.value("GraphWidget/logPlot", false).toBool();
+    ui_->graphOpenGLWidget->getLogPlotAction()->setChecked(logPlotUsed);
 }
 
 void MainWindow::createActions()

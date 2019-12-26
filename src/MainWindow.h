@@ -98,6 +98,10 @@ private slots:
 private:
     Q_DISABLE_COPY(MainWindow)
 
+    void closeEvent(QCloseEvent* event) override;
+
+    void readSettings();
+
     void createActions();
 
     void initializeUi();
