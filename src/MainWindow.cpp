@@ -189,9 +189,7 @@ void MainWindow::openFile(const QString& fileName)
     }
 
     if (!loaded) {
-        QMessageBox::warning(this, tr("BSDF Processor"),
-                             tr("Failed to load \"") + fileName + "\"",
-                             QMessageBox::Ok);
+        QMessageBox::warning(this, qApp->applicationName(), "Failed to load \"" + fileName + "\"");
         return;
     }
 
@@ -276,15 +274,15 @@ void MainWindow::updateBrdf()
 
 void MainWindow::openBxdfUsingDialog()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open BRDF/BTDF File"), QString(),
-                                                    tr("BxDF Files (*.ddr *.ddt *.sdr *.sdt *.bsdf *.astm *.binary);;"
-                                                       "Integra DDR Files (*.ddr);;"
-                                                       "Integra DDT Files (*.ddt);;"
-                                                       "Integra SDR Files (*.sdr);;"
-                                                       "Integra SDR Files (*.sdt);;"
-                                                       "LightTools/Zemax BSDF Files (*.bsdf);;"
-                                                       "ASTM Files (*.astm);;"
-                                                       "MERL binary Files (*.binary)"));
+    QString fileName = QFileDialog::getOpenFileName(this, "Open BRDF/BTDF File", QString(),
+                                                    "BxDF Files (*.ddr *.ddt *.sdr *.sdt *.bsdf *.astm *.binary);;"
+                                                    "Integra DDR Files (*.ddr);;"
+                                                    "Integra DDT Files (*.ddt);;"
+                                                    "Integra SDR Files (*.sdr);;"
+                                                    "Integra SDR Files (*.sdt);;"
+                                                    "LightTools/Zemax BSDF Files (*.bsdf);;"
+                                                    "ASTM Files (*.astm);;"
+                                                    "MERL binary Files (*.binary)");
 
     if (fileName.isEmpty()) return;
 
@@ -293,12 +291,12 @@ void MainWindow::openBxdfUsingDialog()
 
 void MainWindow::openCcbxdfUsingDialog()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open CCBRDF/CCBTDF File"), QString(),
-                                                    tr("BxDF Files (*.ddr *.ddt *.bsdf *.astm);;"
-                                                       "Integra DDR Files (*.ddr);;"
-                                                       "Integra DDT Files (*.ddt);;"
-                                                       "LightTools/Zemax BSDF Files (*.bsdf);;"
-                                                       "ASTM Files (*.astm)"));
+    QString fileName = QFileDialog::getOpenFileName(this, "Open CCBRDF/CCBTDF File", QString(),
+                                                    "BxDF Files (*.ddr *.ddt *.bsdf *.astm);;"
+                                                    "Integra DDR Files (*.ddr);;"
+                                                    "Integra DDT Files (*.ddt);;"
+                                                    "LightTools/Zemax BSDF Files (*.bsdf);;"
+                                                    "ASTM Files (*.astm)");
 
     if (fileName.isEmpty()) return;
 
@@ -313,12 +311,10 @@ void MainWindow::exportBxdfUsingDialog()
 
     QString fileName;
     if (data_->getBrdf()) {
-        fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
-                                                tr("Integra DDR Files (*.ddr)"));
+        fileName = QFileDialog::getSaveFileName(this, "Export BxDF File", QString(), "Integra DDR Files (*.ddr)");
     }
     else {
-        fileName = QFileDialog::getSaveFileName(this, tr("Export BxDF File"), QString(),
-                                                tr("Integra DDT Files (*.ddt)"));
+        fileName = QFileDialog::getSaveFileName(this, "Export BxDF File", QString(), "Integra DDT Files (*.ddt)");
     }
 
     if (fileName.isEmpty()) return;
@@ -743,19 +739,19 @@ void MainWindow::displayReflectance()
 
     if (data_->getBrdf()) {
         ss2 = data_->getReflectances();
-        ui_->pickedReflectanceLabel->setText(tr("Reflectance:"));
+        ui_->pickedReflectanceLabel->setText("Reflectance:");
     }
     else if (data_->getBtdf()) {
         ss2 = data_->getReflectances();
-        ui_->pickedReflectanceLabel->setText(tr("Transmittance:"));
+        ui_->pickedReflectanceLabel->setText("Transmittance:");
     }
     else if (data_->getSpecularReflectances()) {
         ss2 = data_->getSpecularReflectances();
-        ui_->pickedReflectanceLabel->setText(tr("Reflectance:"));
+        ui_->pickedReflectanceLabel->setText("Reflectance:");
     }
     else if (data_->getSpecularTransmittances()) {
         ss2 = data_->getSpecularTransmittances();
-        ui_->pickedReflectanceLabel->setText(tr("Transmittance:"));
+        ui_->pickedReflectanceLabel->setText("Transmittance:");
     }
     else {
         return;

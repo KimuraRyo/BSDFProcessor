@@ -41,23 +41,23 @@ RenderingWidget::RenderingWidget(QWidget*           parent,
     viewer_->setCameraManipulator(trackball);
 
     actionResetCamera_ = new QAction(this);
-    actionResetCamera_->setText(QApplication::translate("RenderingWidget", "Reset camera position", 0));
+    actionResetCamera_->setText("Reset camera position");
     connect(actionResetCamera_, SIGNAL(triggered()), this, SLOT(resetCameraPosition()));
 
     actionShapeSphere_ = new QAction(this);
-    actionShapeSphere_->setText(QApplication::translate("RenderingWidget", "Sphere", 0));
+    actionShapeSphere_->setText("Sphere");
     connect(actionShapeSphere_, SIGNAL(triggered()), this, SLOT(showSphere()));
 
     actionShapeCylinder_ = new QAction(this);
-    actionShapeCylinder_->setText(QApplication::translate("RenderingWidget", "Cylinder", 0));
+    actionShapeCylinder_->setText("Cylinder");
     connect(actionShapeCylinder_, SIGNAL(triggered()), this, SLOT(showCylinder()));
 
     actionShapeBox_ = new QAction(this);
-    actionShapeBox_->setText(QApplication::translate("RenderingWidget", "Box", 0));
+    actionShapeBox_->setText("Box");
     connect(actionShapeBox_, SIGNAL(triggered()), this, SLOT(showBox()));
 
     actionShapeOpen_ = new QAction(this);
-    actionShapeOpen_->setText(QApplication::translate("RenderingWidget", "Open...", 0));
+    actionShapeOpen_->setText("Open...");
     connect(actionShapeOpen_, SIGNAL(triggered()), this, SLOT(showLoadedModel()));
 }
 
@@ -130,8 +130,7 @@ void RenderingWidget::showBox()
 
 void RenderingWidget::showLoadedModel()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Model File"), QString(),
-                                                    tr("Obj Files (*.obj)"));
+    QString fileName = QFileDialog::getOpenFileName(this, "Open Model File", QString(), "Obj Files (*.obj)");
     if (fileName.isEmpty()) return;
 
     openModel(fileName);
@@ -322,7 +321,7 @@ void RenderingWidget::showContextMenu(const QPoint& pos)
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
 
-    QMenu* shapeMenu = menu.addMenu(tr("Shape"));
+    QMenu* shapeMenu = menu.addMenu("Shape");
     shapeMenu->addAction(actionShapeSphere_);
     shapeMenu->addAction(actionShapeCylinder_);
     shapeMenu->addAction(actionShapeBox_);
@@ -335,9 +334,7 @@ void RenderingWidget::openModel(const QString& fileName)
 {
     osg::Node* loadedModel = osgDB::readNodeFile(fileName.toLocal8Bit().data());
     if (!loadedModel) {
-        QMessageBox::warning(this, tr("BSDF Processor"),
-                             tr("Failed to load \"") + fileName + "\"",
-                             QMessageBox::Ok);
+        QMessageBox::warning(this, qApp->applicationName(), "Failed to load \"" + fileName + "\"");
         return;
     }
 

@@ -41,13 +41,7 @@ void InsertIncomingAzimuthalAngleDockWidget::setBrdf(lb::Brdf* brdf)
 
 void InsertIncomingAzimuthalAngleDockWidget::setFileName()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open BRDF/BTDF File"), QString(),
-//                                                    tr("BxDF Files (*.ddr *.ddt *.astm);;"
-//                                                       "Integra DDR Files (*.ddr);;"
-//                                                       "Integra DDT Files (*.ddt);;"
-//                                                       "ASTM Files (*.astm)"
-//                                                       ));
-                                                    tr("ASTM Files (*.astm)"));
+    QString fileName = QFileDialog::getOpenFileName(this, "Open BRDF/BTDF File", QString(), "ASTM Files (*.astm)");
 
     if (fileName.isEmpty()) return;
 
@@ -65,9 +59,8 @@ void InsertIncomingAzimuthalAngleDockWidget::process()
     auto insertedBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(insertedBrdf_);
 
     if (!baseBrdf || !insertedBrdf) {
-        QMessageBox::warning(this, tr("BSDF Processor"),
-                             tr("Unsupported type of BRDF for insertion") + ui_->fileNameLineEdit->text() + "\"",
-                             QMessageBox::Ok);
+        QMessageBox::warning(this, qApp->applicationName(),
+                             "Unsupported type of BRDF for insertion" + ui_->fileNameLineEdit->text() + "\"");
         return;
     }
 
@@ -80,9 +73,8 @@ void InsertIncomingAzimuthalAngleDockWidget::process()
         emit processed(std::shared_ptr<lb::Brdf>(brdf));
     }
     else {
-        QMessageBox::warning(this, tr("BSDF Processor"),
-                             tr("Failed to insert \"") + ui_->fileNameLineEdit->text() + "\"",
-                             QMessageBox::Ok);
+        QMessageBox::warning(this, qApp->applicationName(),
+                             "Failed to insert \"" + ui_->fileNameLineEdit->text() + "\"");
         return;
     }
 }
@@ -95,15 +87,9 @@ void InsertIncomingAzimuthalAngleDockWidget::openFile(const QString& fileName)
             insertedBrdf_ = lb::AstmReader::read(fileName.toLocal8Bit().data());
             break;
         }
-        //case lb::INTEGRA_DDR_FILE:
-        //case lb::INTEGRA_DDT_FILE: {
-        //    insertedBrdf_ = lb::DdrReader::read(fileName.toLocal8Bit().data());
-        //    break;
-        //}
         default: {
-            QMessageBox::warning(this, tr("BSDF Processor"),
-                                 tr("Unsupported type of BRDF: \"") + ui_->fileNameLineEdit->text() + "\"",
-                                 QMessageBox::Ok);
+            QMessageBox::warning(this, qApp->applicationName(),
+                                 "Unsupported type of BRDF: \"" + ui_->fileNameLineEdit->text() + "\"");
             break;
         }
     }

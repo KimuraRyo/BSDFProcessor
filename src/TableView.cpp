@@ -25,11 +25,11 @@ TableView::TableView(QWidget* parent) : QGraphicsView(parent),
                                         backSideShown_(true)
 {
     actionFitView_ = new QAction(this);
-    actionFitView_->setText(QApplication::translate("TableView", "Fit in view", 0));
+    actionFitView_->setText("Fit in view");
     connect(actionFitView_, SIGNAL(triggered()), this, SLOT(fitView()));
 
     actionShowBackSide_ = new QAction(this);
-    actionShowBackSide_->setText(QApplication::translate("TableView", "Show/Hide back side samples", 0));
+    actionShowBackSide_->setText("Show/Hide back side samples");
     connect(actionShowBackSide_, SIGNAL(triggered()), this, SLOT(changeBackSideVisibility()));
 
     graphicsScene_ = new TableScene;

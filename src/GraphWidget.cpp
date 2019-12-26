@@ -41,19 +41,19 @@ GraphWidget::GraphWidget(QWidget*           parent,
     viewer_->setCameraManipulator(trackball);
 
     actionResetCamera_ = new QAction(this);
-    actionResetCamera_->setText(QApplication::translate("GraphWidget", "Reset camera position", 0));
+    actionResetCamera_->setText("Reset camera position");
     connect(actionResetCamera_, SIGNAL(triggered()), this, SLOT(resetCameraPosition()));
 
     actionCopyCameraSettings_ = new QAction(this);
-    actionCopyCameraSettings_->setText(QApplication::translate("GraphWidget", "Copy camera settings", 0));
+    actionCopyCameraSettings_->setText("Copy camera settings");
     connect(actionCopyCameraSettings_, SIGNAL(triggered()), this, SLOT(copyCameraSettings()));
 
     actionPasteCameraSettings_ = new QAction(this);
-    actionPasteCameraSettings_->setText(QApplication::translate("GraphWidget", "Paste camera settings", 0));
+    actionPasteCameraSettings_->setText("Paste camera settings");
     connect(actionPasteCameraSettings_, SIGNAL(triggered()), this, SLOT(pasteCameraSettings()));
 
     actionLogPlot_ = new QAction(this);
-    actionLogPlot_->setText(QApplication::translate("GraphWidget", "Log plot", 0));
+    actionLogPlot_->setText("Log plot");
     actionLogPlot_->setCheckable(true);
     connect(actionLogPlot_, SIGNAL(toggled(bool)), this, SLOT(toggleLogPlot(bool)));
 }
