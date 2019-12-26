@@ -77,6 +77,14 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+set(RESOURCE_PATH resource)
+
+# Set version of a binary file for Windows
+if (MSVC)
+    set(RESOURCES ${RESOURCES} ${RESOURCE_PATH}/version.rc)
+endif()
+
+# Set icon
 if(APPLE)
     set(ICON_FILE ${PROJECT_NAME}.icns)
     set(MACOSX_BUNDLE_ICON_FILE ${ICON_FILE})
