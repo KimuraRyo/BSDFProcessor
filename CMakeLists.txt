@@ -88,15 +88,15 @@ endif()
 if(APPLE)
     set(ICON_FILE ${PROJECT_NAME}.icns)
     set(MACOSX_BUNDLE_ICON_FILE ${ICON_FILE})
-    set_source_files_properties(icon/${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    set(SOURCES ${SOURCES} icon/${ICON_FILE})
+    set_source_files_properties(${RESOURCE_PATH}/${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set(RESOURCES ${RESOURCES} ${RESOURCE_PATH}/${ICON_FILE})
 elseif(MSVC)
-    set(SOURCES ${SOURCES} icon/${PROJECT_NAME}.rc)
+    set(RESOURCES ${RESOURCES} ${RESOURCE_PATH}/icon.rc)
 endif()
 
-qt5_add_resources(RESOURCE resource/resource.qrc)
+qt5_add_resources(RESOURCES ${RESOURCE_PATH}/resource.qrc)
 
-add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCES} ${RESOURCE})
+add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCES} ${RESOURCES})
 
 target_link_libraries(${PROJECT_NAME}
                       ${OPENSCENEGRAPH_LIBRARIES} Qt5::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES}
