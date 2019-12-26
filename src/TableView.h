@@ -69,9 +69,10 @@ private:
                       qreal posX, qreal posY,
                       qreal lodThreshold = 25.0, qreal textLodThreshold = 25.0);
 
-    void paintEvent(QPaintEvent* event);
-    void wheelEvent(QWheelEvent* event);
-    void contextMenuEvent(QContextMenuEvent* event);
+    void paintEvent(QPaintEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
     TableScene* graphicsScene_;
 
@@ -84,6 +85,8 @@ private:
     float   gamma_;
     bool    photometric_;
     bool    backSideShown_;
+
+    bool fittingNeeded_;
 };
 
 #endif // TABLE_VIEW_H

@@ -9,7 +9,6 @@
 #include "TableView.h"
 
 #include <QtWidgets>
-#include <QGraphicsPixmapItem>
 
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
@@ -22,7 +21,8 @@ constexpr qreal ALWAYS_VISIBLE_LOD = 0.0;
 
 TableView::TableView(QWidget* parent) : QGraphicsView(parent),
                                         data_(0),
-                                        backSideShown_(true)
+                                        backSideShown_(true),
+                                        fittingNeeded_(true)
 {
     actionFitView_ = new QAction(this);
     actionFitView_->setText("Fit in view");
@@ -586,4 +586,16 @@ void TableView::contextMenuEvent(QContextMenuEvent* event)
     menu.addAction(actionFitView_);
     menu.addAction(actionShowBackSide_);
     menu.exec(event->globalPos());
+}
+
+void TableView::showEvent(QShowEvent* event)
+{
+    Q_UNUSED(event);
+
+    // Initialize the scale of this view with scene.
+    // If data is set before the view is shown, the proper size of the view is not acquired.
+    if (fittingNeeded_) {
+        fitView(0.9);
+    }
+    fittingNeeded_ = false;
 }
