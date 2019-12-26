@@ -92,14 +92,13 @@ void GraphWidget::copyCameraSettings()
                   + QString::number(up.y()) + " "
                   + QString::number(up.z());
 
-    QClipboard* clipboard = QGuiApplication::clipboard();
-    clipboard->setText(posStr + " " + centerStr + " " + upStr);
+    qApp->clipboard()->setText(posStr + " " + centerStr + " " + upStr);
 }
 
 void GraphWidget::pasteCameraSettings()
 {
-    const QClipboard* clipboard = QApplication::clipboard();
-    QStringList paramList = clipboard->text().split(' ', QString::SkipEmptyParts);
+    QString paramStr = qApp->clipboard()->text();
+    QStringList paramList = paramStr.split(' ', QString::SkipEmptyParts);
 
     osg::Vec3d pos, center, up;
     if (getParameters(paramList, "CameraPosition",  &pos) &&
