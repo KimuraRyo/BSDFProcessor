@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2019 Kimura Ryo                                       //
+// Copyright (C) 2019-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -24,10 +24,11 @@ OsgQWidget::OsgQWidget(QWidget*         parent,
 
 void OsgQWidget::initializeGL()
 {
-    // An OpenGL context is set up in initializeGL(), not the constructor. Because the OpenGL context of QOpenGLWidget in QDockWidget is
-    // reinitialized while docking/undoking.
-    int pr = static_cast<int>(getPixelRatio());
-    graphicsWindow_ = viewer_->setUpViewerAsEmbeddedInWindow(x() * pr, y() * pr, width() * pr, height() * pr);
+    // An OpenGL context is set up in initializeGL(), not the constructor.
+    // The reason is because the OpenGL context of QOpenGLWidget in QDockWidget is reinitialized while docking/undoking.
+    QPoint viewPos = pos() * getPixelRatio();
+    QSize viewSize = size() * getPixelRatio();
+    graphicsWindow_ = viewer_->setUpViewerAsEmbeddedInWindow(viewPos.x(), viewPos.y(), viewSize.width(), viewSize.height());
     viewer_->getCamera()->setGraphicsContext(graphicsWindow_);
     viewer_->realize();
 
@@ -49,12 +50,13 @@ void OsgQWidget::paintGL()
 
 void OsgQWidget::resizeGL(int w, int h)
 {
-    int pr = static_cast<int>(getPixelRatio());
+    QPoint viewPos = pos() * getPixelRatio();
+    QSize viewSize = QSize(w, h) * getPixelRatio();
 
-    graphicsWindow_->getEventQueue()->windowResize(x() * pr, y() * pr, w * pr, h * pr);
-    graphicsWindow_->resized(x() * pr, y() * pr, w * pr, h * pr);
+    graphicsWindow_->getEventQueue()->windowResize(viewPos.x(), viewPos.y(), viewSize.width(), viewSize.height());
+    graphicsWindow_->resized(viewPos.x(), viewPos.y(), viewSize.width(), viewSize.height());
 
-    viewer_->getCamera()->setViewport(0, 0, w * pr, h * pr);
+    viewer_->getCamera()->setViewport(0, 0, viewSize.width(), viewSize.height());
 }
 
 void OsgQWidget::paintEvent(QPaintEvent* event)

@@ -58,12 +58,12 @@ protected:
     osg::ref_ptr<osgViewer::Viewer> viewer_;
     osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> graphicsWindow_;
 
+    bool osgFboIdInitialized_;
+
 private:
     Q_DISABLE_COPY(OsgQWidget)
 
     static int getOsgMouseButton(const QMouseEvent& event);
-
-    bool osgFboIdInitialized_;
 };
 
 #endif // OSG_QWIDGET_H
