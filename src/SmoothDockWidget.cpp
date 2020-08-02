@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2017 Kimura Ryo                                       //
+// Copyright (C) 2017-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -9,6 +9,8 @@
 #include "SmoothDockWidget.h"
 
 #include <libbsdf/Brdf/Smoother.h>
+
+#include "Utility.h"
 
 SmoothDockWidget::SmoothDockWidget(QWidget* parent)
                                    : QDockWidget(parent),
@@ -29,10 +31,10 @@ void SmoothDockWidget::setBrdf(lb::Brdf* brdf)
 {
     brdf_ = brdf;
 
-    ui_->maxIteration0Label->setText(brdf->getAngle0Name().c_str() + QString(":"));
-    ui_->maxIteration1Label->setText(brdf->getAngle1Name().c_str() + QString(":"));
-    ui_->maxIteration2Label->setText(brdf->getAngle2Name().c_str() + QString(":"));
-    ui_->maxIteration3Label->setText(brdf->getAngle3Name().c_str() + QString(":"));
+    ui_->maxIteration0Label->setText(util::toSentenceCase(brdf->getAngle0Name().c_str()) + QString(":"));
+    ui_->maxIteration1Label->setText(util::toSentenceCase(brdf->getAngle1Name().c_str()) + QString(":"));
+    ui_->maxIteration2Label->setText(util::toSentenceCase(brdf->getAngle2Name().c_str()) + QString(":"));
+    ui_->maxIteration3Label->setText(util::toSentenceCase(brdf->getAngle3Name().c_str()) + QString(":"));
 
     const lb::SampleSet* ss = brdf->getSampleSet();
 

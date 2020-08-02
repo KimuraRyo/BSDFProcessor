@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2019 Kimura Ryo                                  //
+// Copyright (C) 2018-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -196,11 +196,12 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
 {
     lb::Brdf* brdf;
     std::string coordinateSystemName(ui_->coordSysComboBox->currentText().toLocal8Bit());
-    if (coordinateSystemName == "Half difference") {
+    if (coordinateSystemName == "Half-difference coordinate system") {
         // Create narrow intervals near specular directions.
-        lb::Arrayf halfThetaAngles = lb::createExponentialArray<lb::Arrayf>(ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
-                                                                            lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0,
-                                                                            2.0f);
+        lb::Arrayf halfThetaAngles =
+            lb::array_util::createExponential<lb::Arrayf>(ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
+                                                          lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0,
+                                                          2.0f);
 
         lb::Arrayf halfPhiAngles;
         if (isotropic || ui_->halfDiffCsNumAngle1SpinBox->value() <= 1) {
@@ -228,7 +229,7 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
         ss->getAngles2() = diffThetaAngles;
         ss->getAngles3() = diffPhiAngles;
     }
-    else if (coordinateSystemName == "Specular") {
+    else if (coordinateSystemName == "Specular coordinate system") {
         int numInPhi;
         if (isotropic || ui_->specularCsNumAngle1SpinBox->value() <= 1) {
             numInPhi = 1;
@@ -244,7 +245,7 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
                                                2.0f,
                                                lb::RGB_MODEL, 3);
     }
-    else if (coordinateSystemName == "Spherical") {
+    else if (coordinateSystemName == "Spherical coordinate system") {
         int spinBox1Val = ui_->sphericalCsNumAngle1SpinBox->value();
         int numAngle1 = (isotropic || spinBox1Val <= 1) ? 1 : (spinBox1Val + 1);
         brdf = new lb::SphericalCoordinatesBrdf(ui_->sphericalCsNumAngle0SpinBox->value() + 1,

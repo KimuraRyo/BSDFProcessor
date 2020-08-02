@@ -26,7 +26,7 @@ public:
     explicit DisplayDockWidget(QWidget* parent);
     ~DisplayDockWidget();
 
-    void setGraphScene(GraphScene* scene) { graphScene_ = scene; }
+    void setGraphScene(GraphScene* scene);
     void setMaterialData(MaterialData* materialData) { data_ = materialData; }
 
     float getGamma();

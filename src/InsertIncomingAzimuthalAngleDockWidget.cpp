@@ -41,7 +41,7 @@ void InsertIncomingAzimuthalAngleDockWidget::setBrdf(lb::Brdf* brdf)
 
 void InsertIncomingAzimuthalAngleDockWidget::setFileName()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Open BRDF/BTDF File", QString(), "ASTM Files (*.astm)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Open BRDF/BTDF File", QString(), "ASTM E1392-96(2002) (*.astm)");
 
     if (fileName.isEmpty()) return;
 

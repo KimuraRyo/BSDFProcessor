@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -16,6 +16,10 @@
 
 #include "SceneUtil.h"
 
+const QString CAMERA_POSITION("CAMERA_POSITION");
+const QString CAMERA_CENTER("CAMERA_CENTER");
+const QString CAMERA_UP("CAMERA_UP");
+
 GraphWidget::GraphWidget(QWidget*           parent,
                          Qt::WindowFlags    f)
                          : OsgQWidget(parent, f),
@@ -24,8 +28,8 @@ GraphWidget::GraphWidget(QWidget*           parent,
     setAcceptDrops(true);
 
     osg::Camera* camera = new osg::Camera;
-    int pr = static_cast<int>(getPixelRatio());
-    camera->setViewport(0, 0, width() * pr, height() * pr);
+    QSize viewSize = size() * getPixelRatio();
+    camera->setViewport(0, 0, viewSize.width(), viewSize.height());
     camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
     double aspectRatio = static_cast<double>(width()) / height();
     camera->setProjectionMatrixAsPerspective(30.0, aspectRatio, 0.00001, 100000.0);
@@ -62,12 +66,13 @@ void GraphWidget::setGraphScene(GraphScene* scene)
 {
     graphScene_ = scene;
     viewer_->setSceneData(graphScene_->getRoot());
+    actionLogPlot_->setChecked(graphScene_->isLogPlot());
 }
 
 void GraphWidget::updateView()
 {
-    int pr = static_cast<int>(getPixelRatio());
-    graphScene_->updateView(width() * pr, height() * pr);
+    QSize viewSize = size() * getPixelRatio();
+    graphScene_->updateView(viewSize.width(), viewSize.height());
     update();
 }
 
@@ -79,31 +84,31 @@ void GraphWidget::copyCameraSettings()
     osg::Vec3d pos, center, up;
     tm->getTransformation(pos, center, up);
 
-    QString posStr = "CameraPosition "
+    QString posStr = CAMERA_POSITION + " "
                    + QString::number(pos.x()) + " "
                    + QString::number(pos.y()) + " "
                    + QString::number(pos.z());
-    QString centerStr = "CameraCenter "
+    QString centerStr = CAMERA_CENTER + " "
                       + QString::number(center.x()) + " "
                       + QString::number(center.y()) + " "
                       + QString::number(center.z());
-    QString upStr = "CameraUp "
+    QString upStr = CAMERA_UP + " "
                   + QString::number(up.x()) + " "
                   + QString::number(up.y()) + " "
                   + QString::number(up.z());
 
-    qApp->clipboard()->setText(posStr + " " + centerStr + " " + upStr);
+    qApp->clipboard()->setText(posStr + "\n" + centerStr + "\n" + upStr);
 }
 
 void GraphWidget::pasteCameraSettings()
 {
     QString paramStr = qApp->clipboard()->text();
-    QStringList paramList = paramStr.split(' ', QString::SkipEmptyParts);
+    QStringList paramList = paramStr.split(QRegularExpression("\\s+"), QString::SkipEmptyParts);
 
     osg::Vec3d pos, center, up;
-    if (getParameters(paramList, "CameraPosition",  &pos) &&
-        getParameters(paramList, "CameraCenter",    &center) &&
-        getParameters(paramList, "CameraUp",        &up)) {
+    if (getParameters(paramList, CAMERA_POSITION, &pos) &&
+        getParameters(paramList, CAMERA_CENTER,   &center) &&
+        getParameters(paramList, CAMERA_UP,       &up)) {
         auto tm = dynamic_cast<osgGA::TrackballManipulator*>(viewer_->getCameraManipulator());
         if (!tm) return;
 
@@ -123,8 +128,8 @@ void GraphWidget::resizeGL(int w, int h)
     OsgQWidget::resizeGL(w, h);
 
     if (graphScene_) {
-        int pr = static_cast<int>(getPixelRatio());
-        graphScene_->updateView(w * pr, h * pr);
+        QSize viewSize = QSize(w, h) * getPixelRatio();
+        graphScene_->updateView(viewSize.width(), viewSize.height());
     }
 }
 
@@ -198,7 +203,6 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
         osg::Node* pickedNode = scene_util::pickNode(viewer_, pos, intersectPosition, mask, false);
 
         if (pickedNode) {
-            lbInfo << "[GraphWidget::mouseReleaseEvent] " << pickedNode->getName();
             emit picked(intersectPosition);
         }
         else {

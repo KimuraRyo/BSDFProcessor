@@ -22,9 +22,16 @@ DisplayDockWidget::~DisplayDockWidget()
     delete ui_;
 }
 
+void DisplayDockWidget::setGraphScene(GraphScene* scene)
+{
+    graphScene_ = scene;
+    ui_->logPlotGroupBox->setChecked(graphScene_->isLogPlot());
+}
+
 float DisplayDockWidget::getGamma()
 {
-    if (graphScene_->isLogPlotAcceptable() && ui_->logPlotGroupBox->isChecked()) {
+    if (graphScene_->isLogPlotAcceptable() &&
+        graphScene_->isLogPlot()) {
         return ui_->logPlotBaseSlider->value();
     }
     else {

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2019 Kimura Ryo                                  //
+// Copyright (C) 2018-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -33,6 +33,11 @@ TransmittanceModelDockWidget::TransmittanceModelDockWidget(QWidget* parent)
     // Select a specular coordinate system.
     ui_->coordSysComboBox->setCurrentIndex(1);
     ui_->coordSysComboBox->activated(1);
+
+    // Increase the number of angles for refraction.
+    ui_->halfDiffCsNumAngle2SpinBox->setValue(ui_->halfDiffCsNumAngle2SpinBox->value() * 2);
+    ui_->halfDiffCsNumAngle3SpinBox->setValue(ui_->halfDiffCsNumAngle3SpinBox->value() * 2);
+    ui_->specularCsNumAngle2SpinBox->setValue(ui_->specularCsNumAngle2SpinBox->value() * 2);
 
     connect(ui_->generateBrdfPushButton, SIGNAL(clicked()), this, SLOT(generateBrdf()));
 }

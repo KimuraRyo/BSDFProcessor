@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -61,15 +61,12 @@ void GraphicsSampleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem
         painter->setPen(QPen(textColor_));
 
         int precision = std::min(static_cast<int>(lod / 20.0), 6);
-        QString textg = QString::number(value_, 'g', precision);
-        QString textf = QString::number(value_, 'f', precision);
-
         QString text;
         if (value_ < 1.0f || value_ >= 10000.0f) {
-            text = textg;
+            text = QString::number(value_, 'g', precision);
         }
         else {
-            text = textf;
+            text = QString::number(value_, 'f', precision);
         }
 
         QFont font("Helvetica");

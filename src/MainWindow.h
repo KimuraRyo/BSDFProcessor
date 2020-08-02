@@ -18,13 +18,14 @@
 #include "DisplayDockWidget.h"
 #include "GraphScene.h"
 #include "GraphWidget.h"
+#include "PickDockWidget.h"
 #include "InsertIncomingAzimuthalAngleDockWidget.h"
 #include "MaterialData.h"
 #include "ReflectanceModelDockWidget.h"
-#include "TransmittanceModelDockWidget.h"
-#include "SmoothDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
+#include "TransmittanceModelDockWidget.h"
+#include "SmoothDockWidget.h"
 
 /*!
  * \class   MainWindow
@@ -148,6 +149,7 @@ private:
     bool signalEmittedFromUi_;
 
     DisplayDockWidget*                      displayDockWidget_;
+    PickDockWidget*                         pickDockWidget_;
     ReflectanceModelDockWidget*             reflectanceModelDockWidget_;
     TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;
