@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2019 Kimura Ryo                                       //
+// Copyright (C) 2019-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -26,14 +26,5 @@ void TableScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     if (event->button() == Qt::LeftButton &&
         event->screenPos() == event->lastScreenPos()) {
         emit mouseClicked(event->scenePos());
-    }
-}
-
-void TableScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
-{
-    QGraphicsScene::mouseDoubleClickEvent(event);
-
-    if (event->button() == Qt::LeftButton) {
-        emit mouseDoubleClicked(event->scenePos());
     }
 }

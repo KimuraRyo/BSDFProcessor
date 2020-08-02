@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -99,11 +99,12 @@ lb::Vec3 RenderingScene::getInDir(int x, int y)
 
     lb::Vec3 inDir = lb::toVec3(color);
     inDir = inDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
-    inDir.normalize();
 
-    if (dataType_ == lb::BTDF_DATA || dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
+    if (dataType_ == lb::BTDF_DATA ||
+        dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
         inDir[2] = -inDir[2];
     }
+    inDir.normalize();
 
     return inDir;
 }
@@ -126,7 +127,11 @@ lb::Vec3 RenderingScene::getOutDir(int x, int y)
 
     lb::Vec3 outDir = lb::toVec3(color);
     outDir = outDir.cwiseProduct(lb::Vec3(2.0, 2.0, 2.0)) - lb::Vec3(1.0, 1.0, 1.0);
-    outDir[2] = std::max(outDir[2], lb::Vec3::Scalar(0));
+
+    if (dataType_ == lb::BTDF_DATA ||
+        dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
+        outDir[2] = -outDir[2];
+    }
     outDir.normalize();
 
     return outDir;

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -27,13 +27,16 @@
 
 /*! Node mask types. */
 enum NodeMask {
-    HUD_MASK = 1 << 0,
-    BRDF_MASK = 1 << 1,
-    SPECULAR_REFLECTANCE_MASK = 1 << 2,
-    UNDEFINED_MASK = 1 << 3
+    UNDEFINED_MASK              = 1 << 1,
+    HUD_MASK                    = 1 << 2,
+    BRDF_MASK                   = 1 << 3,
+    SPECULAR_REFLECTANCE_MASK   = 1 << 4
 };
 
-const osg::Vec4 AXIS_COLOR(0.1, 0.1, 0.1, 1.0);
+const osg::Vec4 AXIS_COLOR(0.2, 0.2, 0.2, 1.0);
+
+constexpr double DEPTH_ZFAR_1 = 1.0 - 2e-7;
+constexpr double DEPTH_ZFAR_2 = 1.0 - 4e-7;
 
 const std::string ARIAL_FONT_FILE("fonts/arial.ttf");
 
@@ -47,27 +50,6 @@ inline T toLogValue(const T& value, const T& baseOfLogarithm)
 {
     return std::log(value + 1.0) / std::log(baseOfLogarithm);
 }
-
-/*! Corrects a gamma value. */
-inline osg::Vec3d correctGamma(const osg::Vec3d& color, double gamma)
-{
-    return osg::Vec3d(std::pow(color.x(), 1.0 / gamma),
-                      std::pow(color.y(), 1.0 / gamma),
-                      std::pow(color.z(), 1.0 / gamma));
-}
-
-/*! Corrects a gamma value. */
-inline osg::Vec4d correctGamma(const osg::Vec4d& color, double gamma)
-{
-    return osg::Vec4d(std::pow(color.x(), 1.0 / gamma),
-                      std::pow(color.y(), 1.0 / gamma),
-                      std::pow(color.z(), 1.0 / gamma), color.w());
-}
-
-/*! Converts from a spectrum or RGB to Y of CIE-XYZ. */
-float spectrumToY(const lb::Spectrum&   spectrum,
-                  lb::ColorModel        colorModel,
-                  const lb::Arrayf&     wavelengths);
 
 /*! Calculates RGB using hue rotation. */
 inline osg::Vec3 hueToRgb(float hue)
@@ -182,7 +164,7 @@ osg::Geometry* createBrdfPointGeometry(const lb::Brdf&  brdf,
                                        float            baseOfLogarithm,
                                        lb::DataType     dataType);
 
-/*! Creates the text labes of sample points. */
+/*! Creates the text labels of sample points. */
 void attachBrdfTextLabels(osg::Geode*       geode,
                           const lb::Brdf&   brdf,
                           int               inThetaIndex,
@@ -193,7 +175,7 @@ void attachBrdfTextLabels(osg::Geode*       geode,
                           lb::DataType      dataType);
 
 /*! Creates the lines of XYZ axis. */
-osg::Geode* createAxis(double length, bool backSideShown, bool rgbUsed = false);
+osg::Geode* createAxis(double length, bool rgbUsed = false);
 
 osg::Geometry* createCircleFloor(float  radius,
                                  int    numSegments,
@@ -211,6 +193,16 @@ osg::Geometry* createStippledLine(const osg::Vec3&  pos0,
 /*! Creates the arc of a circle. */
 osg::Geometry* createArc(const osg::Vec3&   pos0,
                          const osg::Vec3&   pos1,
+                         int                numSegments,
+                         const osg::Vec4&   color,
+                         float              width = 1.0f,
+                         GLint              stippleFactor = 1,
+                         GLushort           stipplePattern = 0xffff);
+
+/*! Creates the arc of a circle. */
+osg::Geometry* createArc(const osg::Vec3&   pos,
+                         float              angle,
+                         const osg::Vec3&   axis,
                          int                numSegments,
                          const osg::Vec4&   color,
                          float              width = 1.0f,

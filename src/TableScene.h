@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2019 Kimura Ryo                                       //
+// Copyright (C) 2019-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -33,7 +33,6 @@ private:
 
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event);
 };
 
 #endif // TABLE_SCENE_H

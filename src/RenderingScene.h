@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -41,6 +41,7 @@ public:
     lb::Brdf* getBrdf() { return brdf_; }
     lb::SampleSet2D* getReflectance() { return reflectances_; }
     void setReflectance(lb::SampleSet2D* reflectances) { reflectances_ = reflectances; }
+    lb::DataType getDataType() { return dataType_; }
 
     void setLightDir(const osg::Vec3& dir) { inDirUniform_->set(dir); }
 
@@ -67,7 +68,7 @@ private:
     RenderingScene(const RenderingScene&);
     RenderingScene& operator=(const RenderingScene&);
 
-    /*! Attachs a shader of BRDF rendering to a node. */
+    /*! Attaches a shader of BRDF rendering to a node. */
     void attachRenderingShader(osg::Node* node);
 
     /*! Creates a post processing group. */

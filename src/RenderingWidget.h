@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -31,7 +31,7 @@ public:
 
 signals:
     void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);
-    void inDirPicked(const lb::Vec3& inDir);
+    void clearPickedValue();
 
 private slots:
     void resetCameraPosition();
@@ -43,12 +43,13 @@ private slots:
 private:
     Q_DISABLE_COPY(RenderingWidget)
 
+    void paintGL() override;
     void resizeGL(int w, int h) override;
 
     void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseDoubleClickEvent(QMouseEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dropEvent(QDropEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
@@ -59,7 +60,7 @@ private:
 
     RenderingScene* renderingScene_;
 
-    lb::Vec3 pickedInDir_;
+    bool skipRequested_;
 
     QAction* actionResetCamera_;
     QAction* actionShapeSphere_;

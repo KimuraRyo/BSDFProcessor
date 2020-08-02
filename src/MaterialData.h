@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2019 Kimura Ryo                                  //
+// Copyright (C) 2016-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -35,16 +35,17 @@ public:
     std::shared_ptr<lb::Btdf> getBtdf() { return btdf_; }
     void setBtdf(std::shared_ptr<lb::Btdf> btdf);
 
-    lb::SampleSet2D* getSpecularReflectances() { return specularReflectances_; }
-    void setSpecularReflectances(lb::SampleSet2D* reflectances);
+    std::shared_ptr<lb::SampleSet2D> getSpecularReflectances() { return specularReflectances_; }
+    void setSpecularReflectances(std::shared_ptr<lb::SampleSet2D>reflectances);
 
-    lb::SampleSet2D* getSpecularTransmittances() { return specularTransmittances_; }
-    void setSpecularTransmittances(lb::SampleSet2D* transmittances);
+    std::shared_ptr<lb::SampleSet2D> getSpecularTransmittances() { return specularTransmittances_; }
+    void setSpecularTransmittances(std::shared_ptr<lb::SampleSet2D> transmittances);
 
     lb::FileType getFileType() const { return fileType_; }
     void setFileType(lb::FileType type) { fileType_ = type; }
 
-    lb::SampleSet2D* getReflectances() { return reflectances_.get(); }
+    lb::SampleSet2D*       getReflectances()       { return reflectances_.get(); }
+    const lb::SampleSet2D* getReflectances() const { return reflectances_.get(); }
 
     inline int getNumInTheta() const { return numInTheta_; }
     inline int getNumInPhi()   const { return numInPhi_; }
@@ -57,14 +58,29 @@ public:
     void updateBtdf();
 
     bool isEmpty() const;
+    bool isIsotropic() const;
 
     float getIncomingPolarAngle(int index) const;
     float getIncomingAzimuthalAngle(int index) const;
 
+    void getHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
+                                float* halfTheta, float* halfPhi, float* diffTheta, float* diffPhi);
+
+    void getSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
+                                float* inTheta, float* inPhi, float* specTheta, float* specPhi);
+
+    void getShericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
+                                float* inTheta, float* inPhi, float* outTheta, float* outPhi);
+
     float getWavelength(int index) const;
+
+    lb::Arrayf getWavelengths() const;
 
     /*! Gets the color model of used data. */
     lb::ColorModel getColorModel() const;
+
+    /*! Gets the source type of used data. */
+    lb::SourceType getSourceType() const;
 
     lb::Vec3 getInDir(int inThetaIndex, int inPhiIndex);
 
@@ -76,12 +92,15 @@ public:
     /*! Gets lb::SampleSet in brdf_ or btdf_. If not found, nullptr is returned. */
     lb::SampleSet* getSampleSet() const;
 
+    /*! Gets lb::SampleSet2D from specularReflectances_ or specularTransmittances_. If not found, nullptr is returned. */
+    lb::SampleSet2D* getSampleSet2D() const;
+
     /*! Returns true if a coordinate system has the angles of an incoming direction. */
     bool isInDirDependentCoordinateSystem() const;
 
     lb::DataType getDataType() const;
 
-    bool computedReflectances() { return reflectancesComputed_; }
+    bool isReflectancesComputed() { return reflectancesComputed_; }
 
     void editBrdf(lb::Spectrum::Scalar  glossyIntensity,
                   lb::Spectrum::Scalar  glossyShininess,
@@ -107,8 +126,8 @@ private:
     std::shared_ptr<lb::Btdf> btdf_;
     std::unique_ptr<lb::Brdf> origBrdf_;
 
-    lb::SampleSet2D* specularReflectances_;     /*!< The array of specular reflectance. */
-    lb::SampleSet2D* specularTransmittances_;   /*!< The array of specular transmittance. */
+    std::shared_ptr<lb::SampleSet2D> specularReflectances_;     /*!< The array of specular reflectance. */
+    std::shared_ptr<lb::SampleSet2D> specularTransmittances_;   /*!< The array of specular transmittance. */
 
     std::shared_ptr<lb::SampleSet2D> reflectances_; /*!< Reflectances at each incoming direction. */
 

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -28,10 +28,14 @@ public:
     void createTable(int wavelengthIndex, float gamma = 1.0f, bool photometric = false);
 
     void setMaterialData(MaterialData* materialData) { data_ = materialData; }
+    void setLogPlotAction(QAction* action) { actionLogPlot_ = action; }
+
+    bool isBackSideShown() const { return backSideShown_; }
+    void showBackSide(bool on) { backSideShown_ = on; }
 
 signals:
     void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);
-    void inDirPicked(const lb::Vec3& inDir);
+    void clearPickedValue();
 
 public slots:
     void fitView(qreal scaleFactor = 1.0);
@@ -39,8 +43,7 @@ public slots:
 private slots:
     void changeBackSideVisibility();
     void showToolTip(const QPointF& pos);
-    void updateInOutDirection(const QPointF& pos);
-    void updateInDirection(const QPointF& pos);
+    void updateInOutDir(const QPointF& pos);
 
 private:
     Q_DISABLE_COPY(TableView)
@@ -74,9 +77,10 @@ private:
     void contextMenuEvent(QContextMenuEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
-    TableScene* graphicsScene_;
+    TableScene* tableScene_;
 
     QAction* actionFitView_;
+    QAction* actionLogPlot_;
     QAction* actionShowBackSide_;
 
     MaterialData* data_;

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -34,23 +34,6 @@
 #include <libbsdf/Common/SpectrumUtility.h>
 
 #include "SpecularCenteredCoordinateSystem.h"
-
-float scene_util::spectrumToY(const lb::Spectrum&   spectrum,
-                              lb::ColorModel        colorModel,
-                              const lb::Arrayf&     wavelengths)
-{
-    if (colorModel == lb::RGB_MODEL) {
-        lb::Vec3f xyz = lb::srgbToXyz<lb::Vec3f>(spectrum);
-        return xyz[1];
-    }
-    else if (colorModel == lb::SPECTRAL_MODEL) {
-        return lb::SpectrumUtility::spectrumToY(spectrum, wavelengths);
-    }
-    else {
-        lbError << "[scene_util::spectrumToY] Invalid color model for photometric values: " << colorModel;
-        return 0.0f;
-    }
-}
 
 void scene_util::fitCameraPosition(osg::Camera*     camera,
                                    const osg::Vec3& cameraDirection,
@@ -560,7 +543,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     if (dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf) ||
         dynamic_cast<const lb::HalfDifferenceCoordinatesBrdf*>(&brdf)) {
         // Create narrow intervals near specular directions.
-        thetaAngles = lb::createExponentialArray<lb::Arrayf>(numTheta, CoordSysT::MAX_ANGLE2, 2.0f);
+        thetaAngles = lb::array_util::createExponential<lb::Arrayf>(numTheta, CoordSysT::MAX_ANGLE2, 2.0f);
     }
     else {
         thetaAngles = lb::Arrayf::LinSpaced(numTheta, 0.0, CoordSysT::MAX_ANGLE2);
@@ -585,7 +568,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         if (outDir[2] < 0.0) {
             outDir[2] = 0.0;
 
-            if (outDir == lb::Vec3::Zero()) {
+            if (outDir.isZero()) {
                 positions.push_back(lb::Vec3::Zero());
                 continue;
             }
@@ -596,7 +579,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
         if (photometric) {
             const lb::SampleSet* ss = brdf.getSampleSet();
             lb::Spectrum sp = brdf.getSpectrum(inDir, outDir);
-            brdfValue = spectrumToY(sp, ss->getColorModel(), ss->getWavelengths());
+            brdfValue = lb::SpectrumUtility::spectrumToY(sp, ss->getColorModel(), ss->getWavelengths());
         }
         else {
             brdfValue = brdf.getValue(inDir, outDir, wavelengthIndex);
@@ -803,8 +786,12 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
 
     osg::Vec3Array* pointVertices = new osg::Vec3Array;
 
+    bool overlapped = (lb::isEqual(ss->getAngle3(0), 0.0f) &&
+                       lb::isEqual(ss->getAngle3(ss->getNumAngles3() - 1), lb::TAU_F));
+    int numPhi = overlapped ? (ss->getNumAngles3() - 1) : ss->getNumAngles3();
+
     // Add labels.
-    for (int i3 = 0; i3 < ss->getNumAngles3() - 1; ++i3) {
+    for (int i3 = 0; i3 < numPhi; ++i3) {
         // Avoid extra azimuthal angles.
         bool many = (ss->getNumAngles2() * (ss->getNumAngles3() - 1) > maxSamples);
         const float interval = lb::PI_2_F;
@@ -879,14 +866,14 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
 
     osg::ClipPlane* clipPlane = new osg::ClipPlane;
     if (dataType == lb::BTDF_DATA) {
-        clipPlane->setClipPlane(0.0, 0.0, -1.0, 0.000001);
+        clipPlane->setClipPlane(0.0, 0.0, -1.0, 0.0);
     }
     else {
-        clipPlane->setClipPlane(0.0, 0.0, 1.0, 0.000001);
+        clipPlane->setClipPlane(0.0, 0.0, 1.0, 0.0);
     }
 
     // Add lines.
-    for (int i3 = 0; i3 < ss->getNumAngles3() - 1; ++i3) {
+    for (int i3 = 0; i3 < numPhi; ++i3) {
         // Avoid extra azimuthal angles.
         bool many = (ss->getNumAngles2() * (ss->getNumAngles3() - 1) > maxSamples);
         const float interval = lb::PI_2_F;
@@ -946,7 +933,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
     //geode->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 }
 
-osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUsed)
+osg::Geode* scene_util::createAxis(double length, bool rgbUsed)
 {
     osg::ref_ptr<osg::Geode> axisGeode = new osg::Geode;
     axisGeode->setName("axisGeode");
@@ -959,13 +946,8 @@ osg::Geode* scene_util::createAxis(double length, bool backSideShown, bool rgbUs
     vertices->push_back(osg::Vec3( length, 0.0, 0.0));
     vertices->push_back(osg::Vec3(0.0, -length, 0.0));
     vertices->push_back(osg::Vec3(0.0,  length, 0.0));
-    if (backSideShown) {
-        vertices->push_back(osg::Vec3(0.0, 0.0, -length));
-    }
-    else {
-        vertices->push_back(osg::Vec3(0.0, 0.0, 0.0));
-    }
-    vertices->push_back(osg::Vec3(0.0, 0.0, length));
+    vertices->push_back(osg::Vec3(0.0, 0.0, -length));
+    vertices->push_back(osg::Vec3(0.0, 0.0,  length));
     geom->setVertexArray(vertices);
 
     osg::Vec4Array* colors = new osg::Vec4Array;
@@ -1059,7 +1041,7 @@ osg::Geometry* scene_util::createStippledLine(const osg::Vec3&  pos0,
 
     osg::Depth* depth = new osg::Depth;
     depth->setFunction(osg::Depth::LESS);
-    depth->setRange(0.0, 0.999999999);
+    depth->setRange(0.0, DEPTH_ZFAR_1);
     stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
     osg::LineWidth* lineWidth = new osg::LineWidth;
@@ -1084,6 +1066,29 @@ osg::Geometry* scene_util::createArc(const osg::Vec3&   pos0,
                                      GLint              stippleFactor,
                                      GLushort           stipplePattern)
 {
+    osg::Vec3 startDir = pos0;
+    startDir.normalize();
+
+    osg::Vec3 endDir = pos1;
+    endDir.normalize();
+
+    float angle = std::acos(startDir * endDir);
+
+    osg::Vec3 axis = pos0 ^ pos1;
+    axis.normalize();
+
+    return createArc(pos0, angle, axis, numSegments, color, width, stippleFactor, stipplePattern);
+}
+
+osg::Geometry* scene_util::createArc(const osg::Vec3&   pos,
+                                     float              angle,
+                                     const osg::Vec3&   axis,
+                                     int                numSegments,
+                                     const osg::Vec4&   color,
+                                     float              width,
+                                     GLint              stippleFactor,
+                                     GLushort           stipplePattern)
+{
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setName("ArcLine");
 
@@ -1091,13 +1096,10 @@ osg::Geometry* scene_util::createArc(const osg::Vec3&   pos0,
     int numVerts = numSegments + 1;
     osg::Vec3Array* vertices = new osg::Vec3Array(numVerts);
     for (int i = 0; i < numVerts; ++i) {
-        float weight = static_cast<float>(i) / numSegments;
-        osg::Vec3 pos = lb::lerp(pos0, pos1, weight);
-        float radius = lb::lerp(pos0.length(), pos1.length(), weight);
-        pos.normalize();
-        pos *= radius;
+        osg::Quat rotQuat(i * angle / numSegments, axis);
+        osg::Vec3 rotPos = rotQuat * pos;
 
-        (*vertices)[i].set(pos);
+        (*vertices)[i].set(rotPos);
     }
     geom->setVertexArray(vertices);
 

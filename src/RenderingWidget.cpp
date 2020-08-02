@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -23,11 +23,11 @@ RenderingWidget::RenderingWidget(QWidget*           parent,
                                  Qt::WindowFlags    f)
                                  : OsgQWidget(parent, f),
                                    renderingScene_(nullptr),
-                                   pickedInDir_(0.0, 0.0, 0.0)
+                                   skipRequested_(false)
 {
     osg::Camera* camera = new osg::Camera;
-    int pr = static_cast<int>(getPixelRatio());
-    camera->setViewport(0, 0, width() * pr, height() * pr);
+    QSize viewSize = size() * getPixelRatio();
+    camera->setViewport(0, 0, viewSize.width(), viewSize.height());
     camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
     double aspectRatio = static_cast<double>(width()) / height();
     camera->setProjectionMatrixAsPerspective(30.0, aspectRatio, 0.00001, 100000.0);
@@ -71,8 +71,8 @@ void RenderingWidget::setRenderingScene(RenderingScene* scene)
 
 void RenderingWidget::updateView()
 {
-    int pr = static_cast<int>(getPixelRatio());
-    renderingScene_->updateView(width() * pr, height() * pr);
+    QSize viewSize = size() * getPixelRatio();
+    renderingScene_->updateView(viewSize.width(), viewSize.height());
     update();
 }
 
@@ -130,11 +130,29 @@ void RenderingWidget::showBox()
 
 void RenderingWidget::showLoadedModel()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Open Model File", QString(), "Obj Files (*.obj)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Open Model File", QString(), "Wavefront OBJ (*.obj)");
     if (fileName.isEmpty()) return;
 
     openModel(fileName);
     resetCameraPosition();
+}
+
+void RenderingWidget::paintGL()
+{
+    if (skipRequested_) {
+        skipRequested_ = false;
+        return;
+    }
+
+    if (!osgFboIdInitialized_) {
+        // Configure the FBO ID of OSG for QOpenGLWidget.
+        GLuint qtFboId = defaultFramebufferObject();
+        viewer_->getCamera()->getGraphicsContext()->setDefaultFboId(qtFboId);
+
+        osgFboIdInitialized_ = true;
+    }
+ 
+    viewer_->frame();
 }
 
 void RenderingWidget::resizeGL(int w, int h)
@@ -142,8 +160,8 @@ void RenderingWidget::resizeGL(int w, int h)
     OsgQWidget::resizeGL(w, h);
 
     if (renderingScene_) {
-        int pr = static_cast<int>(getPixelRatio());
-        renderingScene_->updateView(w * pr, h * pr);
+        QSize viewSize = QSize(w, h) * getPixelRatio();
+        renderingScene_->updateView(viewSize.width(), viewSize.height());
     }
 }
 
@@ -227,22 +245,27 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
     }
 }
 
+void RenderingWidget::mousePressEvent(QMouseEvent* event)
+{
+    OsgQWidget::mousePressEvent(event);
+
+    skipRequested_ = true;
+}
+
 void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
 {
     OsgQWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
+        skipRequested_ = true;
+
         if (!renderingScene_) return;
 
-        int pr = static_cast<int>(getPixelRatio());
-        int x = event->pos().x() * pr;
-        int y = event->pos().y() * pr;
-
-        lb::Vec3 inDir  = renderingScene_->getInDir(x, y);
-        lb::Vec3 outDir = renderingScene_->getOutDir(x, y);
+        QPoint pixelPos = event->pos() * getPixelRatio();
+        lb::Vec3 inDir  = renderingScene_->getInDir(pixelPos.x(), pixelPos.y());
+        lb::Vec3 outDir = renderingScene_->getOutDir(pixelPos.x(), pixelPos.y());
         if (inDir.isZero() || outDir.isZero()) {
-            pickedInDir_ = lb::Vec3::Zero();
-            emit inOutDirPicked(lb::Vec3::Zero(), lb::Vec3::Zero());
+            emit clearPickedValue();
             return;
         }
 
@@ -269,10 +292,20 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
                 outDir = lb::SphericalCoordinateSystem::toXyz(theta, lb::PI_F);
             }
 
-            inDir = lb::reflect(outDir, lb::Vec3(0.0, 0.0, 1.0));
+            lb::DataType dataType = renderingScene_->getDataType();
+            switch (dataType) {
+                case lb::SPECULAR_REFLECTANCE_DATA:
+                    inDir = lb::reflect(outDir, lb::Vec3(0.0, 0.0, 1.0));
+                    break;
+                case lb::SPECULAR_TRANSMITTANCE_DATA:
+                    inDir = -outDir;
+                    break;
+                default:
+                    lbWarn << "[RenderingWidget::mouseReleaseEvent] Invalid data type: " << dataType;
+                    break;
+            }
         }
 
-        pickedInDir_ = inDir;
         emit inOutDirPicked(inDir, outDir);
     }
 #ifdef __APPLE__
@@ -280,15 +313,6 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
         showContextMenu(event->globalPos());
     }
 #endif
-}
-
-void RenderingWidget::mouseDoubleClickEvent(QMouseEvent* event)
-{
-    OsgQWidget::mouseDoubleClickEvent(event);
-
-    if (!pickedInDir_.isZero()) {
-        emit inDirPicked(pickedInDir_);
-    }
 }
 
 void RenderingWidget::dragEnterEvent(QDragEnterEvent* event)

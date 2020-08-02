@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2019 Kimura Ryo                                  //
+// Copyright (C) 2016-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -42,7 +42,7 @@ void MaterialData::setBtdf(std::shared_ptr<lb::Btdf> btdf)
     updateBtdf();
 }
 
-void MaterialData::setSpecularReflectances(lb::SampleSet2D* reflectances)
+void MaterialData::setSpecularReflectances(std::shared_ptr<lb::SampleSet2D> reflectances)
 {
     specularReflectances_ = reflectances;
 
@@ -56,11 +56,11 @@ void MaterialData::setSpecularReflectances(lb::SampleSet2D* reflectances)
         maxPerWavelength_.resize(0);
         diffuseThresholds_.resize(0);
 
-        reflectances_.reset(specularReflectances_);
+        reflectances_ = specularReflectances_;
     }
 }
 
-void MaterialData::setSpecularTransmittances(lb::SampleSet2D* reflectances)
+void MaterialData::setSpecularTransmittances(std::shared_ptr<lb::SampleSet2D> reflectances)
 {
     specularTransmittances_ = reflectances;
 
@@ -74,7 +74,7 @@ void MaterialData::setSpecularTransmittances(lb::SampleSet2D* reflectances)
         maxPerWavelength_.resize(0);
         diffuseThresholds_.resize(0);
 
-        reflectances_.reset(specularTransmittances_);
+        reflectances_ = specularTransmittances_;
     }
 }
 
@@ -135,6 +135,25 @@ bool MaterialData::isEmpty() const
     return !(brdf_ || btdf_ || specularReflectances_ || specularTransmittances_);
 }
 
+bool MaterialData::isIsotropic() const
+{
+    const lb::SampleSet* ss = getSampleSet();
+    const lb::SampleSet2D* ss2 = getSampleSet2D();
+
+    bool isotropic;
+    if (ss && ss->isIsotropic()) {
+        isotropic = true;
+    }
+    else if (ss2 && ss2->isIsotropic()) {
+        isotropic = true;
+    }
+    else {
+        isotropic = false;
+    }
+
+    return isotropic;
+}
+
 float MaterialData::getIncomingAzimuthalAngle(int index) const
 {
     if (brdf_ || btdf_) {
@@ -163,6 +182,72 @@ float MaterialData::getIncomingAzimuthalAngle(int index) const
     }
 }
 
+void MaterialData::getHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
+                                          float* halfTheta, float* halfPhi, float* diffTheta, float* diffPhi)
+{
+    lb::Vec3 brdfOutDir = outDir;
+    if (btdf_ || specularTransmittances_) {
+        brdfOutDir.z() = -outDir.z();
+    }
+
+    if (isIsotropic()) {
+        *halfPhi = 0.0f;
+        lb::HalfDifferenceCoordinateSystem::fromXyz(inDir, brdfOutDir, halfTheta, diffTheta, diffPhi);
+    }
+    else {
+        lb::HalfDifferenceCoordinateSystem::fromXyz(inDir, brdfOutDir, halfTheta, halfPhi, diffTheta, diffPhi);
+    }
+
+    if (lb::isEqual(*halfTheta, 0.0f)) {
+        *diffPhi = 0.0f;
+    }
+}
+
+void MaterialData::getSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
+                                          float* inTheta, float* inPhi, float* specTheta, float* specPhi)
+{
+    lb::Vec3 brdfOutDir = outDir;
+    if (btdf_ || specularTransmittances_) {
+        brdfOutDir.z() = -outDir.z();
+    }
+
+    const lb::SpecularCoordinatesBrdf* specBrdf = nullptr;
+    if (btdf_) {
+        specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(btdf_->getBrdf().get());
+    }
+
+    if (specBrdf) {
+        // Get the outgoing direction considering refraction.
+        specBrdf->fromXyz(inDir, brdfOutDir, inTheta, inPhi, specTheta, specPhi);
+    }
+    else {
+        if (isIsotropic()) {
+            *inPhi = 0.0f;
+            lb::SpecularCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, specTheta, specPhi);
+        }
+        else {
+            lb::SpecularCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, inPhi, specTheta, specPhi);
+        }
+    }
+}
+
+void MaterialData::getShericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
+                                          float* inTheta, float* inPhi, float* outTheta, float* outPhi)
+{
+    lb::Vec3 brdfOutDir = outDir;
+    if (btdf_ || specularTransmittances_) {
+        brdfOutDir.z() = -outDir.z();
+    }
+
+    if (isIsotropic()) {
+        *inPhi = 0.0f;
+        lb::SphericalCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, outTheta, outPhi);
+    }
+    else {
+        lb::SphericalCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, inPhi, outTheta, outPhi);
+    }
+}
+
 float MaterialData::getWavelength(int index) const
 {
     if (brdf_ || btdf_) {
@@ -179,6 +264,22 @@ float MaterialData::getWavelength(int index) const
     }
 }
 
+lb::Arrayf MaterialData::getWavelengths() const
+{
+    if (brdf_ || btdf_) {
+        return getSampleSet()->getWavelengths();
+    }
+    else if (specularReflectances_) {
+        return specularReflectances_->getWavelengths();
+    }
+    else if (specularTransmittances_) {
+        return specularTransmittances_->getWavelengths();
+    }
+    else {
+        return lb::Arrayf();
+    }
+}
+
 lb::ColorModel MaterialData::getColorModel() const
 {
     if (brdf_ || btdf_) {
@@ -192,6 +293,19 @@ lb::ColorModel MaterialData::getColorModel() const
     }
     else {
         return lb::SPECTRAL_MODEL;
+    }
+}
+
+lb::SourceType MaterialData::getSourceType() const
+{
+    if (const lb::Brdf* brdf = getBrdfData()) {
+        return brdf->getSourceType();
+    }
+    else if (const lb::SampleSet2D* ss2 = getSampleSet2D()) {
+        return ss2->getSourceType();
+    }
+    else {
+        return lb::UNKNOWN_SOURCE;
     }
 }
 
@@ -232,6 +346,19 @@ lb::SampleSet* MaterialData::getSampleSet() const
     }
 }
 
+lb::SampleSet2D* MaterialData::getSampleSet2D() const
+{
+    if (specularReflectances_) {
+        return specularReflectances_.get();
+    }
+    else if (specularTransmittances_) {
+        return specularTransmittances_.get();
+    }
+    else {
+        return nullptr;
+    }
+}
+
 bool MaterialData::isInDirDependentCoordinateSystem() const
 {
     const lb::Brdf* brdf = getBrdfData();
@@ -247,6 +374,12 @@ lb::DataType MaterialData::getDataType() const
     }
     else if (btdf_) {
         return lb::BTDF_DATA;
+    }
+    else if (specularReflectances_) {
+        return lb::SPECULAR_REFLECTANCE_DATA;
+    }
+    else if (specularTransmittances_) {
+        return lb::SPECULAR_TRANSMITTANCE_DATA;
     }
     else {
         return lb::UNKNOWN_DATA;

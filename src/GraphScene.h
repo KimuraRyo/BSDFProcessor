@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -9,8 +9,6 @@
 #ifndef GRAPH_SCENE_H
 #define GRAPH_SCENE_H
 
-#include <osg/Geode>
-#include <osg/Geometry>
 #include <osg/Group>
 
 #include <libbsdf/Brdf/Brdf.h>
@@ -39,14 +37,17 @@ public:
         SAMPLE_POINT_LABELS_DISPLAY
     };
 
-    osg::Group* getRoot() { return root_.get(); }
+    enum class ArcDisplayMode {
+        HALF_DIFF   = 0,
+        SPECULAR    = 1,
+        SPHERICAL   = 2
+    };
 
-    osg::Group* getBsdfGroup() { return bsdfGroup_.get(); }
+    osg::Group* getRoot() { return root_; }
+
+    osg::Group* getBsdfGroup() { return bsdfGroup_; }
 
     void updateView(int width, int height);
-
-    /*! Creates and adds graph geometry to the scene. */
-    void createBrdfGeode();
 
     void setScaleLength1(float length) { scaleLength1_ = length; }
     void setScaleLength2(float length) { scaleLength2_ = length; }
@@ -58,8 +59,11 @@ public:
     void updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex);
     void updateGraphGeometry();
 
-    void updateInOutDirLine(const lb::Vec3& inDir, const lb::Vec3& outDir, int wavelengthIndex);
+    void updateInOutDirLine(const lb::Vec3& inDir,
+                            const lb::Vec3& outDir);
     void updateInOutDirLine();
+    void updateInDirLine(const lb::Vec3& inDir);
+    void clearOutDirLine();
 
     void setMaterialData(MaterialData* data) { data_ = data; }
 
@@ -73,30 +77,47 @@ public:
     DisplayMode getDisplayMode() const { return displayMode_; }
     void setDisplayMode(DisplayMode mode) { displayMode_ = mode; }
 
-    float getInTheta() const { return inTheta_; }
-    float getInPhi() const { return inPhi_; }
+    ArcDisplayMode getArcDisplayMode() const { return arcDisplayMode_; }
+    void setArcDisplayMode(ArcDisplayMode mode) { arcDisplayMode_ = mode; }
+
+    bool getArcDisplayUsed() const { return arcDisplayUsed_; }
+    void setArcDisplayUsed(bool on) { arcDisplayUsed_ = on; }
+
+    int getWavelengthIndex() const { return wavelengthIndex_; }
+
+    float getInTheta() const { return lb::SphericalCoordinateSystem::toTheta(pickedInDir_); }
+    float getInPhi()   const { return lb::SphericalCoordinateSystem::toPhi(pickedInDir_); }
+
+    const lb::Vec3& getPickedInDir()  const { return pickedInDir_; }
+    const lb::Vec3& getPickedOutDir() const { return pickedOutDir_; }
 
 private:
     GraphScene(const GraphScene&);
     GraphScene& operator=(const GraphScene&);
 
-    /*! Attachs the shader of 3D graph to a node. */
+    /*! Creates and adds graph geometries to the scene. */
+    void setupBrdfGeode();
+
+    /*! Attaches the shader of 3D graph to a node. */
     void attachGraphShader(osg::Node* node);
 
-    /*! Attachs the color shader to a node. */
+    /*! Attaches the color shader to a node. */
     void attachColorShader(osg::Node* node);
 
     /*! Creates a post processing group. */
     osg::Group* createPostProcessing(osg::Node* subgraph, int width, int height, int numFboSamples = 4);
 
-    void initializeInDirLine();
-    void updateInDirLine(const lb::Vec3& inDir);
-    void clearInDirLine() { inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables()); }
-
-    void initializeInOutDirLine();
-
-    /*! Modifies the length of a line from the origin concidering BRDF/BTDF. */
+    /*! Modifies the length of a line from the origin considering BRDF/BTDF. */
     osg::Vec3 modifyLineLength(const lb::Vec3& pos);
+
+    /*! Sets up the angles of a half difference coordinate system. */
+    void setupHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir, float arcRadius);
+
+    /*! Sets up the angles of a specular coordinate system. */
+    void setupSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir, float arcRadius);
+
+    /*! Sets up the angles of a spherical coordinate system. */
+    void setupSphericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir, float arcRadius);
 
     void updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
 
@@ -109,30 +130,32 @@ private:
 
     MaterialData* data_;
 
-    osg::ref_ptr<osg::Group> root_;
+    osg::Group* root_;
 
-    osg::ref_ptr<osg::Group> postProcessingGroup_;
-    osg::ref_ptr<osg::Group> postProcessingChild_;
+    osg::Group* postProcessingGroup_;
+    osg::Group* postProcessingChild_;
 
-    osg::ref_ptr<osg::Group> oitGroup_;
-    osg::ref_ptr<osg::Group> oitChild_;
+    osg::Group* oitGroup_;
+    osg::Group* oitChild_;
 
-    osg::ref_ptr<osg::Group> scene_;            /*!< The group for rendered geometry. */
-    osg::ref_ptr<osg::Group> accessoryGroup_;   /*!< The group for accessories like axes or text labels. */
+    osg::Group* scene_; /*!< The group for rendered geometry. */
 
-    osg::ref_ptr<osg::Group> bsdfGroup_;
-    osg::ref_ptr<osg::Geode> bxdfMeshGeode_;
-    osg::ref_ptr<osg::Geode> bxdfPointGeode_;
-    osg::ref_ptr<osg::Geode> bxdfTextGeode_;
-    osg::ref_ptr<osg::Geode> specularReflectanceGeode_;
+    osg::Group* accessoryGroup_; /*!< The group for accessories like axes or text labels. */
 
-    osg::ref_ptr<osg::Geode> axisGeode_;
-    osg::ref_ptr<osg::Geode> circleGeode_;
-    osg::ref_ptr<osg::Geode> scaleInPlaneOfIncidenceGeode_;
-    osg::ref_ptr<osg::Geode> axisTextLabelGeode_;
+    // Children of accessoryGroup_.
+    osg::Group* axisGroup_;
+    osg::Group* axisTextLabelGroup_;
+    osg::Group* circleGroup_;
+    osg::Group* inOutDirGroup_;
+    osg::Group* scaleInPlaneOfIncidenceGroup_;
 
-    osg::ref_ptr<osg::Geode> inDirGeode_;
-    osg::ref_ptr<osg::Geode> inOutDirGeode_;
+    osg::Group* bsdfGroup_;
+
+    // Children of bsdfGroup_.
+    osg::Group* brdfMeshGroup_;
+    osg::Group* brdfPointGroup_;
+    osg::Group* brdfTextGroup_;
+    osg::Group* specularReflectanceGroup_;
 
     int     numMultiSamples_;
     bool    oitUsed_;
@@ -141,20 +164,19 @@ private:
     bool    logPlotUsed_;
     float   baseOfLogarithm_;
 
-    float   scaleLength1_;
-    float   scaleLength2_;
+    float scaleLength1_;
+    float scaleLength2_;
+
+    bool scaleInPlaneOfIncidenceUsed_;
 
     DisplayMode displayMode_;
+
+    ArcDisplayMode  arcDisplayMode_;
+    bool            arcDisplayUsed_;
 
     int inThetaIndex_;
     int inPhiIndex_;
     int wavelengthIndex_;
-
-    /*! Incoming polar angle. This attribute is valid when an angle index (\a inThetaIndex_) is not used. */
-    float inTheta_;
-
-    /*!< Incoming azimuthal angle. This attribute is valid when an angle index (\a inPhiIndex_) is not used. */
-    float inPhi_;
 
     lb::Vec3 pickedInDir_, pickedOutDir_;
 };

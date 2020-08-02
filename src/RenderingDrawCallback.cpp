@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -66,7 +66,8 @@ void RenderingDrawCallback::render() const
             renderReflectance(outDir, renderedData);
         }
 
-        if (dataType_ == lb::BTDF_DATA || dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
+        if (dataType_ == lb::BTDF_DATA ||
+            dataType_ == lb::SPECULAR_TRANSMITTANCE_DATA) {
             inDir[2] = -inDir[2];
         }
 

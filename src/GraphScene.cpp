@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -25,6 +25,16 @@
 #include "SceneUtil.h"
 #include "SpecularCenteredCoordinateSystem.h"
 
+const osg::Vec4 RED(1.0, 0.2, 0.2, 1.0);
+const osg::Vec4 GREEN(0.2, 1.0, 0.2, 1.0);
+const osg::Vec4 BLUE(0.3, 0.3, 1.0, 1.0);
+const osg::Vec4 YELLOW(0.8, 0.8, 0.2, 1.0);
+
+constexpr int NUM_ARC_SEGMENTS = 512;
+
+constexpr float RADIUS_FACTOR_1 = 1.0f + 0.005f;
+constexpr float RADIUS_FACTOR_2 = 1.0f - 0.005f;
+
 GraphScene::GraphScene() : data_(0),
                            numMultiSamples_(4),
                            oitUsed_(false),
@@ -33,12 +43,13 @@ GraphScene::GraphScene() : data_(0),
                            baseOfLogarithm_(10.0f),
                            scaleLength1_(0.5f),
                            scaleLength2_(1.0f),
+                           scaleInPlaneOfIncidenceUsed_(false),
                            displayMode_(NORMAL_DISPLAY),
+                           arcDisplayMode_(ArcDisplayMode::SPHERICAL),
+                           arcDisplayUsed_(false),
                            inThetaIndex_(0),
                            inPhiIndex_(0),
                            wavelengthIndex_(0),
-                           inTheta_(0.0f),
-                           inPhi_(0.0f),
                            pickedInDir_(0.0, 0.0, 0.0),
                            pickedOutDir_(0.0, 0.0, 0.0)
 {
@@ -50,13 +61,13 @@ GraphScene::GraphScene() : data_(0),
     postProcessingChild_ = new osg::Group;
     postProcessingChild_->setName("postProcessingChild_");
 
-    postProcessingGroup_ = createPostProcessing(postProcessingChild_.get(), windowResolution, windowResolution);
+    postProcessingGroup_ = createPostProcessing(postProcessingChild_, windowResolution, windowResolution);
     postProcessingGroup_->setName("postProcessingGroup_");
 
     oitChild_ = new osg::Group;
     oitChild_->setName("oitChild_");
 
-    oitGroup_ = scene_util::createOitGroup(oitChild_.get(), windowResolution, windowResolution, numOitPasses_);
+    oitGroup_ = scene_util::createOitGroup(oitChild_, windowResolution, windowResolution, numOitPasses_);
     oitGroup_->setName("oitGroup_");
 
     scene_ = new osg::Group;
@@ -65,34 +76,71 @@ GraphScene::GraphScene() : data_(0),
     bsdfGroup_ = new osg::Group;
     bsdfGroup_->setName("bsdfGroup_");
 
+    brdfMeshGroup_ = new osg::Group;
+    attachGraphShader(brdfMeshGroup_);
+    brdfMeshGroup_->setName("brdfMeshGroup_");
+
+    brdfPointGroup_ = new osg::Group;
+    brdfPointGroup_->setName("brdfPointGroup_");
+
+    brdfTextGroup_ = new osg::Group;
+    brdfTextGroup_->setName("brdfTextGroup_");
+
+    specularReflectanceGroup_ = new osg::Group;
+    specularReflectanceGroup_->setName("specularReflectanceGroup_");
+
     accessoryGroup_ = new osg::Group;
     accessoryGroup_->setName("accessoryGroup_");
     accessoryGroup_->setNodeMask(UNDEFINED_MASK);
 
-    root_->addChild(postProcessingGroup_.get());
-    postProcessingChild_->addChild(oitGroup_.get());
-    oitChild_->addChild(scene_.get());
-    scene_->addChild(bsdfGroup_.get());
-    scene_->addChild(accessoryGroup_.get());
+    axisGroup_ = new osg::Group;
+    attachColorShader(axisGroup_);
+    axisGroup_->setName("axisGroup_");
+
+    axisTextLabelGroup_ = new osg::Group;
+    axisTextLabelGroup_->setName("axisTextLabelGroup_");
+
+    circleGroup_ = new osg::Group;
+    attachColorShader(circleGroup_);
+    circleGroup_->setName("circleGroup_");
+
+    inOutDirGroup_ = new osg::Group;
+    attachColorShader(inOutDirGroup_);
+    inOutDirGroup_->setName("inOutDirGroup_");
+
+    scaleInPlaneOfIncidenceGroup_ = new osg::Group;
+    attachColorShader(scaleInPlaneOfIncidenceGroup_);
+    scaleInPlaneOfIncidenceGroup_->setName("scaleInPlaneOfIncidenceGroup_");
+
+    root_->addChild(postProcessingGroup_);
+    postProcessingChild_->addChild(oitGroup_);
+    oitChild_->addChild(scene_);
+
+    scene_->addChild(bsdfGroup_);
+    bsdfGroup_->addChild(brdfMeshGroup_);
+    bsdfGroup_->addChild(brdfPointGroup_);
+    bsdfGroup_->addChild(brdfTextGroup_);
+    bsdfGroup_->addChild(specularReflectanceGroup_);
+
+    scene_->addChild(accessoryGroup_);
+    accessoryGroup_->addChild(axisGroup_);
+    accessoryGroup_->addChild(axisTextLabelGroup_);
+    accessoryGroup_->addChild(circleGroup_);
+    accessoryGroup_->addChild(inOutDirGroup_);
+    accessoryGroup_->addChild(scaleInPlaneOfIncidenceGroup_);
 
     root_->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-
-    initializeInDirLine();
-    initializeInOutDirLine();
 }
 
 void GraphScene::updateView(int width, int height)
 {
-    assert(postProcessingGroup_.valid() && postProcessingChild_.valid());
-    assert(oitGroup_.valid() && oitChild_.valid());
-
     int numMultiSamples = oitUsed_ ? 0 : numMultiSamples_;
     int numOitPasses = oitUsed_ ? numOitPasses_ : 1;
 
     // Replace post processing group.
     {
-        osg::Group* oldGroup = postProcessingGroup_.get();
-        osg::Group* newGroup = createPostProcessing(postProcessingChild_.get(), width, height, numMultiSamples);
+        osg::Group* oldGroup = postProcessingGroup_;
+        osg::Group* newGroup = createPostProcessing(postProcessingChild_, width, height, numMultiSamples);
         if (!newGroup) return;
 
         postProcessingGroup_ = newGroup;
@@ -104,8 +152,8 @@ void GraphScene::updateView(int width, int height)
 
     // Replace order independent transparency group.
     {
-        osg::Group* oldGroup = oitGroup_.get();
-        osg::Group* newGroup = scene_util::createOitGroup(oitChild_.get(), width, height, numOitPasses, numMultiSamples);
+        osg::Group* oldGroup = oitGroup_;
+        osg::Group* newGroup = scene_util::createOitGroup(oitChild_, width, height, numOitPasses, numMultiSamples);
         if (!newGroup) return;
 
         oitGroup_ = newGroup;
@@ -122,25 +170,13 @@ void GraphScene::createAxisAndScale()
 
     // Add axis.
     {
-        if (axisGeode_.valid()) {
-            accessoryGroup_->removeChild(axisGeode_.get());
-        }
+        axisGroup_->removeChildren(0, axisGroup_->getNumChildren());
 
-        bool backSideShown;
-        if (data_->getBtdf() || data_->getSpecularTransmittances()) {
-            backSideShown = true;
-        }
-        else {
-            backSideShown = false;
-        }
+        osg::Vec3 vec = modifyLineLength(lb::Vec3(1.0, 0.0, 0.0));
+        float length = std::max(vec.length(), 2.0f);
 
-        osg::Vec3 tempAxis = modifyLineLength(lb::Vec3(1.0, 0.0, 0.0));
-        float axisSize = std::max(tempAxis.length(), 2.0f);
-
-        axisGeode_ = scene_util::createAxis(axisSize, backSideShown, false);
-        axisGeode_->setName("axisGeode_");
-        attachColorShader(axisGeode_);
-        accessoryGroup_->addChild(axisGeode_);
+        osg::Geode* geode = scene_util::createAxis(length, false);
+        axisGroup_->addChild(geode);
     }
 
     float radius1, radius2;
@@ -155,63 +191,55 @@ void GraphScene::createAxisAndScale()
 
     // Add circles.
     {
-        if (circleGeode_.valid()) {
-            accessoryGroup_->removeChild(circleGeode_.get());
-        }
+        circleGroup_->removeChildren(0, circleGroup_->getNumChildren());
 
-        circleGeode_ = new osg::Geode;
-        circleGeode_->setName("circleGeode_");
-        attachColorShader(circleGeode_);
-        accessoryGroup_->addChild(circleGeode_);
+        osg::Geode* geode = new osg::Geode;
+        circleGroup_->addChild(geode);
 
-        circleGeode_->addDrawable(scene_util::createCircleFloor(radius1, 256, 1.0f, false));
-        circleGeode_->addDrawable(scene_util::createCircleFloor(radius2, 256, 1.0f, false));
+        geode->addDrawable(scene_util::createCircleFloor(radius1, NUM_ARC_SEGMENTS, 1.0f, false));
+        geode->addDrawable(scene_util::createCircleFloor(radius2, NUM_ARC_SEGMENTS, 1.0f, false));
     }
 
-    if (axisTextLabelGeode_.valid()) {
-        accessoryGroup_->removeChild(axisTextLabelGeode_.get());
-    }
+    axisTextLabelGroup_->removeChildren(0, axisTextLabelGroup_->getNumChildren());
 
     // Add text labels.
     if (data_->isEmpty()) {
-        axisTextLabelGeode_ = new osg::Geode;
-        axisTextLabelGeode_->setName("axisTextLabelGeode_");
-        axisTextLabelGeode_->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-        accessoryGroup_->addChild(axisTextLabelGeode_);
+        osg::Geode* geode = new osg::Geode;
+        geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+        axisTextLabelGroup_->addChild(geode);
 
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(radius1, 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(-radius1, 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, radius1, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, -radius1, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(radius1, 0.0, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(-radius1, 0.0, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, radius1, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, -radius1, 0.0)));
 
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(radius2, 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(-radius2, 0.0, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, radius2, 0.0)));
-        axisTextLabelGeode_->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, -radius2, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(radius2, 0.0, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(-radius2, 0.0, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, radius2, 0.0)));
+        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, -radius2, 0.0)));
     }
 }
 
 void GraphScene::showScaleInPlaneOfIncidence(bool on)
 {
-    if (!data_) return;
+    scaleInPlaneOfIncidenceGroup_->removeChildren(0, scaleInPlaneOfIncidenceGroup_->getNumChildren());
 
-    if (scaleInPlaneOfIncidenceGeode_.valid()) {
-        accessoryGroup_->removeChild(scaleInPlaneOfIncidenceGeode_.get());
-    }
+    scaleInPlaneOfIncidenceUsed_ = on;
 
-    if (!on) return;
+    if (!scaleInPlaneOfIncidenceUsed_ || !data_) return;
 
-    scaleInPlaneOfIncidenceGeode_ = new osg::Geode;
-    scaleInPlaneOfIncidenceGeode_->setName("scaleInPlaneOfIncidenceGeode_");
-    attachColorShader(scaleInPlaneOfIncidenceGeode_);
-    accessoryGroup_->addChild(scaleInPlaneOfIncidenceGeode_);
+    osg::Geode* geode = new osg::Geode;
+    scaleInPlaneOfIncidenceGroup_->addChild(geode);
+
+    float inTheta, inPhi;
+    lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
 
     osg::Vec3 pos0(0.0, 0.0, 1.0);
     if (data_->getBtdf() || data_->getSpecularTransmittances()) {
         pos0 = -pos0;
     }
-    osg::Vec3 pos1 = scene_util::toOsg(lb::SphericalCoordinateSystem::toXyz(lb::PI_2_F, inPhi_));
-    osg::Vec3 pos2 = scene_util::toOsg(lb::SphericalCoordinateSystem::toXyz(lb::PI_2_F, inPhi_ + lb::PI_F));
+    osg::Vec3 pos1 = scene_util::toOsg(lb::SphericalCoordinateSystem::toXyz(lb::PI_2_F, inPhi));
+    osg::Vec3 pos2 = scene_util::toOsg(lb::SphericalCoordinateSystem::toXyz(lb::PI_2_F, inPhi + lb::PI_F));
 
     float coeff1, coeff2;
     if (logPlotUsed_ && isLogPlotAcceptable()) {
@@ -223,68 +251,15 @@ void GraphScene::showScaleInPlaneOfIncidence(bool on)
         coeff2 = scaleLength2_;
     }
 
-    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff1, pos1 * coeff1, 64, AXIS_COLOR));
-    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff1, pos2 * coeff1, 64, AXIS_COLOR));
-    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff2, pos1 * coeff2, 64, AXIS_COLOR));
-    scaleInPlaneOfIncidenceGeode_->addDrawable(scene_util::createArc(pos0 * coeff2, pos2 * coeff2, 64, AXIS_COLOR));
+    geode->addDrawable(scene_util::createArc(pos0 * coeff1, pos1 * coeff1, NUM_ARC_SEGMENTS, AXIS_COLOR));
+    geode->addDrawable(scene_util::createArc(pos0 * coeff1, pos2 * coeff1, NUM_ARC_SEGMENTS, AXIS_COLOR));
+    geode->addDrawable(scene_util::createArc(pos0 * coeff2, pos1 * coeff2, NUM_ARC_SEGMENTS, AXIS_COLOR));
+    geode->addDrawable(scene_util::createArc(pos0 * coeff2, pos2 * coeff2, NUM_ARC_SEGMENTS, AXIS_COLOR));
 }
 
 void GraphScene::updateScaleInPlaneOfIncidence()
 {
-    if (scaleInPlaneOfIncidenceGeode_.valid()) {
-        showScaleInPlaneOfIncidence(true);
-    }
-}
-
-void GraphScene::createBrdfGeode()
-{
-    const lb::SampleSet* ss = data_->getSampleSet();
-    if (!ss) return;
-
-    if (bxdfMeshGeode_.valid()) {
-        bsdfGroup_->removeChild(bxdfMeshGeode_.get());
-    }
-
-    // Set up mesh.
-    {
-        bxdfMeshGeode_ = new osg::Geode;
-        bxdfMeshGeode_->setName("bxdfMeshGeode_");
-        bxdfMeshGeode_->setNodeMask(BRDF_MASK);
-        bsdfGroup_->addChild(bxdfMeshGeode_.get());
-
-        osg::ClipPlane* clipPlane = new osg::ClipPlane;
-        if (data_->getBrdf()) {
-            clipPlane->setClipPlane(0.0, 0.0, 1.0, -0.000001);
-        }
-        else {
-            clipPlane->setClipPlane(0.0, 0.0, -1.0, -0.000001);
-        }
-        bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(clipPlane, osg::StateAttribute::ON);
-
-        attachGraphShader(bxdfMeshGeode_.get());
-    }
-
-    // Set up points.
-    {
-        if (bxdfPointGeode_.valid()) {
-            bsdfGroup_->removeChild(bxdfPointGeode_.get());
-        }
-
-        bxdfPointGeode_ = new osg::Geode;
-        bxdfPointGeode_->setName("bxdfPointGeode_");
-        bsdfGroup_->addChild(bxdfPointGeode_.get());
-    }
-
-    // Set up text labels of sample points.
-    {
-        if (bxdfTextGeode_.valid()) {
-            bsdfGroup_->removeChild(bxdfTextGeode_.get());
-        }
-
-        bxdfTextGeode_ = new osg::Geode;
-        bxdfTextGeode_->setName("bxdfTextGeode_");
-        bsdfGroup_->addChild(bxdfTextGeode_.get());
-    }
+    showScaleInPlaneOfIncidence(scaleInPlaneOfIncidenceUsed_);
 }
 
 void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
@@ -292,6 +267,28 @@ void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavel
     inThetaIndex_ = inThetaIndex;
     inPhiIndex_ = inPhiIndex;
     wavelengthIndex_ = wavelengthIndex;
+
+    if (inThetaIndex != -1 && inPhiIndex != -1) {
+        float inTheta = data_->getIncomingPolarAngle(inThetaIndex);
+        float inPhi = data_->getIncomingAzimuthalAngle(inPhiIndex);
+        pickedInDir_ = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
+        
+    }
+    else if (inThetaIndex != -1) {
+        float inTheta, inPhi;
+        lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
+
+        inTheta = data_->getIncomingPolarAngle(inThetaIndex);
+        pickedInDir_ = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
+    }
+
+    else if (inPhiIndex != -1) {
+        float inTheta, inPhi;
+        lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
+
+        inPhi = data_->getIncomingAzimuthalAngle(inPhiIndex);
+        pickedInDir_ = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
+    }
 
     clearGraphGeometry();
 
@@ -311,111 +308,488 @@ void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavel
 
 void GraphScene::updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex)
 {
-    inTheta_ = inTheta;
-    inPhi_ = inPhi;
+    pickedInDir_ = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
 
     updateGraphGeometry(-1, -1, wavelengthIndex);
 }
 
 void GraphScene::updateGraphGeometry()
 {
+    if (data_->isEmpty()) return;
+
     GraphScene::DisplayMode dm = getDisplayMode();
     if (dm == GraphScene::SAMPLE_POINTS_DISPLAY ||
         dm == GraphScene::SAMPLE_POINT_LABELS_DISPLAY) {
         updateGraphGeometry(inThetaIndex_, inPhiIndex_, wavelengthIndex_);
     }
     else {
-        updateGraphGeometry(inTheta_, inPhi_, wavelengthIndex_);
+        float inTheta, inPhi;
+        lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
+        updateGraphGeometry(inTheta, inPhi, wavelengthIndex_);
+    }
+}
+
+void setupAngleArcOnGround(osg::Geode*      geode,
+                           const osg::Vec3& dir,
+                           float            radius,
+                           const osg::Vec4& color,
+                           GLushort         stipplePattern = 0xcccc)
+{
+    bool isNormal = (lb::isEqual(dir.x(), 0.0f) &&
+                     lb::isEqual(dir.y(), 0.0f));
+
+    // Create an arc.
+    {
+        osg::Vec3 normal = osg::Vec3(0.0, 0.0, 1.0) * radius;
+        osg::Vec3 axis;
+        if (isNormal) {
+            axis = osg::Vec3(0.0, 1.0, 0.0);
+        }
+        else {
+            axis = normal ^ dir;
+            axis.normalize();
+        }
+
+        constexpr float lineWidth = 1.0f;
+        constexpr GLint stippleFactor = 1;
+
+        osg::Geometry* geom = scene_util::createArc(normal, lb::PI_F, axis, NUM_ARC_SEGMENTS, color,
+                                                    lineWidth, stippleFactor, stipplePattern);
+        geode->addDrawable(geom);
+    }
+
+    // Create a point on the ground.
+    {
+        osg::Geometry* geom = new osg::Geometry;
+        geode->addDrawable(geom);
+
+        osg::Vec3 pos;
+        if (isNormal) {
+            pos = osg::Vec3(1.0, 0.0, 0.0);
+        }
+        else {
+            pos = osg::Vec3(dir.x(), dir.y(), 0.0);
+            pos.normalize();
+        }
+
+        pos *= radius;
+
+        osg::Vec3Array* vertices = new osg::Vec3Array;
+        vertices->push_back(pos);
+        geom->setVertexArray(vertices);
+        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, vertices->size()));
+
+        osg::Vec4Array* colors = new osg::Vec4Array;
+        colors->push_back(color);
+        geom->setColorArray(colors);
+        geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+        osg::StateSet* stateSet = geom->getOrCreateStateSet();
+
+        osg::Point* point = new osg::Point(6.0f);
+        stateSet->setAttribute(point);
+        stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+        osg::Depth* depth = new osg::Depth;
+        depth->setFunction(osg::Depth::LESS);
+        depth->setRange(0.0, DEPTH_ZFAR_2);
+        geom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
+    }
+}
+
+void GraphScene::setupHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir, float arcRadius)
+{
+    bool transparent = (data_->getBtdf() || data_->getSpecularTransmittances());
+
+    lb::Vec3 brdfInDir = inDir;
+    if (transparent) {
+        brdfInDir.z() = -brdfInDir.z();
+    }
+
+    using std::abs;
+
+    lb::Vec3 halfDir;
+    if (abs(inDir.z())  < lb::EPSILON_F &&
+        abs(outDir.z()) < lb::EPSILON_F) {
+        halfDir = transparent ? lb::Vec3(0.0, 0.0, -1.0) : lb::Vec3(0.0, 0.0, 1.0);
+    }
+    else {
+        halfDir = (brdfInDir + outDir) * 0.5;
+        halfDir.normalize();
+    }
+    osg::Vec3 hDir = modifyLineLength(halfDir);
+
+    constexpr float lineWidth = 2.0f;
+    constexpr GLint stippleFactor = 1;
+
+    osg::Geode* geode = new osg::Geode;
+    inOutDirGroup_->addChild(geode);
+
+    // Create the line of the halfway vector.
+    {
+        osg::Vec4 color(0.7, 0.1, 1.0, 1.0);
+        constexpr GLushort stipplePattern = 0xf8ff;
+
+        osg::Geometry* lineGeom = scene_util::createStippledLine(osg::Vec3(), hDir, color,
+                                                                 lineWidth, stippleFactor, stipplePattern);
+        geode->addDrawable(lineGeom);
+
+        setupAngleArcOnGround(geode, scene_util::toOsg(halfDir), arcRadius, color);
+    }
+
+    if (transparent) {
+        osg::Vec4 color(1.0, 0.5, 0.0, 1.0);
+        constexpr GLushort stipplePattern = 0xff8f;
+
+        osg::Vec3 iDir = modifyLineLength(brdfInDir);
+        osg::Geometry* lineGeom = scene_util::createStippledLine(osg::Vec3(), iDir, color,
+                                                                 lineWidth, stippleFactor, stipplePattern);
+        geode->addDrawable(lineGeom);
+    }
+
+    osg::Vec3 anglePosI(scene_util::toOsg(inDir));
+    anglePosI.normalize();
+    anglePosI *= arcRadius;
+    if (transparent) {
+        anglePosI.z() = -anglePosI.z();
+    }
+
+    osg::Vec3 anglePosO(scene_util::toOsg(outDir));
+    anglePosO.normalize();
+    anglePosO *= arcRadius;
+
+    osg::Vec3 anglePosH(hDir);
+    anglePosH.normalize();
+    anglePosH *= arcRadius;
+
+    osg::Vec3 anglePosN = osg::Vec3(0.0, 0.0, 1.0) * arcRadius;
+    if (transparent) {
+        anglePosN.z() = -anglePosN.z();
+    }
+
+    osg::Geometry* angleGeomHI = scene_util::createArc(anglePosH * RADIUS_FACTOR_2, anglePosI,
+                                                       NUM_ARC_SEGMENTS, GREEN, lineWidth);
+    geode->addDrawable(angleGeomHI);
+
+    constexpr GLushort stipplePattern = 0xf8f8;
+    osg::Geometry* angleGeomHO = scene_util::createArc(anglePosH * RADIUS_FACTOR_2, anglePosO,
+                                                       NUM_ARC_SEGMENTS, GREEN, lineWidth, stippleFactor, stipplePattern);
+    geode->addDrawable(angleGeomHO);
+
+    osg::Geometry* angleGeomHN = scene_util::createArc(anglePosH * RADIUS_FACTOR_1, anglePosN,
+                                                       NUM_ARC_SEGMENTS, RED, lineWidth);
+    geode->addDrawable(angleGeomHN);
+
+    float halfTheta, halfPhi, diffTheta, diffPhi;
+    data_->getHalfDiffCoordAngles(inDir, outDir, &halfTheta, &halfPhi, &diffTheta, &diffPhi);
+
+    // half azimuthal angle
+    const lb::SampleSet* ss = data_->getSampleSet();
+    if (ss && !ss->isIsotropic()) {
+        osg::Vec3 anglePosX = osg::Vec3(1.0, 0.0, 0.0) * arcRadius;
+        const osg::Vec3 axis(0.0, 0.0, 1.0);
+        osg::Geometry* angleGeomHalfPhi = scene_util::createArc(anglePosX * RADIUS_FACTOR_1, halfPhi, axis,
+                                                                NUM_ARC_SEGMENTS, YELLOW, lineWidth);
+        geode->addDrawable(angleGeomHalfPhi);
+    }
+
+    // difference azimuthal angle
+    if (data_->getBrdf() ||
+        data_->getBtdf()) {
+        osg::Vec3 axis = transparent ? scene_util::toOsg(halfDir) : scene_util::toOsg(-halfDir);
+        osg::Geometry* angleGeomDiffPhi = scene_util::createArc(anglePosI, diffPhi, axis,
+                                                                NUM_ARC_SEGMENTS, BLUE, lineWidth);
+        geode->addDrawable(angleGeomDiffPhi);
+    }
+}
+
+void GraphScene::setupSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir, float arcRadius)
+{
+    bool transparent = (data_->getBtdf() || data_->getSpecularTransmittances());
+
+    float inTheta, inPhi, specTheta, specPhi;
+    data_->getSpecularCoordAngles(inDir, outDir, &inTheta, &inPhi, &specTheta, &specPhi);
+
+    lb::Vec3 specDir;
+    if (transparent) {
+        specDir = -inDir;
+
+        // Offset the specular direction for refraction.
+        if (std::shared_ptr<const lb::Btdf> btdf = data_->getBtdf()) {
+            lb::Vec3 tempInDir, refractedDir;
+            if (auto specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(btdf->getBrdf().get())) {
+                specBrdf->toXyz(inTheta, inPhi, 0.0f, specPhi, &tempInDir, &refractedDir);
+                refractedDir.z() = -refractedDir.z();
+                specDir = refractedDir;
+            }
+        }
+    }
+    else {
+        specDir = lb::reflect(inDir, lb::Vec3(0.0, 0.0, 1.0));
+    }
+
+    specDir.normalize();
+    osg::Vec3 sDir = modifyLineLength(specDir);
+
+    constexpr float lineWidth = 2.0f;
+
+    osg::Geode* geode = new osg::Geode;
+    inOutDirGroup_->addChild(geode);
+
+    // Create the line of the specular direction.
+    {
+        osg::Vec4 color(0.0, 0.7, 0.8, 1.0);
+        constexpr GLint stippleFactor = 1;
+        constexpr GLushort stipplePattern = 0xf8ff;
+
+        osg::Geometry* lineGeom = scene_util::createStippledLine(osg::Vec3(), sDir, color,
+                                                                 lineWidth, stippleFactor, stipplePattern);
+        geode->addDrawable(lineGeom);
+
+        setupAngleArcOnGround(geode, sDir, arcRadius, color);
+    }
+
+    osg::Vec3 anglePosI(scene_util::toOsg(inDir));
+    anglePosI.normalize();
+    anglePosI *= arcRadius;
+
+    osg::Vec3 anglePosO(scene_util::toOsg(outDir));
+    anglePosO.normalize();
+    anglePosO *= arcRadius;
+
+    osg::Vec3 anglePosS(scene_util::toOsg(specDir));
+    anglePosS.normalize();
+    anglePosS *= arcRadius;
+
+    osg::Vec3 anglePosN = osg::Vec3(0.0, 0.0, 1.0) * arcRadius;
+
+    // incoming polar angle
+    osg::Geometry* angleGeomIN = scene_util::createArc(anglePosI * RADIUS_FACTOR_1, anglePosN,
+                                                       NUM_ARC_SEGMENTS, RED, lineWidth);
+    geode->addDrawable(angleGeomIN);
+
+    // specular polar angle
+    osg::Geometry* angleGeomON = scene_util::createArc(anglePosO * RADIUS_FACTOR_1, anglePosS,
+                                                       NUM_ARC_SEGMENTS, GREEN, lineWidth);
+    geode->addDrawable(angleGeomON);
+
+    // incoming azimuthal angle
+    const lb::SampleSet* ss = data_->getSampleSet();
+    if (ss && !ss->isIsotropic()) {
+        osg::Vec3 anglePosX = osg::Vec3(1.0, 0.0, 0.0) * arcRadius;
+        const osg::Vec3 axis(0.0, 0.0, 1.0);
+        osg::Geometry* angleGeomInPhi = scene_util::createArc(anglePosX * RADIUS_FACTOR_1, inPhi, axis,
+                                                              NUM_ARC_SEGMENTS, YELLOW, lineWidth);
+        geode->addDrawable(angleGeomInPhi);
+    }
+
+    // specular azimuthal angle
+    {
+        osg::Vec3 axis = transparent ? scene_util::toOsg(specDir) : scene_util::toOsg(-specDir);
+        osg::Geometry* angleGeomSpecPhi = scene_util::createArc(anglePosO * RADIUS_FACTOR_1, specPhi, axis,
+                                                                NUM_ARC_SEGMENTS, BLUE, lineWidth);
+        geode->addDrawable(angleGeomSpecPhi);
+    }
+}
+
+void GraphScene::setupSphericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir, float arcRadius)
+{
+    constexpr float lineWidth = 2.0f;
+
+    osg::Vec3 anglePosI(scene_util::toOsg(inDir));
+    anglePosI.normalize();
+    anglePosI *= arcRadius;
+
+    osg::Vec3 anglePosO(scene_util::toOsg(outDir));
+    anglePosO.normalize();
+    anglePosO *= arcRadius;
+
+    osg::Vec3 anglePosN = osg::Vec3(0.0, 0.0, 1.0) * arcRadius;
+
+    osg::Geode* geode = new osg::Geode;
+    inOutDirGroup_->addChild(geode);
+
+    // incoming polar angle
+    osg::Geometry* angleGeomIN = scene_util::createArc(anglePosI * RADIUS_FACTOR_1, anglePosN,
+                                                       NUM_ARC_SEGMENTS, RED, lineWidth);
+    geode->addDrawable(angleGeomIN);
+
+    // outgoing polar angle
+    {
+        bool transparent = (data_->getBtdf() || data_->getSpecularTransmittances());
+
+        osg::Vec3 posN = transparent ? osg::Vec3(0.0, 0.0, -1.0) : osg::Vec3(0.0, 0.0, 1.0);
+        posN *= arcRadius;
+
+        osg::Geometry* angleGeomON = scene_util::createArc(anglePosO * RADIUS_FACTOR_1, posN,
+                                                           NUM_ARC_SEGMENTS, GREEN, lineWidth);
+        geode->addDrawable(angleGeomON);
+    }
+
+    osg::Vec3 anglePosX = osg::Vec3(1.0, 0.0, 0.0) * arcRadius;
+
+    float inTheta, inPhi, outTheta, outPhi;
+    data_->getShericalCoordAngles(inDir, outDir, &inTheta, &inPhi, &outTheta, &outPhi);
+
+    // incoming azimuthal angle
+    const lb::SampleSet* ss = data_->getSampleSet();
+    if (ss && !ss->isIsotropic()) {
+        const osg::Vec3 axis(0.0, 0.0, 1.0);
+        osg::Geometry* angleGeomInPhi = scene_util::createArc(anglePosX * RADIUS_FACTOR_2, inPhi, axis,
+                                                              NUM_ARC_SEGMENTS, YELLOW, lineWidth);
+        geode->addDrawable(angleGeomInPhi);
+    }
+
+    // outgoing azimuthal angle
+    {
+        const osg::Vec3 axis(0.0, 0.0, 1.0);
+        osg::Geometry* angleGeomOutPhi = scene_util::createArc(anglePosX * RADIUS_FACTOR_1, outPhi, axis,
+                                                               NUM_ARC_SEGMENTS, BLUE, lineWidth);
+        geode->addDrawable(angleGeomOutPhi);
     }
 }
 
 void GraphScene::updateInOutDirLine(const lb::Vec3& inDir,
-                                    const lb::Vec3& outDir,
-                                    int             wavelengthIndex)
+                                    const lb::Vec3& outDir)
 {
     pickedInDir_ = inDir;
-    pickedOutDir_ = outDir;
-    wavelengthIndex_ = wavelengthIndex;
 
-    inOutDirGeode_->removeDrawables(0, inOutDirGeode_->getNumDrawables());
-
-    if (inDir.isZero() && outDir.isZero()) {
-        return;
+    if (outDir.isZero()) {
+        pickedInDir_.setZero();
     }
-
-    const float lineWidth = 2.0f;
-    const GLint stippleFactor = 1;
-
-    float arcRadius = std::min(scaleLength1_, scaleLength2_);
-    if (logPlotUsed_){
-        arcRadius = scene_util::toLogValue(arcRadius, baseOfLogarithm_);
-    }
-
-    osg::Depth* depth = new osg::Depth;
-    depth->setFunction(osg::Depth::LESS);
-    depth->setRange(0.0, 0.9999999);
-
-    // Update the line of an incoming direction.
-    {
-        osg::Vec4 color(1.0, 0.2, 0.0, 1.0);
-        GLushort stipplePattern = 0x8fff;
-
-        osg::Vec3 dir = modifyLineLength(inDir);
-        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
-                                                             lineWidth, stippleFactor, stipplePattern);
-        inOutDirGeode_->addDrawable(geom);
-
-        osg::Vec3 anglePos0(dir);
-        anglePos0.normalize();
-        anglePos0 *= arcRadius;
-
-        osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
-        anglePos1.normalize();
-        anglePos1 *= arcRadius;
-
-        osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
-        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
-        inOutDirGeode_->addDrawable(angleGeom);
-    }
-
-    // Update the line of an outgoing direction.
-    {
-        osg::Vec3 dir = modifyLineLength(outDir);
-        if (data_->getBtdf() ||
-            data_->getSpecularTransmittances()) {
-            dir.z() = -dir.z();
+    else {
+        switch (data_->getDataType()) {
+            case lb::SPECULAR_REFLECTANCE_DATA:
+                pickedOutDir_ = lb::reflect(inDir, lb::Vec3(0.0, 0.0, 1.0));
+                break;
+            case lb::SPECULAR_TRANSMITTANCE_DATA:
+                pickedOutDir_ = -inDir;
+                break;
+            default:
+                pickedOutDir_ = outDir;
+                break;
         }
-
-        osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
-        GLushort stipplePattern = 0xff8f;
-
-        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
-                                                             lineWidth, stippleFactor, stipplePattern);
-        inOutDirGeode_->addDrawable(geom);
-
-        osg::Vec3 anglePos0(dir);
-        anglePos0.normalize();
-        anglePos0 *= arcRadius;
-
-        osg::Vec3 anglePos1(dir.x(), dir.y(), 0.0);
-        anglePos1.normalize();
-        anglePos1 *= arcRadius;
-
-        osg::Geometry* angleGeom = scene_util::createArc(anglePos0, anglePos1, 64, color);
-        angleGeom->getOrCreateStateSet()->setAttributeAndModes(depth, osg::StateAttribute::ON);
-        inOutDirGeode_->addDrawable(angleGeom);
     }
+
+    updateInOutDirLine();
 }
 
 void GraphScene::updateInOutDirLine()
 {
-    updateInOutDirLine(pickedInDir_, pickedOutDir_, wavelengthIndex_);
+    if (pickedInDir_.isZero()) return;
+
+    inOutDirGroup_->removeChildren(0, inOutDirGroup_->getNumChildren());
+
+    constexpr float lineWidth = 2.0f;
+    constexpr GLint stippleFactor = 1;
+
+    float arcRadius = scaleLength1_;
+    if (logPlotUsed_ && isLogPlotAcceptable()) {
+        arcRadius = scene_util::toLogValue(arcRadius, baseOfLogarithm_);
+    }
+
+    osg::Geode* geode = new osg::Geode;
+    inOutDirGroup_->addChild(geode);
+
+    // Update the line of an incoming direction.
+    {
+        osg::Vec3 dir = modifyLineLength(pickedInDir_);
+        osg::Vec4 color(1.0, 0.0, 0.0, 1.0);
+        constexpr GLushort stipplePattern = 0x8fff;
+        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
+                                                             lineWidth, stippleFactor, stipplePattern);
+        geode->addDrawable(geom);
+
+        setupAngleArcOnGround(geode, dir, arcRadius, color);
+    }
+
+    if (pickedOutDir_.isZero()) return;
+
+    // Update the line of an outgoing direction.
+    {
+        osg::Vec3 dir = modifyLineLength(pickedOutDir_);
+        osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
+        constexpr GLushort stipplePattern = 0xff8f;
+        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
+                                                             lineWidth, stippleFactor, stipplePattern);
+        geode->addDrawable(geom);
+
+        setupAngleArcOnGround(geode, dir, arcRadius, color, 0x3333);
+    }
+
+    if (arcDisplayUsed_) {
+        switch (arcDisplayMode_) {
+            case ArcDisplayMode::HALF_DIFF:
+                setupHalfDiffCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
+                break;
+            case ArcDisplayMode::SPECULAR:
+                setupSpecularCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
+                break;
+            case ArcDisplayMode::SPHERICAL:
+                setupSphericalCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void GraphScene::updateInDirLine(const lb::Vec3& inDir)
+{
+    pickedInDir_ = inDir;
+    updateInOutDirLine();
+}
+
+void GraphScene::clearOutDirLine()
+{
+    pickedOutDir_.setZero();
+    updateInOutDirLine();
 }
 
 bool GraphScene::isLogPlotAcceptable()
 {
     if (!data_) return true;
     return (data_->getBrdf() || data_->getBtdf() || data_->isEmpty());
+}
+
+void GraphScene::setupBrdfGeode()
+{
+    const lb::SampleSet* ss = data_->getSampleSet();
+    if (!ss) return;
+
+    // Set up mesh.
+    {
+        brdfMeshGroup_->removeChildren(0, brdfMeshGroup_->getNumChildren());
+
+        osg::Geode* geode = new osg::Geode;
+        geode->setNodeMask(BRDF_MASK);
+        brdfMeshGroup_->addChild(geode);
+
+        osg::ClipPlane* clipPlane = new osg::ClipPlane;
+        if (data_->getBrdf()) {
+            clipPlane->setClipPlane(0.0, 0.0, 1.0, 0.0);
+        }
+        else {
+            clipPlane->setClipPlane(0.0, 0.0, -1.0, 0.0);
+        }
+        geode->getOrCreateStateSet()->setAttributeAndModes(clipPlane, osg::StateAttribute::ON);
+    }
+
+    // Set up points.
+    {
+        brdfPointGroup_->removeChildren(0, brdfPointGroup_->getNumChildren());
+
+        osg::Geode* geode = new osg::Geode;
+        brdfPointGroup_->addChild(geode);
+    }
+
+    // Set up text labels of sample points.
+    {
+        brdfTextGroup_->removeChildren(0, brdfTextGroup_->getNumChildren());
+
+        osg::Geode* geode = new osg::Geode;
+        brdfTextGroup_->addChild(geode);
+    }
 }
 
 void GraphScene::attachGraphShader(osg::Node* node)
@@ -577,47 +951,6 @@ osg::Group* GraphScene::createPostProcessing(osg::Node* subgraph, int width, int
     return postProcessingGroup;
 }
 
-void GraphScene::initializeInDirLine()
-{
-    if (inDirGeode_.valid()) {
-        accessoryGroup_->removeChild(inDirGeode_.get());
-    }
-
-    inDirGeode_ = new osg::Geode;
-    inDirGeode_->setName("inDirGeode_");
-    attachColorShader(inDirGeode_.get());
-    accessoryGroup_->addChild(inDirGeode_.get());
-}
-
-void GraphScene::updateInDirLine(const lb::Vec3& inDir)
-{
-    osg::Vec3 dir;
-    if (inDir[2] >= 0.0) {
-        dir = modifyLineLength(inDir);
-    }
-    else {
-        dir = osg::Vec3(0.0, 0.0, 1.0);
-        lbError << "[GraphScene::updateInDirLine] Negative Z-component: " << inDir;
-    }
-
-    osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir,
-                                                         osg::Vec4(1.0, 0.0, 0.0, 1.0));
-    inDirGeode_->removeDrawables(0, inDirGeode_->getNumDrawables());
-    inDirGeode_->addDrawable(geom);
-}
-
-void GraphScene::initializeInOutDirLine()
-{
-    if (inOutDirGeode_.valid()) {
-        accessoryGroup_->removeChild(inOutDirGeode_.get());
-    }
-
-    inOutDirGeode_ = new osg::Geode;
-    inOutDirGeode_->setName("inOutDirGeode_");
-    attachColorShader(inOutDirGeode_.get());
-    accessoryGroup_->addChild(inOutDirGeode_.get());
-}
-
 osg::Vec3 GraphScene::modifyLineLength(const lb::Vec3& pos)
 {
     osg::Vec3 newPos(pos[0], pos[1], pos[2]);
@@ -642,52 +975,47 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
     const lb::SampleSet* ss = data_->getSampleSet();
     if (!ss) return;
 
-    bool nodeValid = (bxdfMeshGeode_.valid() &&
-                      bxdfPointGeode_.valid() &&
-                      bxdfTextGeode_.valid());
+    setupBrdfGeode();
+
     bool paramValid = (inThetaIndex < data_->getNumInTheta() &&
                        inPhiIndex   < data_->getNumInPhi() &&
                        wavelengthIndex < ss->getNumWavelengths());
-    if (!nodeValid || !paramValid) return;
+    if (!paramValid) return;
 
-    if (inThetaIndex != -1) {
-        inTheta_ = data_->getIncomingPolarAngle(inThetaIndex);
-    }
-
-    if (inPhiIndex != -1) {
-        inPhi_ = data_->getIncomingAzimuthalAngle(inPhiIndex);
-    }
-
-    // Update the line of incoming direction.
-    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
-    updateInDirLine(inDir);
+    float inTheta, inPhi;
+    lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
 
     const lb::Brdf* brdf = data_->getBrdfData();
     if (!brdf) return;
 
     lb::DataType dataType = data_->getDataType();
 
-    bxdfMeshGeode_->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::POLYGONOFFSET);
+    osg::Geode* meshGeode = brdfMeshGroup_->getChild(0)->asGeode();
+    meshGeode->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::POLYGONOFFSET);
 
     switch (displayMode_) {
         case PHOTOMETRY_DISPLAY: {
-            setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, wavelengthIndex, dataType, true);
+            setupBrdfMeshGeometry(*brdf, inTheta, inPhi, wavelengthIndex, dataType, true);
+            updateInOutDirLine();
+
             oitUsed_ = false;
             break;
         }
         case NORMAL_DISPLAY: {
-            setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
+            setupBrdfMeshGeometry(*brdf, inTheta, inPhi, wavelengthIndex, dataType);
+            updateInOutDirLine();
+
             oitUsed_ = false;
             break;
         }
         case ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
-            clearInDirLine();
+            inOutDirGroup_->removeChildren(0, inOutDirGroup_->getNumChildren());
 
             float curInTheta;
             #pragma omp parallel for private(curInTheta)
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
                 curInTheta = data_->getIncomingPolarAngle(i);
-                setupBrdfMeshGeometry(*brdf, curInTheta, inPhi_, wavelengthIndex, dataType);
+                setupBrdfMeshGeometry(*brdf, curInTheta, inPhi, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
@@ -695,17 +1023,20 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 float inThetaRatio = curInTheta / lb::PI_2_F;
                 osg::Vec4 color(scene_util::hueToRgb(inThetaRatio), 1.0);
 
-                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi_);
+                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi);
                 osg::Vec3 dir = modifyLineLength(curInDir);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 2.0f);
-                inDirGeode_->addDrawable(geom);
+
+                osg::Geode* geode = new osg::Geode;
+                geode->addDrawable(geom);
+                inOutDirGroup_->addChild(geode);
             }
 
             oitUsed_ = true;
             break;
         }
         case ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
-            clearInDirLine();
+            inOutDirGroup_->removeChildren(0, inOutDirGroup_->getNumChildren());
 
             float endInPhi = data_->getIncomingAzimuthalAngle(data_->getNumInPhi() - 1)
                            - lb::SphericalCoordinateSystem::MAX_ANGLE1;
@@ -715,7 +1046,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
             #pragma omp parallel for private(curInPhi)
             for (int i = 0; i < numInPhi; ++i) {
                 curInPhi = data_->getIncomingAzimuthalAngle(i);
-                setupBrdfMeshGeometry(*brdf, inTheta_, curInPhi, wavelengthIndex, dataType);
+                setupBrdfMeshGeometry(*brdf, inTheta, curInPhi, wavelengthIndex, dataType);
             }
 
             for (int i = 0; i < numInPhi; ++i) {
@@ -723,10 +1054,13 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                 float inPhiRatio = curInPhi / lb::TAU_F;
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
-                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, curInPhi);
+                lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta, curInPhi);
                 osg::Vec3 dir = modifyLineLength(curInDir);
                 osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color, 2.0f);
-                inDirGeode_->addDrawable(geom);
+
+                osg::Geode* geode = new osg::Geode;
+                geode->addDrawable(geom);
+                inOutDirGroup_->addChild(geode);
             }
 
             oitUsed_ = true;
@@ -735,33 +1069,41 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_WAVELENGTHS_DISPLAY: {
             #pragma omp parallel for
             for (int i = 0; i < data_->getNumWavelengths(); ++i) {
-                setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, i, dataType);
+                setupBrdfMeshGeometry(*brdf, inTheta, inPhi, i, dataType);
             }
+            updateInOutDirLine();
             oitUsed_ = true;
             break;
         }
         case SAMPLE_POINTS_DISPLAY: {
-            setupBrdfMeshGeometry(*brdf, inTheta_, inPhi_, wavelengthIndex, dataType);
-            bxdfMeshGeode_->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
+            setupBrdfMeshGeometry(*brdf, inTheta, inPhi, wavelengthIndex, dataType);
+            meshGeode->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
                                                                         osg::StateAttribute::ON);
             if (!data_->isInDirDependentCoordinateSystem()) break;
 
             // Update point geometry.
-            osg::Geometry* pointGeom = scene_util::createBrdfPointGeometry(*brdf,
-                                                                           inThetaIndex, inPhiIndex, wavelengthIndex,
-                                                                           logPlotUsed_, baseOfLogarithm_, dataType);
-            bxdfPointGeode_->removeDrawables(0, bxdfPointGeode_->getNumDrawables());
-            bxdfPointGeode_->addDrawable(pointGeom);
+            osg::Geometry* geom = scene_util::createBrdfPointGeometry(*brdf,
+                                                                      inThetaIndex, inPhiIndex, wavelengthIndex,
+                                                                      logPlotUsed_, baseOfLogarithm_, dataType);
+            osg::Geode* geode = brdfPointGroup_->getChild(0)->asGeode();
+            geode->addDrawable(geom);
+
+            updateInOutDirLine();
+
             oitUsed_ = false;
             break;
         }
         case SAMPLE_POINT_LABELS_DISPLAY: {
             if (!data_->isInDirDependentCoordinateSystem()) break;
 
-            scene_util::attachBrdfTextLabels(bxdfTextGeode_.get(),
+            osg::Geode* geode = brdfTextGroup_->getChild(0)->asGeode();
+            scene_util::attachBrdfTextLabels(geode,
                                              *brdf,
                                              inThetaIndex, inPhiIndex, wavelengthIndex,
                                              logPlotUsed_, baseOfLogarithm_, dataType);
+
+            updateInOutDirLine();
+
             oitUsed_ = false;
             break;
         }
@@ -851,18 +1193,20 @@ void GraphScene::setupBrdfMeshGeometry(const lb::Brdf& brdf, float inTheta, floa
         meshGeom->setColorArray(colors, osg::Array::BIND_OVERALL);
     }
 
-    #pragma omp critical
-    bxdfMeshGeode_->addDrawable(meshGeom);
+    if (osg::Geode* geode = brdfMeshGroup_->getChild(0)->asGeode()) {
+        #pragma omp critical
+        geode->addDrawable(meshGeom);
+    }
 }
 
 void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex)
 {
     const lb::SampleSet2D* ss2;
     if (data_->getSpecularReflectances()) {
-        ss2 = data_->getSpecularReflectances();
+        ss2 = data_->getSpecularReflectances().get();
     }
     else if (data_->getSpecularTransmittances()) {
-        ss2 = data_->getSpecularTransmittances();
+        ss2 = data_->getSpecularTransmittances().get();
     }
     else {
         return;
@@ -873,31 +1217,16 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
                        wavelengthIndex < ss2->getNumWavelengths());
     if (!paramValid) return;
 
-    if (inThetaIndex != -1) {
-        inTheta_ = ss2->getTheta(inThetaIndex);
-    }
+    specularReflectanceGroup_->removeChildren(0, specularReflectanceGroup_->getNumChildren());
 
-    if (inPhiIndex != -1) {
-        inPhi_ = ss2->getPhi(inPhiIndex);
-    }
+    osg::Geode* geode = new osg::Geode;
+    geode->setNodeMask(SPECULAR_REFLECTANCE_MASK);
+    specularReflectanceGroup_->addChild(geode);
 
-    if (specularReflectanceGeode_.valid()) {
-        bsdfGroup_->removeChild(specularReflectanceGeode_.get());
-    }
-
-    specularReflectanceGeode_ = new osg::Geode;
-    specularReflectanceGeode_->setName("specularReflectanceGeode_");
-    specularReflectanceGeode_->setNodeMask(SPECULAR_REFLECTANCE_MASK);
-    bsdfGroup_->addChild(specularReflectanceGeode_.get());
-
-    // Update the line of incoming direction.
-    lb::Vec3 inDir = lb::SphericalCoordinateSystem::toXyz(inTheta_, inPhi_);
-    updateInDirLine(inDir);
-
-    const lb::Spectrum& sp = ss2->getSpectrum(inTheta_, inPhi_);
+    const lb::Spectrum& sp = ss2->getSpectrum(pickedInDir_);
     float value;
     if (displayMode_ == PHOTOMETRY_DISPLAY) {
-        value = scene_util::spectrumToY(sp, ss2->getColorModel(), ss2->getWavelengths());
+        value = lb::SpectrumUtility::spectrumToY(sp, ss2->getColorModel(), ss2->getWavelengths());
     }
     else {
         value = sp[wavelengthIndex];
@@ -906,10 +1235,10 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     // Update specular reflectance.
     lb::Vec3 outDir;
     if (data_->getSpecularReflectances()) {
-        outDir = lb::reflect(inDir, lb::Vec3(0.0, 0.0, 1.0));
+        outDir = lb::reflect(pickedInDir_, lb::Vec3(0.0, 0.0, 1.0));
     }
     else {
-        outDir = -inDir;
+        outDir = -pickedInDir_;
     }
     lb::Vec3 outPos = outDir * value;
     osg::Vec3Array* vertices = new osg::Vec3Array;
@@ -917,7 +1246,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
     vertices->push_back(osg::Vec3(outPos[0], outPos[1], outPos[2]));
     osg::Geometry* spRefGeometry = new osg::Geometry;
     spRefGeometry->setVertexArray(vertices);
-    specularReflectanceGeode_->addDrawable(spRefGeometry);
+    geode->addDrawable(spRefGeometry);
 
     osg::DrawElementsUByte* spRefLine = new osg::DrawElementsUByte(osg::PrimitiveSet::LINES, 0);
     spRefLine->push_back(0);
@@ -934,7 +1263,7 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
 
     osg::Depth* depth = new osg::Depth;
     depth->setFunction(osg::Depth::LESS);
-    depth->setRange(0.0, 0.999999);
+    depth->setRange(0.0, DEPTH_ZFAR_2);
     stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
     osg::LineWidth* lineWidth = new osg::LineWidth;
@@ -944,19 +1273,8 @@ void GraphScene::updateSpecularReflectanceGeometry(int inThetaIndex, int inPhiIn
 
 void GraphScene::clearGraphGeometry()
 {
-    if (bxdfMeshGeode_.valid()) {
-        bxdfMeshGeode_->removeDrawables(0, bxdfMeshGeode_->getNumDrawables());
-    }
-
-    if (bxdfPointGeode_.valid()) {
-        bxdfPointGeode_->removeDrawables(0, bxdfPointGeode_->getNumDrawables());
-    }
-
-    if (bxdfTextGeode_.valid()) {
-        bxdfTextGeode_->removeDrawables(0, bxdfTextGeode_->getNumDrawables());
-    }
-
-    if (specularReflectanceGeode_.valid()) {
-        bsdfGroup_->removeChild(specularReflectanceGeode_.get());
-    }
+    brdfMeshGroup_->removeChildren(0, brdfMeshGroup_->getNumChildren());
+    brdfPointGroup_->removeChildren(0, brdfPointGroup_->getNumChildren());
+    brdfTextGroup_->removeChildren(0, brdfTextGroup_->getNumChildren());
+    specularReflectanceGroup_->removeChildren(0, specularReflectanceGroup_->getNumChildren());
 }
