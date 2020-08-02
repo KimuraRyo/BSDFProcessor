@@ -1379,6 +1379,58 @@ QString MainWindow::getDisplayModeName(GraphScene::DisplayMode mode)
     }
 }
 
+bool MainWindow::openSsdd(const QString& fileName)
+{
+    lb::Material* material = lb::SsddReader::read(fileName.toLocal8Bit().data());
+    if (!material) return false;
+
+    OpenSsddDialog dialog(this);
+
+    std::shared_ptr<lb::Bsdf> bsdf      = material->getBsdf();
+    std::shared_ptr<lb::SampleSet2D> sr = material->getSpecularReflectances();
+    std::shared_ptr<lb::SampleSet2D> st = material->getSpecularTransmittances();
+
+    std::shared_ptr<lb::Brdf> brdf;
+    std::shared_ptr<lb::Btdf> btdf;
+    if (bsdf) {
+        brdf = material->getBsdf()->getBrdf();
+        btdf = material->getBsdf()->getBtdf();
+
+        if (brdf) { dialog.addBrdfItem(); }
+        if (btdf) { dialog.addBtdfItem(); }
+    }
+
+    if (sr) { dialog.addSpecularReflectanceItem(); }
+    if (st) { dialog.addSpecularTransmittanceItem(); }
+
+    if (dialog.hasMultipleItems()) {
+        if (dialog.exec() == QDialog::Rejected) {
+            delete material;
+            return false;
+        }
+    }
+
+    if (dialog.isBrdf()) {
+        setupBrdf(brdf, lb::BRDF_DATA);
+    }
+
+    if (dialog.isBtdf()) {
+        setupBrdf(btdf->getBrdf(), lb::BTDF_DATA);
+    }
+
+    if (dialog.isSpecularReflectance()) {
+        setupSpecularReflectances(sr, lb::SPECULAR_REFLECTANCE_DATA);
+    }
+
+    if (dialog.isSpecularTransmittance()) {
+        setupSpecularReflectances(st, lb::SPECULAR_TRANSMITTANCE_DATA);
+    }
+
+    delete material;
+
+    return true;
+}
+
 bool MainWindow::openDdrDdt(const QString& fileName, lb::DataType dataType)
 {
     lb::SpecularCoordinatesBrdf* brdf = lb::DdrReader::read(fileName.toLocal8Bit().data());
@@ -1478,21 +1530,110 @@ bool MainWindow::openMerlBinary(const QString& fileName)
 
 void MainWindow::exportFile(const QString& fileName)
 {
-    lb::DataType dataType;
-    if (fileName.endsWith(".ddr")) {
-        dataType = lb::BRDF_DATA;
+    lb::FileType fileType;
+    if (fileName.endsWith(".ssdd")) {
+        fileType = lb::SSDD_FILE;
+    }
+    else if (fileName.endsWith(".ddr")) {
+        fileType = lb::INTEGRA_DDR_FILE;
     }
     else if (fileName.endsWith(".ddt")) {
-        dataType = lb::BTDF_DATA;
+        fileType = lb::INTEGRA_DDT_FILE;
     }
     else {
         lbError << "[MainWindow::exportFile] Invalid file extension: " << fileName.toLocal8Bit().data();
         return;
     }
 
-    if (exportDdrDdt(fileName, dataType)) {
+    bool saved;
+    switch (fileType) {
+        case lb::SSDD_FILE:
+            saved = exportSsdd(fileName);
+            break;
+        case lb::INTEGRA_DDR_FILE:
+            saved = exportDdrDdt(fileName, lb::BRDF_DATA);
+            break;
+        case lb::INTEGRA_DDT_FILE:
+            saved = exportDdrDdt(fileName, lb::BTDF_DATA);
+            break;
+        default:
+            saved = false;
+            break;
+    }
+
+    if (!saved) {
         lbInfo << "[MainWindow::exportFile] fileName: " << fileName.toLocal8Bit().data();
     }
+}
+
+std::shared_ptr<lb::Brdf> reduceAnglesUsingBilateralSymmetry(std::shared_ptr<lb::Brdf> brdf, float threshold)
+{
+    const lb::SampleSet* ss = brdf->getSampleSet();
+
+    lb::Spectrum diffSp = lb::computeBilateralSymmetry(*brdf);
+    float y = lb::SpectrumUtility::spectrumToY(diffSp, ss->getColorModel(), ss->getWavelengths());
+    if (y < threshold) {
+        brdf.reset(lb::reduceAnglesUsingBilateralSymmetry(*brdf));
+    }
+
+    return brdf;
+};
+
+std::shared_ptr<lb::Brdf> reduceAnglesUsingReciprocity(std::shared_ptr<lb::Brdf> brdf, float threshold)
+{
+    lb::HalfDifferenceCoordinatesBrdf* hdBrdf = dynamic_cast<lb::HalfDifferenceCoordinatesBrdf*>(brdf.get());
+
+    if (!hdBrdf) return brdf;
+
+    const lb::SampleSet* ss = brdf->getSampleSet();
+
+    lb::Spectrum diffSp = lb::computeReciprocity(*brdf);
+    float y = lb::SpectrumUtility::spectrumToY(diffSp, ss->getColorModel(), ss->getWavelengths());
+    if (y < threshold) {
+        brdf.reset(lb::reduceAnglesUsingReciprocity(*hdBrdf));
+    }
+
+    return brdf;
+};
+
+bool MainWindow::exportSsdd(const QString& fileName)
+{
+    constexpr float threshold = 0.005f;
+
+    std::shared_ptr<lb::Brdf> brdf = data_->getBrdf();
+    if (brdf) {
+        brdf = reduceAnglesUsingBilateralSymmetry(brdf, threshold);
+        brdf = reduceAnglesUsingReciprocity(brdf, threshold);
+    }
+
+    std::shared_ptr<lb::Btdf> btdf = data_->getBtdf();
+    if (btdf) {
+        std::shared_ptr<lb::Brdf> btdfData;
+        btdfData = reduceAnglesUsingBilateralSymmetry(btdf->getBrdf(), threshold);
+        btdfData = reduceAnglesUsingReciprocity(btdfData, threshold);
+
+        if (btdfData != btdf->getBrdf()) {
+            btdf.reset(new lb::Btdf(btdfData));
+        }
+    }
+
+    std::shared_ptr<lb::Bsdf> bsdf = std::make_shared<lb::Bsdf>(brdf, btdf);
+
+    std::shared_ptr<lb::SampleSet2D> specR;
+    if (data_->getSpecularReflectances()) {
+        specR = std::make_shared<lb::SampleSet2D>(*data_->getSpecularReflectances());
+    }
+
+    std::shared_ptr<lb::SampleSet2D> specT;
+    if (data_->getSpecularTransmittances()) {
+        specT = std::make_shared<lb::SampleSet2D>(*data_->getSpecularTransmittances());
+    }
+
+    std::unique_ptr<lb::Material> mat(new lb::Material(bsdf, specR, specT));
+
+    lb::SsddWriter::DataFormat format = lb::SsddWriter::DataFormat::ASCII_DATA;
+    std::string comments("Software: BSDFProcessor-" + std::string(getVersion()));
+    return lb::SsddWriter::write(fileName.toLocal8Bit().data(), *mat, format, comments);
 }
 
 bool MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
