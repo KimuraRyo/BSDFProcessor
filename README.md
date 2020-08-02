@@ -53,7 +53,7 @@ BSDF Processor uses the following open source libraries:
 
 * [libbsdf][1]
 * [Eigen 3][2]
-* [OpenSceneGraph][3]
+* [OpenSceneGraph][3] (v3.6.4 is recommended instead of v3.6.5 to avoid the issue of osgText::FadeText openscenegraph/OpenSceneGraph#946)
 * [Qt 5][4]
 
 CMake is used as the build system.
