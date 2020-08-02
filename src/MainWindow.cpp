@@ -26,14 +26,17 @@
 #include <libbsdf/Reader/LightToolsBsdfReader.h>
 #include <libbsdf/Reader/MerlBinaryReader.h>
 #include <libbsdf/Reader/SdrReader.h>
+#include <libbsdf/Reader/SsddReader.h>
 #include <libbsdf/Reader/ZemaxBsdfReader.h>
 
 #include <libbsdf/Writer/DdrWriter.h>
+#include <libbsdf/Writer/SsddWriter.h>
 
 #include "AboutDialog.h"
 #include "DoubleValidator.h"
 #include "OpenAstmDialog.h"
 #include "OpenLightToolsBsdfDialog.h"
+#include "OpenSsddDialog.h"
 #include "SceneUtil.h"
 #include "Version.h"
 
@@ -152,45 +155,42 @@ void MainWindow::openFile(const QString& fileName)
 
     lb::FileType fileType = lb::reader_utility::classifyFile(fileName.toLocal8Bit().data());
     switch (fileType) {
-        case lb::ASTM_FILE: {
+        case lb::ASTM_FILE:
             loaded = openAstm(fileName);
             break;
-        }
-        case lb::INTEGRA_DDR_FILE: {
+        case lb::INTEGRA_DDR_FILE:
             loaded = openDdrDdt(fileName, lb::BRDF_DATA);
             break;
-        }
-        case lb::INTEGRA_DDT_FILE: {
+        case lb::INTEGRA_DDT_FILE:
             loaded = openDdrDdt(fileName, lb::BTDF_DATA);
             break;
-        }
-        case lb::INTEGRA_SDR_FILE: {
+        case lb::INTEGRA_SDR_FILE:
             loaded = openSdrSdt(fileName, lb::SPECULAR_REFLECTANCE_DATA);
             break;
-        }
-        case lb::INTEGRA_SDT_FILE: {
+        case lb::INTEGRA_SDT_FILE:
             loaded = openSdrSdt(fileName, lb::SPECULAR_TRANSMITTANCE_DATA);
             break;
-        }
-        case lb::LIGHTTOOLS_FILE: {
+        case lb::LIGHTTOOLS_FILE:
             loaded = openLightToolsBsdf(fileName);
             break;
-        }
-        case lb::ZEMAX_FILE: {
-            loaded = openZemaxBsdf(fileName);
-            break;
-        }
-        case lb::MERL_BINARY_FILE: {
+        case lb::MERL_BINARY_FILE:
             loaded = openMerlBinary(fileName);
             break;
-        }
-        default: {
+        case lb::SSDD_FILE:
+            loaded = openSsdd(fileName);
             break;
-        }
+        case lb::ZEMAX_FILE:
+            loaded = openZemaxBsdf(fileName);
+            break;
+        default:
+            break;
     }
 
     if (!loaded) {
         QMessageBox::warning(this, qApp->applicationName(), "Failed to load \"" + fileName + "\"");
+        lbWarn
+            << "[MainWindow::openFile] Failed to load: " << fileName.toLocal8Bit().data()
+            << " (" << timer.elapsed() * 0.001f << "(s)" << ")";
         return;
     }
 
@@ -276,14 +276,15 @@ void MainWindow::updateBrdf()
 void MainWindow::openBxdfUsingDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(this, "Open BRDF/BTDF File", QString(),
-                                                    "BxDF Files (*.ddr *.ddt *.sdr *.sdt *.bsdf *.astm *.binary);;"
-                                                    "Integra DDR Files (*.ddr);;"
-                                                    "Integra DDT Files (*.ddt);;"
-                                                    "Integra SDR Files (*.sdr);;"
-                                                    "Integra SDR Files (*.sdt);;"
-                                                    "LightTools/Zemax BSDF Files (*.bsdf);;"
-                                                    "ASTM Files (*.astm);;"
-                                                    "MERL binary Files (*.binary)");
+                                                    "Surface Scattering Files (*.ssdd *.ddr *.ddt *.sdr *.sdt *.bsdf *.astm *.binary);;"
+                                                    "SSDD (*.ssdd);;"
+                                                    "Integra DDR (*.ddr);;"
+                                                    "Integra DDT (*.ddt);;"
+                                                    "Integra SDR (*.sdr);;"
+                                                    "Integra SDR (*.sdt);;"
+                                                    "LightTools/Zemax (*.bsdf);;"
+                                                    "ASTM E1392-96(2002) (*.astm);;"
+                                                    "MERL binary (*.binary)");
 
     if (fileName.isEmpty()) return;
 
@@ -306,18 +307,23 @@ void MainWindow::openCcbxdfUsingDialog()
     cosineCorrected_ = false;
 }
 
-void MainWindow::exportBxdfUsingDialog()
+void MainWindow::exportDataUsingDialog()
 {
-    if (!data_->getBrdf() && !data_->getBtdf()) return;
+    if (data_->isEmpty()) return;
 
-    QString fileName;
+    QString ssddFilterSSDD("SSDD (*.ssdd)");
+
+    QString ddrFilter;
     if (data_->getBrdf()) {
-        fileName = QFileDialog::getSaveFileName(this, "Export BxDF File", QString(), "Integra DDR Files (*.ddr)");
+        ddrFilter = "Integra DDR (*.ddr)";
     }
-    else {
-        fileName = QFileDialog::getSaveFileName(this, "Export BxDF File", QString(), "Integra DDT Files (*.ddt)");
+    else if (data_->getBtdf()) {
+        ddrFilter = "Integra DDT (*.ddt)";
     }
 
+    QString filter = ssddFilterSSDD + ";;" + ddrFilter;
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Export Surface Scattering File", QString(), filter);
     if (fileName.isEmpty()) return;
 
     exportFile(fileName);

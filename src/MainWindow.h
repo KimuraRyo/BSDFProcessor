@@ -114,6 +114,7 @@ private:
 
     QString getDisplayModeName(GraphScene::DisplayMode mode);
 
+    bool openSsdd(const QString& fileName);
     bool openDdrDdt(const QString& fileName, lb::DataType dataType);
     bool openSdrSdt(const QString& fileName, lb::DataType dataType);
     bool openLightToolsBsdf(const QString& fileName);
@@ -122,6 +123,7 @@ private:
     bool openMerlBinary(const QString& fileName);
 
     void exportFile(const QString& fileName);
+    bool exportSsdd(const QString& fileName);
     bool exportDdrDdt(const QString& fileName, lb::DataType dataType);
 
     osgViewer::View* getGraphView() const { return ui_->graphOpenGLWidget->getViewer(); }
