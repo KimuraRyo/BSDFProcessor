@@ -53,7 +53,7 @@ BSDF Processor uses the following open source libraries:
 
 * [libbsdf][1]
 * [Eigen 3][2]
-* [OpenSceneGraph][3] (v3.6.4 is recommended instead of v3.6.5 to avoid the issue of osgText::FadeText openscenegraph/OpenSceneGraph#946)
+* [OpenSceneGraph][3] (v3.6.4 is recommended instead of v3.6.5 to avoid the [issue][10] of osgText::FadeText)
 * [Qt 5][4]
 
 CMake is used as the build system.
@@ -71,3 +71,4 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 [7]: http://www.graphics.cornell.edu/online/measurements/reflectance/
 [8]: http://www.merl.com/brdf
 [9]: http://www.rpcphotonics.com/bsdf-data-optical-diffusers/
+[10]: https://github.com/openscenegraph/OpenSceneGraph/issues/946
