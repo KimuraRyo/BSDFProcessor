@@ -37,6 +37,7 @@
 #include "OpenAstmDialog.h"
 #include "OpenLightToolsBsdfDialog.h"
 #include "OpenSsddDialog.h"
+#include "Settings.h"
 #include "SceneUtil.h"
 #include "Version.h"
 
@@ -114,6 +115,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     data_.reset(new MaterialData);
     graphScene_.reset(new GraphScene);
     renderingScene_.reset(new RenderingScene);
+    readSettings();
     graphScene_->setMaterialData(data_.get());
     graphScene_->createAxisAndScale();
     ui_->graphOpenGLWidget->setGraphScene(graphScene_.get());
@@ -811,22 +813,16 @@ void MainWindow::clearFileType()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    QSettings settings;
-    settings.setValue("MainWindow/geometry", saveGeometry());
-    settings.setValue("MainWindow/windowState", saveState());
-    settings.setValue("GraphWidget/logPlot", ui_->graphOpenGLWidget->getLogPlotAction()->isChecked());
+    Settings settings;
+    settings.save(*this);
 
     QMainWindow::closeEvent(event);
 }
 
 void MainWindow::readSettings()
 {
-    QSettings settings;
-    restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
-    restoreState(settings.value("MainWindow/windowState").toByteArray());
-
-    bool logPlotUsed = settings.value("GraphWidget/logPlot", false).toBool();
-    ui_->graphOpenGLWidget->getLogPlotAction()->setChecked(logPlotUsed);
+    Settings settings;
+    settings.restore(this);
 }
 
 void MainWindow::createActions()
