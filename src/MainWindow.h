@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -39,18 +39,25 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
+    const GraphScene* getGraphScene() const { return graphScene_.get(); }
+    GraphScene*       getGraphScene()       { return graphScene_.get(); }
+
+    const TableView* getTableView() const { return ui_->tableGraphicsView; }
+    TableView*       getTableView()       { return ui_->tableGraphicsView; }
+
 public slots:
     void openFile(const QString& fileName);
 
 private slots:
     bool setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType);
+    bool setupSpecularReflectances(std::shared_ptr<lb::SampleSet2D> ss2, lb::DataType dataType);
     void setupBrdf(std::shared_ptr<lb::Brdf> brdf);
     void updateBrdf();
 
     void openBxdfUsingDialog();
     void openCcbxdfUsingDialog();
 
-    void exportBxdfUsingDialog();
+    void exportDataUsingDialog();
 
     void viewFront();
     void viewBack();
@@ -70,8 +77,7 @@ private slots:
     void updateIncomingAzimuthalAngle();
     void updateWavelength(int index);
 
-    void updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir);
-    void updateInDirection(const lb::Vec3& inDir);
+    void updateInOutDir(const lb::Vec3& inDir, const lb::Vec3& outDir, bool graphUpdateRequested = true);
     void updateLightPolarAngle(int angle);
     void updateLightPolarAngle(double angle);
     void updateLightAzimuthalAngle(int angle);
@@ -80,10 +86,6 @@ private slots:
     void updateLightIntensity(double intensity);
     void updateEnvironmentIntensity(int intensity);
     void updateEnvironmentIntensity(double intensity);
-
-    void displayPickedValue(const osg::Vec3& position);
-    void clearPickedValue();
-    void displayReflectance();
 
     void updateGlossyIntensity(int intensity);
     void updateGlossyIntensity(double intensity);
@@ -109,9 +111,13 @@ private:
     void initializeDisplayModeUi(QString modeName);
     void initializeWavelengthUi(int index);
 
-    bool updateIncomingPolarAngleUi(float* inTheta);
-    bool updateIncomingAzimuthalAngleUi(float* inPhi);
-    bool updatePickedReflectanceUi();
+    void adjustIncomingPolarAngleSlider(float inTheta);
+    void adjustIncomingAzimuthalAngleSlider(float inPhi);
+
+    bool updateIncomingPolarAngle(float* inTheta);
+    bool updateIncomingAzimuthalAngle(float* inPhi);
+
+    void updateInDir(const lb::Vec3& inDir);
 
     QString getDisplayModeName(GraphScene::DisplayMode mode);
 

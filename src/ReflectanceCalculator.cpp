@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2019 Kimura Ryo                                  //
+// Copyright (C) 2016-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -20,7 +20,7 @@
 #endif
 
 ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   reflectances,
-                                             const std::shared_ptr<lb::Brdf>    brdf)
+                                             std::shared_ptr<const lb::Brdf>    brdf)
                                              : reflectances_(reflectances),
                                                brdf_(brdf),
                                                stopped_(false)
@@ -29,7 +29,7 @@ ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   
 }
 
 ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   reflectances,
-                                             const std::shared_ptr<lb::Btdf>    btdf)
+                                             std::shared_ptr<const lb::Btdf>    btdf)
                                              : reflectances_(reflectances),
                                                btdf_(btdf),
                                                stopped_(false)
@@ -46,7 +46,7 @@ void ReflectanceCalculator::computeReflectances()
 {
     lbInfo << "[ReflectanceCalculator::computeReflectances] Thread: " << QThread::currentThread();
 
-    lb::Brdf* brdf;
+    const lb::Brdf* brdf;
     if (brdf_) {
         brdf = brdf_.get();
     }
@@ -78,10 +78,16 @@ void ReflectanceCalculator::computeReflectances()
 #if defined(USE_INTEGRATOR)
         sp = integrator.computeReflectance(*brdf, inDir);
 #else
-        if (auto spheBrdf = dynamic_cast<lb::SphericalCoordinatesBrdf*>(brdf)) {
+        auto spheBrdf = dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf);
+        auto specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(brdf);
+        if (spheBrdf &&
+            spheBrdf->getNumOutTheta() >= 2 &&
+            spheBrdf->getNumOutPhi() >= 2) {
             sp = lb::computeReflectance(*spheBrdf, inThIndex, inPhIndex);
         }
-        else if (auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf)) {
+        else if (specBrdf &&
+                 specBrdf->getNumSpecTheta() >= 2 &&
+                 specBrdf->getNumSpecPhi() >= 2) {
             sp = lb::computeReflectance(*specBrdf, inThIndex, inPhIndex);
         }
         else {

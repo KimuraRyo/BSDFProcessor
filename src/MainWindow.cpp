@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -132,7 +132,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     ui_->renderingOpenGLWidget->setRenderingScene(renderingScene_.get());
 
     createActions();
-    readSettings();
 
     lbInfo << "libbsdf-" << lb::getVersion();
     lbInfo << "OpenSceneGraph-" << osgGetVersion();
@@ -237,7 +236,6 @@ bool MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType
     else if (dataType == lb::BTDF_DATA) {
         data_->setBtdf(std::shared_ptr<lb::Btdf>(new lb::Btdf(brdf)));
     }
-    graphScene_->createBrdfGeode();
 
     renderingScene_->setData(brdf.get(), data_->getReflectances(), dataType);
 
@@ -308,7 +306,6 @@ void MainWindow::updateBrdf()
         return;
     }
 
-    graphScene_->createBrdfGeode();
     renderingScene_->setData(data_->getBrdfData(), data_->getReflectances(), data_->getDataType());
 
     initializeUi();
@@ -467,8 +464,7 @@ void MainWindow::updateDisplayMode(QString modeName)
     }
     ui_->graphOpenGLWidget->updateView();
 
-    clearPickedValue();
-    displayReflectance();
+    pickDockWidget_->displayReflectance();
     createTable();
 }
 
@@ -485,21 +481,22 @@ void MainWindow::updateIncomingPolarAngle(int index)
     ui_->incomingPolarAngleLineEdit->setText(QString::number(inPolarDegree));
     ui_->incomingPolarAngleLineEdit->home(false);
 
-    clearPickedValue();
-    displayReflectance();
+    pickDockWidget_->clearPickedValue();
+    pickDockWidget_->displayReflectance();
 }
 
 void MainWindow::updateIncomingPolarAngle()
 {
     float inTheta;
-    if (!updateIncomingPolarAngleUi(&inTheta)) return;
+    if (!updateIncomingPolarAngle(&inTheta)) return;
 
     if (inTheta == graphScene_->getInTheta()) return;
 
     graphScene_->updateGraphGeometry(inTheta, graphScene_->getInPhi(), ui_->wavelengthSlider->value());
     ui_->graphOpenGLWidget->update();
 
-    clearPickedValue();
+    pickDockWidget_->clearPickedValue();
+    pickDockWidget_->displayReflectance();
 }
 
 void MainWindow::updateIncomingAzimuthalAngle(int index)
@@ -516,14 +513,14 @@ void MainWindow::updateIncomingAzimuthalAngle(int index)
     ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inAzimuthalDegree));
     ui_->incomingAzimuthalAngleLineEdit->home(false);
 
-    clearPickedValue();
-    displayReflectance();
+    pickDockWidget_->clearPickedValue();
+    pickDockWidget_->displayReflectance();
 }
 
 void MainWindow::updateIncomingAzimuthalAngle()
 {
     float inPhi;
-    if (!updateIncomingAzimuthalAngleUi(&inPhi)) return;
+    if (!updateIncomingAzimuthalAngle(&inPhi)) return;
 
     if (inPhi == graphScene_->getInPhi()) return;
 
@@ -531,7 +528,8 @@ void MainWindow::updateIncomingAzimuthalAngle()
     graphScene_->updateScaleInPlaneOfIncidence();
     ui_->graphOpenGLWidget->update();
 
-    clearPickedValue();
+    pickDockWidget_->clearPickedValue();
+    pickDockWidget_->displayReflectance();
 }
 
 void MainWindow::updateWavelength(int index)
@@ -552,21 +550,27 @@ void MainWindow::updateWavelength(int index)
     }
     ui_->graphOpenGLWidget->update();
 
-    clearPickedValue();
-    displayReflectance();
+    pickDockWidget_->updatePickedValue();
+    pickDockWidget_->displayReflectance();
     createTable();
 }
 
-void MainWindow::updateInOutDirection(const lb::Vec3& inDir, const lb::Vec3& outDir)
+void MainWindow::updateInOutDir(const lb::Vec3& inDir, const lb::Vec3& outDir, bool graphUpdateRequested)
 {
-    graphScene_->updateInOutDirLine(inDir, outDir, ui_->wavelengthSlider->value());
+    graphScene_->updateInOutDirLine(inDir, outDir);
     ui_->graphOpenGLWidget->update();
 
-    clearPickedValue();
+    pickDockWidget_->updatePickedValue(inDir, outDir);
+
+    if (graphUpdateRequested) {
+        updateInDir(inDir);
+    }
 }
 
-void MainWindow::updateInDirection(const lb::Vec3& inDir)
+void MainWindow::updateInDir(const lb::Vec3& inDir)
 {
+    if (inDir.isZero()) return;
+
     GraphScene::DisplayMode dm = graphScene_->getDisplayMode();
     if (dm == GraphScene::ALL_INCOMING_POLAR_ANGLES_DISPLAY ||
         dm == GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY ||
@@ -832,7 +836,7 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(ui_->controlDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(displayDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(ui_->renderingDockWidget->toggleViewAction());
-    ui_->viewMenu->addAction(ui_->informationDockWidget->toggleViewAction());
+    ui_->viewMenu->addAction(pickDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(ui_->tableDockWidget->toggleViewAction());
     ui_->viewMenu->addSeparator();
     ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
@@ -859,22 +863,22 @@ void MainWindow::createActions()
     connect(ui_->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 
     connect(ui_->graphOpenGLWidget, SIGNAL(fileDropped(QString)), this, SLOT(openFile(QString)));
-    connect(ui_->graphOpenGLWidget, SIGNAL(picked(osg::Vec3)),    this, SLOT(displayPickedValue(osg::Vec3)));
-    connect(ui_->graphOpenGLWidget, SIGNAL(clearPickedValue()),   this, SLOT(clearPickedValue()));
     connect(ui_->graphOpenGLWidget, SIGNAL(viewFront()),          this, SLOT(viewFront()));
+    connect(ui_->graphOpenGLWidget, SIGNAL(picked(osg::Vec3)),  pickDockWidget_, SLOT(updateOutDir(osg::Vec3)));
+    connect(ui_->graphOpenGLWidget, SIGNAL(clearPickedValue()), pickDockWidget_, SLOT(clearPickedValue()));
 
     connect(ui_->graphOpenGLWidget, SIGNAL(logPlotToggled(bool)),
             displayDockWidget_,     SLOT(toggleLogPlotCheckBox(bool)));
 
     connect(ui_->renderingOpenGLWidget, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
-            this,                       SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
-    connect(ui_->renderingOpenGLWidget, SIGNAL(inDirPicked(lb::Vec3)),
-            this,                       SLOT(updateInDirection(lb::Vec3)));
+            this,                       SLOT(updateInOutDir(lb::Vec3, lb::Vec3)));
+    connect(ui_->renderingOpenGLWidget, SIGNAL(clearPickedValue()),
+            pickDockWidget_,            SLOT(clearPickedValue()));
 
     connect(ui_->tableGraphicsView, SIGNAL(inOutDirPicked(lb::Vec3, lb::Vec3)),
-            this,                   SLOT(updateInOutDirection(lb::Vec3, lb::Vec3)));
-    connect(ui_->tableGraphicsView, SIGNAL(inDirPicked(lb::Vec3)),
-            this,                   SLOT(updateInDirection(lb::Vec3)));
+            this,                   SLOT(updateInOutDir(lb::Vec3, lb::Vec3)));
+    connect(ui_->tableGraphicsView, SIGNAL(clearPickedValue()),
+            pickDockWidget_,        SLOT(clearPickedValue()));
 
     connect(reflectanceModelDockWidget_,    SIGNAL(generated(std::shared_ptr<lb::Brdf>, lb::DataType)),
             this,                           SLOT(setupBrdf(std::shared_ptr<lb::Brdf>, lb::DataType)));
@@ -896,6 +900,8 @@ void MainWindow::createActions()
 
     connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), ui_->graphOpenGLWidget, SLOT(update()));
     connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this,                   SLOT(createTable()));
+
+    connect(pickDockWidget_, SIGNAL(redrawGraphRequested()), ui_->graphOpenGLWidget, SLOT(update()));
 }
 
 void MainWindow::initializeUi()
@@ -1045,8 +1051,6 @@ void MainWindow::initializeUi()
     maxGlossyShininess_ = 2.0;
     maxDiffuseIntensity_ = 2.0;
 
-    updateInOutDirection(lb::Vec3::Zero(), lb::Vec3::Zero());
-
     ui_->renderingOpenGLWidget->updateView();
 
     lb::Brdf* brdf = data_->getBrdfData();
@@ -1055,8 +1059,10 @@ void MainWindow::initializeUi()
         insertAngleDockWidget_->setBrdf(brdf);
     }
 
-    clearPickedValue();
-    displayReflectance();
+    updateInOutDir(lb::Vec3(0.0, 0.0, 1.0), lb::Vec3::Zero(), true);
+
+    pickDockWidget_->clearPickedValue();
+    pickDockWidget_->displayReflectance();
     createTable();
 }
 
@@ -1101,7 +1107,8 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
     }
     ui_->wavelengthLineEdit->setEnabled(true);
 
-    ui_->pickedValueLineEdit->setEnabled(true);
+    pickDockWidget_->enablePickedValueLineEdit(true);
+    pickDockWidget_->enablePickedReflectanceLineEdit(true);
 
     // Stop continuous update of the graph view.
     timer_.stop();
@@ -1126,7 +1133,12 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->incomingPolarAngleSlider->setDisabled(true);
         ui_->incomingPolarAngleLineEdit->clear();
         ui_->incomingPolarAngleLineEdit->setDisabled(true);
-        ui_->pickedValueLineEdit->setDisabled(true);
+
+        pickDockWidget_->clearPickedValueLineEdit();
+        pickDockWidget_->enablePickedValueLineEdit(false);
+
+        pickDockWidget_->clearPickedReflectanceLineEdit();
+        pickDockWidget_->enablePickedReflectanceLineEdit(false);
     }
     else if (modeName == getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY);
@@ -1134,7 +1146,12 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->incomingAzimuthalAngleSlider->setDisabled(true);
         ui_->incomingAzimuthalAngleLineEdit->clear();
         ui_->incomingAzimuthalAngleLineEdit->setDisabled(true);
-        ui_->pickedValueLineEdit->setDisabled(true);
+
+        pickDockWidget_->clearPickedValueLineEdit();
+        pickDockWidget_->enablePickedValueLineEdit(false);
+
+        pickDockWidget_->clearPickedReflectanceLineEdit();
+        pickDockWidget_->enablePickedReflectanceLineEdit(false);
     }
     else if (modeName == getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::ALL_WAVELENGTHS_DISPLAY);
@@ -1142,7 +1159,12 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->wavelengthSlider->setDisabled(true);
         ui_->wavelengthLineEdit->setDisabled(true);
         ui_->wavelengthLineEdit->clear();
-        ui_->pickedValueLineEdit->setDisabled(true);
+
+        pickDockWidget_->clearPickedValueLineEdit();
+        pickDockWidget_->enablePickedValueLineEdit(false);
+
+        pickDockWidget_->clearPickedReflectanceLineEdit();
+        pickDockWidget_->enablePickedReflectanceLineEdit(false);
     }
     else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::SAMPLE_POINTS_DISPLAY);
@@ -1151,6 +1173,8 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->incomingPolarAngleLineEdit->setStyleSheet(readOnlyStyleSheet);
         ui_->incomingAzimuthalAngleLineEdit->setReadOnly(true);
         ui_->incomingAzimuthalAngleLineEdit->setStyleSheet(readOnlyStyleSheet);
+
+        pickDockWidget_->clearPickedValue();
     }
     else if (modeName == getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY)) {
         graphScene_->setDisplayMode(GraphScene::SAMPLE_POINT_LABELS_DISPLAY);
@@ -1159,7 +1183,8 @@ void MainWindow::initializeDisplayModeUi(QString modeName)
         ui_->incomingPolarAngleLineEdit->setStyleSheet(readOnlyStyleSheet);
         ui_->incomingAzimuthalAngleLineEdit->setReadOnly(true);
         ui_->incomingAzimuthalAngleLineEdit->setStyleSheet(readOnlyStyleSheet);
-        ui_->pickedValueLineEdit->setDisabled(true);
+
+        pickDockWidget_->clearPickedValue();
 
         // Start continuous update of the graph view for osgText::FadeText.
         connect(&timer_, SIGNAL(timeout()), ui_->graphOpenGLWidget, SLOT(update()));
@@ -1206,7 +1231,49 @@ void MainWindow::initializeWavelengthUi(int index)
     }
 }
 
-bool MainWindow::updateIncomingPolarAngleUi(float* inTheta)
+void MainWindow::adjustIncomingPolarAngleSlider(float inTheta)
+{
+    if (data_->isEmpty()) return;
+
+    // Find the nearest index and adjust the slider.
+    int nearestIndex = 0;
+    lb::Arrayf inThetaArray = data_->getReflectances()->getThetaArray();
+    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE0;
+    for (int i = 0; i < inThetaArray.size(); ++i) {
+        float diff = std::abs(inTheta - inThetaArray[i]);
+        if (minDiff > diff) {
+            minDiff = diff;
+            nearestIndex = i;
+        }
+    }
+
+    signalEmittedFromUi_ = false;
+    ui_->incomingPolarAngleSlider->setValue(nearestIndex);
+    signalEmittedFromUi_ = true;
+}
+
+void MainWindow::adjustIncomingAzimuthalAngleSlider(float inPhi)
+{
+    if (data_->isEmpty()) return;
+
+    // Find the nearest index and adjust the slider.
+    int nearestIndex = 0;
+    lb::Arrayf inPhiArray = data_->getReflectances()->getPhiArray();
+    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE1;
+    for (int i = 0; i < inPhiArray.size(); ++i) {
+        float diff = std::abs(inPhi - inPhiArray[i]);
+        if (minDiff > diff) {
+            minDiff = diff;
+            nearestIndex = i;
+        }
+    }
+
+    signalEmittedFromUi_ = false;
+    ui_->incomingAzimuthalAngleSlider->setValue(nearestIndex);
+    signalEmittedFromUi_ = true;
+}
+
+bool MainWindow::updateIncomingPolarAngle(float* inTheta)
 {
     if (data_->isEmpty()) return false;
 
@@ -1235,25 +1302,12 @@ bool MainWindow::updateIncomingPolarAngleUi(float* inTheta)
 
     *inTheta = std::min(lb::toRadian(inThetaDegree), lb::SphericalCoordinateSystem::MAX_ANGLE0);
 
-    // Adjust the slider.
-    int nearestIndex = 0;
-    lb::Arrayf inThetaArray = data_->getReflectances()->getThetaArray();
-    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE0;
-    for (int i = 0; i < inThetaArray.size(); ++i) {
-        float diff = std::abs(*inTheta - inThetaArray[i]);
-        if (minDiff > diff) {
-            minDiff = diff;
-            nearestIndex = i;
-        }
-    }
-    signalEmittedFromUi_ = false;
-    ui_->incomingPolarAngleSlider->setValue(nearestIndex);
-    signalEmittedFromUi_ = true;
+    adjustIncomingPolarAngleSlider(*inTheta);
 
     return true;
 }
 
-bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
+bool MainWindow::updateIncomingAzimuthalAngle(float* inPhi)
 {
     if (data_->isEmpty()) return false;
 
@@ -1282,74 +1336,7 @@ bool MainWindow::updateIncomingAzimuthalAngleUi(float* inPhi)
 
     *inPhi = std::min(lb::toRadian(inPhiDegree), lb::SphericalCoordinateSystem::MAX_ANGLE1);
 
-    // Adjust the slider.
-    int nearestIndex = 0;
-    lb::Arrayf inPhiArray = data_->getReflectances()->getPhiArray();
-    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE1;
-    for (int i = 0; i < inPhiArray.size(); ++i) {
-        float diff = std::abs(*inPhi - inPhiArray[i]);
-        if (minDiff > diff) {
-            minDiff = diff;
-            nearestIndex = i;
-        }
-    }
-    signalEmittedFromUi_ = false;
-    ui_->incomingAzimuthalAngleSlider->setValue(nearestIndex);
-    signalEmittedFromUi_ = true;
-
-    return true;
-}
-
-bool MainWindow::updatePickedReflectanceUi()
-{
-    lb::Brdf* brdf = data_->getBrdfData();
-    lb::SampleSet2D* ss2 = 0;
-    if (!brdf) {
-        if (data_->getSpecularReflectances()) {
-            ss2 = data_->getSpecularReflectances();
-        }
-        else if (data_->getSpecularTransmittances()) {
-            ss2 = data_->getSpecularTransmittances();
-        }
-    }
-
-    if (!brdf && !ss2) {
-        return false;
-    }
-
-    float inTheta = graphScene_->getInTheta();
-    float inPhi   = graphScene_->getInPhi();
-
-    lb::Spectrum refSp;
-    lb::ColorModel cm;
-    lb::Arrayf wavelengths;
-    if (brdf) {
-        // Interpolate precomputed reflectance/transmittance.
-        refSp = data_->getReflectances()->getSpectrum(inTheta, inPhi);
-
-        const lb::SampleSet* ss = brdf->getSampleSet();
-
-        cm = ss->getColorModel();
-        wavelengths = ss->getWavelengths();
-    }
-    else if (ss2) {
-        refSp = ss2->getSpectrum(inTheta, inPhi);
-
-        cm = ss2->getColorModel();
-        wavelengths = ss2->getWavelengths();
-    }
-    else {
-        return false;
-    }
-
-    float reflectance;
-    if (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY) {
-        reflectance = scene_util::spectrumToY(refSp, cm, wavelengths);
-    }
-    else {
-        reflectance = refSp[ui_->wavelengthSlider->value()];
-    }
-    ui_->pickedReflectanceLineEdit->setText(QString::number(reflectance));
+    adjustIncomingAzimuthalAngleSlider(*inPhi);
 
     return true;
 }
@@ -1405,26 +1392,7 @@ bool MainWindow::openSdrSdt(const QString& fileName, lb::DataType dataType)
     lb::SampleSet2D* ss2 = lb::SdrReader::read(fileName.toLocal8Bit().data());
     if (!ss2) return false;
 
-    data_->clearData();
-    if (dataType == lb::SPECULAR_REFLECTANCE_DATA) {
-        data_->setSpecularReflectances(ss2);
-    }
-    else if (dataType == lb::SPECULAR_TRANSMITTANCE_DATA) {
-        data_->setSpecularTransmittances(ss2);
-    }
-    else {
-        lbError << "[MainWindow::openSdrSdt] Invalid data type: " << dataType;
-        return false;
-    }
-
-    renderingScene_->setData(0, ss2, dataType);
-
-    initializeUi();
-
-    displayDockWidget_->updateUi();
-    ui_->tableGraphicsView->fitView(0.9);
-
-    return true;
+    return setupSpecularReflectances(std::shared_ptr<lb::SampleSet2D>(ss2), dataType);
 }
 
 bool MainWindow::openLightToolsBsdf(const QString& fileName)
@@ -1565,9 +1533,9 @@ void MainWindow::createTable()
     ui_->tableGraphicsView->createTable(ui_->wavelengthSlider->value(), gamma, photometric);
 }
 
-void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
-                          lb::Spectrum::Scalar  glossyShininess,
-                          lb::Spectrum::Scalar  diffuseIntensity)
+void MainWindow::editBrdf(lb::Spectrum::Scalar glossyIntensity,
+                          lb::Spectrum::Scalar glossyShininess,
+                          lb::Spectrum::Scalar diffuseIntensity)
 {
     lbTrace << "[MainWindow::editBrdf]";
 
@@ -1594,7 +1562,9 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar  glossyIntensity,
     ui_->graphOpenGLWidget->update();
     ui_->renderingOpenGLWidget->update();
 
-    clearPickedValue();
-    displayReflectance();
+    pickDockWidget_->updatePickedValue();
+    pickDockWidget_->displayReflectance();
+    propertyDockWidget_->updateData(*data_);
+    characteristicDockWidget_->updateData(*data_);
     createTable();
 }

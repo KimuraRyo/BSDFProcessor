@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2019 Kimura Ryo                                  //
+// Copyright (C) 2016-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -27,10 +27,10 @@ class ReflectanceCalculator : public QObject
 
 public:
     ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>  reflectances,
-                          const std::shared_ptr<lb::Brdf>   brdf);
+                          std::shared_ptr<const lb::Brdf>   brdf);
 
     ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>  reflectances,
-                          const std::shared_ptr<lb::Btdf>   btdf);
+                          std::shared_ptr<const lb::Btdf>   btdf);
 
     ~ReflectanceCalculator() {}
 
@@ -45,8 +45,8 @@ signals:
 private:
     void intialize(lb::SampleSet2D* reflectances);
 
-    std::shared_ptr<lb::Brdf> brdf_;
-    std::shared_ptr<lb::Btdf> btdf_;
+    std::shared_ptr<const lb::Brdf> brdf_;
+    std::shared_ptr<const lb::Btdf> btdf_;
 
     /*! Reflectances at each incoming direction. */
     std::shared_ptr<lb::SampleSet2D> reflectances_;
