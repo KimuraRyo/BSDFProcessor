@@ -15,12 +15,14 @@
 
 #include "ui_MainWindow.h"
 
+#include "CharacteristicDockWidget.h"
 #include "DisplayDockWidget.h"
 #include "GraphScene.h"
 #include "GraphWidget.h"
 #include "PickDockWidget.h"
 #include "InsertIncomingAzimuthalAngleDockWidget.h"
 #include "MaterialData.h"
+#include "PropertyDockWidget.h"
 #include "ReflectanceModelDockWidget.h"
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
@@ -154,8 +156,10 @@ private:
     /*! This attribute holds whether a slot function is invoked by the signal from UI. */
     bool signalEmittedFromUi_;
 
+    CharacteristicDockWidget*               characteristicDockWidget_;
     DisplayDockWidget*                      displayDockWidget_;
     PickDockWidget*                         pickDockWidget_;
+    PropertyDockWidget*                     propertyDockWidget_;
     ReflectanceModelDockWidget*             reflectanceModelDockWidget_;
     TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;

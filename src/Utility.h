@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2019 Kimura Ryo                                  //
+// Copyright (C) 2014-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -53,6 +53,31 @@ inline lb::Vec3 qtToLb(const QColor& color)
 inline QColor lbToQt(const lb::Vec3& color)
 {
     return QColor::fromRgbF(color[0], color[1], color[2]);
+}
+
+/*! Converts the first character of a string to upper case. */
+inline QString toSentenceCase(const QString &str)
+{
+    return QString(str).replace(0, 1, str[0].toUpper());
+}
+
+/*! Converts an Eigen array to std::string. */
+template <typename T>
+std::string arrayToString(const T& arr)
+{
+    std::stringstream stream;
+    stream << arr.format(lb::LB_EIGEN_IO_FMT);
+    return stream.str();
+}
+
+/*! Applies gamma correction. */
+template <typename T>
+T applyGamma(const T& vec, double gamma = 2.2)
+{
+    using std::pow;
+    return T(pow(vec[0], 1.0 / gamma),
+             pow(vec[1], 1.0 / gamma),
+             pow(vec[2], 1.0 / gamma));
 }
 
 } // namespace util

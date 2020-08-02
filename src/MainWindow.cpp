@@ -19,6 +19,7 @@
 #include <libbsdf/Brdf/Processor.h>
 #include <libbsdf/Brdf/TwoSidedMaterial.h>
 
+#include <libbsdf/Common/SpectrumUtility.h>
 #include <libbsdf/Common/Version.h>
 
 #include <libbsdf/Reader/AstmReader.h>
@@ -51,13 +52,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
                                           signalEmittedFromUi_(true),
                                           ui_(new Ui::MainWindowBase)
 {
-    lb::Log::setNotificationLevel(lb::Log::Level::TRACE_MSG);
+    lb::Log::setNotificationLevel(lb::Log::Level::INFO_MSG);
     osg::setNotifyLevel(osg::NOTICE);
 
     ui_->setupUi(this);
 
+    characteristicDockWidget_       = new CharacteristicDockWidget(ui_->centralWidget);
     displayDockWidget_              = new DisplayDockWidget(ui_->centralWidget);
     pickDockWidget_                 = new PickDockWidget(ui_->centralWidget);
+    propertyDockWidget_             = new PropertyDockWidget(ui_->centralWidget);
     reflectanceModelDockWidget_     = new ReflectanceModelDockWidget(ui_->centralWidget);
     transmittanceModelDockWidget_   = new TransmittanceModelDockWidget(ui_->centralWidget);
     smoothDockWidget_               = new SmoothDockWidget(ui_->centralWidget);
@@ -70,6 +73,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     setCentralWidget(ui_->graphOpenGLWidget);
     ui_->graphOpenGLWidget->setFocus();
 
+    addDockWidget(Qt::BottomDockWidgetArea, characteristicDockWidget_);
+    characteristicDockWidget_->hide();
+
     addDockWidget(Qt::RightDockWidgetArea, ui_->controlDockWidget);
 
     addDockWidget(Qt::RightDockWidgetArea, displayDockWidget_);
@@ -78,6 +84,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     addDockWidget(Qt::RightDockWidgetArea, ui_->renderingDockWidget);
 
     addDockWidget(Qt::RightDockWidgetArea, pickDockWidget_);
+
+    addDockWidget(Qt::BottomDockWidgetArea, propertyDockWidget_);
+    propertyDockWidget_->hide();
 
     addDockWidget(Qt::BottomDockWidgetArea, ui_->tableDockWidget);
     ui_->tableDockWidget->hide();
@@ -107,6 +116,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     resizeDocks({ ui_->controlDockWidget }, { 280 }, Qt::Horizontal);
 
+    tabifyDockWidget(ui_->tableDockWidget, propertyDockWidget_);
+    tabifyDockWidget(ui_->tableDockWidget, characteristicDockWidget_);
+
     ui_->incomingPolarAngleLineEdit->setValidator(new DoubleValidator(this));
     ui_->incomingAzimuthalAngleLineEdit->setValidator(new DoubleValidator(this));
 
@@ -115,16 +127,24 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     data_.reset(new MaterialData);
     graphScene_.reset(new GraphScene);
     renderingScene_.reset(new RenderingScene);
+
     readSettings();
+
+    // Initialize the 3D graph view.
     graphScene_->setMaterialData(data_.get());
     graphScene_->createAxisAndScale();
     ui_->graphOpenGLWidget->setGraphScene(graphScene_.get());
+
+    // Disable the small feature culling.
+    osg::CullSettings::CullingMode cm = getGraphView()->getCamera()->getCullingMode();
+    getGraphView()->getCamera()->setCullingMode(cm & ~osgUtil::CullVisitor::SMALL_FEATURE_CULLING);
 
     displayDockWidget_->setGraphScene(graphScene_.get());
     displayDockWidget_->setMaterialData(data_.get());
 
     pickDockWidget_->setGraphScene(graphScene_.get());
     pickDockWidget_->setMaterialData(data_.get());
+
     ui_->tableGraphicsView->setMaterialData(data_.get());
     ui_->tableGraphicsView->setLogPlotAction(ui_->graphOpenGLWidget->getLogPlotAction());
 
@@ -243,6 +263,8 @@ bool MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType
 
     displayDockWidget_->updateUi();
     pickDockWidget_->displayReflectance();
+    propertyDockWidget_->updateData(*data_);
+    characteristicDockWidget_->updateData(*data_);
     ui_->tableGraphicsView->fitView(0.9);
 
     return true;
@@ -278,6 +300,8 @@ bool MainWindow::setupSpecularReflectances(std::shared_ptr<lb::SampleSet2D> ss2,
     initializeUi();
 
     displayDockWidget_->updateUi();
+    propertyDockWidget_->updateData(*data_);
+    characteristicDockWidget_->updateData(*data_);
     ui_->tableGraphicsView->fitView(0.9);
 
     return true;
@@ -838,6 +862,8 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(ui_->renderingDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(pickDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(ui_->tableDockWidget->toggleViewAction());
+    ui_->viewMenu->addAction(propertyDockWidget_->toggleViewAction());
+    ui_->viewMenu->addAction(characteristicDockWidget_->toggleViewAction());
     ui_->viewMenu->addSeparator();
     ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());
