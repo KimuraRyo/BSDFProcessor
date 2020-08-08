@@ -328,6 +328,8 @@ osg::Group* RenderingScene::createRenderingGroup(osg::Group*    subgraph,
         osg::Image* outDirImage = new osg::Image;
         inDirImage->allocateImage(width, height, 1, GL_RGBA, GL_FLOAT);
         outDirImage->allocateImage(width, height, 1, GL_RGBA, GL_FLOAT);
+        inDirImage->setInternalTextureFormat(GL_RGBA32F_ARB);
+        outDirImage->setInternalTextureFormat(GL_RGBA32F_ARB);
         fboCamera->attach(osg::Camera::COLOR_BUFFER0, inDirImage, numMultiSamples_, 0);
         fboCamera->attach(osg::Camera::COLOR_BUFFER1, outDirImage, numMultiSamples_, 0);
 
