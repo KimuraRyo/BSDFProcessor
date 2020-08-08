@@ -9,6 +9,8 @@
 #ifndef INFORMATION_DOCKWIDGET_H
 #define INFORMATION_DOCKWIDGET_H
 
+#include <QtWidgets>
+
 #include "ui_PickDockWidget.h"
 
 #include "GraphScene.h"

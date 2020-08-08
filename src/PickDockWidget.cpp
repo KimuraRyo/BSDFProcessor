@@ -8,9 +8,7 @@
 
 #include "PickDockWidget.h"
 
-#include <QtWidgets>
-
-#include <osg/io_utils>
+//#include <osg/io_utils>
 
 #include <libbsdf/Common/SpectrumUtility.h>
 
@@ -193,7 +191,7 @@ void PickDockWidget::displayReflectance()
 
 void PickDockWidget::updateOutDir(const osg::Vec3& dir)
 {
-    lbDebug << "[PickDockWidget::updateOutDir] position: " << dir;
+    //lbDebug << "[PickDockWidget::updateOutDir] position: " << dir;
 
     if (!ui_->pickedValueLineEdit->isEnabled()) {
         ui_->pickedValueLineEdit->clear();
