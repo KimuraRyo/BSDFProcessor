@@ -1,4 +1,4 @@
-// =================================================================== //
+ï»¿// =================================================================== //
 // Copyright (C) 2020 Kimura Ryo                                       //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
@@ -117,7 +117,7 @@ void CharacteristicDockWidget::addReflectanceItems()
             float inPhi = data_->getIncomingAzimuthalAngle(phIndex);
 
             parentItem = new QTreeWidgetItem(reflectanceItem);
-            parentItem->setText(0, "Incoming azimuthal angle: " + QString::number(lb::toDegree(inPhi)) + u8"‹");
+            parentItem->setText(0, "Incoming azimuthal angle: " + QString::number(lb::toDegree(inPhi)) + u8"Â°");
         }
 
         QTreeWidgetItem* inThetaItem = new QTreeWidgetItem(parentItem);
@@ -129,7 +129,7 @@ void CharacteristicDockWidget::addReflectanceItems()
             const lb::Spectrum& sp = data_->getReflectances()->getSpectrum(thIndex, phIndex);
 
             QTreeWidgetItem* item = new QTreeWidgetItem(inThetaItem);
-            item->setText(0, QString::number(lb::toDegree(inTheta)) + u8"‹");
+            item->setText(0, QString::number(lb::toDegree(inTheta)) + u8"Â°");
             item->setText(1, util::arrayToString(sp).c_str());
 
             setColorIcon(item, sp, data_->getColorModel(), data_->getWavelengths());
@@ -148,13 +148,13 @@ void CharacteristicDockWidget::add8DegreeReflectanceItems()
     switch (data_->getDataType()) {
         case lb::BRDF_DATA:
         case lb::SPECULAR_REFLECTANCE_DATA:
-            reflectanceItem->setText(0, u8"Reflectance at 8‹");
-            reflectanceItem->setToolTip(0, u8"8‹:di (CIE 15, JIS Z 8722)");
+            reflectanceItem->setText(0, u8"Reflectance at 8Â°");
+            reflectanceItem->setToolTip(0, u8"8Â°:di (CIE 15, JIS Z 8722)");
             break;
         case lb::BTDF_DATA:
         case lb::SPECULAR_TRANSMITTANCE_DATA:
-            reflectanceItem->setText(0, u8"Transmittance at 0‹");
-            reflectanceItem->setToolTip(0, u8"0‹:di (CIE 15, JIS Z 8722)");
+            reflectanceItem->setText(0, u8"Transmittance at 0Â°");
+            reflectanceItem->setToolTip(0, u8"0Â°:di (CIE 15, JIS Z 8722)");
             break;
         default:
             return;
@@ -166,7 +166,7 @@ void CharacteristicDockWidget::add8DegreeReflectanceItems()
 
         if (data_->getNumInPhi() > 1) {
             parentItem = new QTreeWidgetItem(reflectanceItem);
-            parentItem->setText(0, "Incoming azimuthal angle: " + QString::number(lb::toDegree(inPhi)) + u8"‹");
+            parentItem->setText(0, "Incoming azimuthal angle: " + QString::number(lb::toDegree(inPhi)) + u8"Â°");
         }
 
         lb::Spectrum sp = data_->getReflectances()->getSpectrum(lb::toRadian(8.0f), inPhi);
