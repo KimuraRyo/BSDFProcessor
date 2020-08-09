@@ -1,12 +1,42 @@
 # Changelog
 
+## [1.2.4] - 2020-08-09
+
+### Changed
+
+- Changed tangent directions of circular faces of cylinder in the render view for anisotropic BRDF.
+
+### Fixed
+
+- Improved the precision of incoming and outgoing directions in the render view.
+
+## [1.2.3] - 2020-08-02
+
+### Added
+
+- Angles of the picked direction in the 3D graph, render view, and table view are displayed in the "Picked direction" dock widget.
+- "Property view" dock widget to display properties of data.
+- "Characteristic view" dock widget to display characteristics of data.
+- Saving and restoring of application settings with QSettings.
+- Loading and saving of SSDD file for BRDF/BTDF/specular reflectance/specular transmittance.
+
+### Changed
+
+- Dealt with libbsdf-0.9.13.
+- Changed the picking of incoming direction to a single click.
+- Improved high DPI settings.
+- Renamed dock widgets.
+- Adjusted item layout and text labels of UI.
+
 ## [1.2.2] - 2019-09-13
 
 ### Added
+
 - Applied the logger of libbsdf.
 - Added a switching preprocessor (LIBBSDF_DOUBLE_PRECISION_VECTOR) for double precision vectors.
 
 ### Changed
+
 - Dealt with libbsdf-0.9.12.
 - Improved the BTDF generator for the refractive index of less than 1.
 - Adjusted the initial values of parameters for BRDF/BTDF generators.
@@ -18,7 +48,10 @@
 - Applied the constructor of BRDF/BTDF with narrow intervals near specular directions.
 
 ### Fixed
+
 - Fixed the click on rendering view without data.
 - Fixed the bug of initial angle display with a nonzero minimum angle.
 
+[1.2.4]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.3...v1.2.4
+[1.2.3]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.1...v1.2.2
