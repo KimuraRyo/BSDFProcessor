@@ -9,8 +9,9 @@ Basic functions are implemented using [libbsdf][1].
 * 3D plot using incoming angles and multiple display modes
 * Real-time rendering with directional and environment lighting
 * Table view of sample points
+* Property and characteristic views
 * Simple editor
-* File loaders for multiple formats
+* File loaders and exporters for multiple formats
 * BRDF/BTDF generators using reflectance/transmittance models
 
 **BSDF Processor can load the following formats:**
@@ -48,7 +49,7 @@ Integra Diffuse Distribution | .ddr, .ddt
 ## License
 
 BSDF Processor is licensed under the terms of the Mozilla Public License, version 2.0.
-See the LICENSE file.
+See the [LICENSE][12] file.
 
 ## Download
 
@@ -83,3 +84,4 @@ Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_
 [9]: http://www.rpcphotonics.com/bsdf-data-optical-diffusers/
 [10]: https://github.com/openscenegraph/OpenSceneGraph/issues/946
 [11]: https://github.com/KimuraRyo/libbsdf/blob/master/doc/SsddFileFormatSpecification.md
+[12]: https://github.com/KimuraRyo/BSDFProcessor/blob/master/LICENSE
