@@ -35,14 +35,15 @@ Integra Diffuse Distribution | .ddr, .ddt
 
 ## Gallery
 
-**Screenshots**
+### Screenshots
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFProcessor/images/screenshot1.png" height="190"/>&nbsp;
 <img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFProcessor/images/screenshot2.png" height="190"/>&nbsp;
 <img src="https://raw.githubusercontent.com/wiki/KimuraRyo/BSDFProcessor/images/screenshot3.png" height="190"/>
 </p>
-**Movie**
+
+### Movie
 
 [![mov](http://img.youtube.com/vi/AJXpTs0InYc/mqdefault.jpg)](https://youtu.be/AJXpTs0InYc)
 
