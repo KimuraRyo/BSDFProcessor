@@ -247,9 +247,9 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
     }
     else if (coordinateSystemName == "Spherical coordinate system") {
         int spinBox1Val = ui_->sphericalCsNumAngle1SpinBox->value();
-        int numAngle1 = (isotropic || spinBox1Val <= 1) ? 1 : (spinBox1Val + 1);
+        int numAngles1 = (isotropic || spinBox1Val <= 1) ? 1 : (spinBox1Val + 1);
         brdf = new lb::SphericalCoordinatesBrdf(ui_->sphericalCsNumAngle0SpinBox->value() + 1,
-                                                numAngle1,
+                                                numAngles1,
                                                 ui_->sphericalCsNumAngle2SpinBox->value() + 1,
                                                 ui_->sphericalCsNumAngle3SpinBox->value() + 1,
                                                 lb::RGB_MODEL, 3, true);

@@ -15,7 +15,7 @@
 
 #include <libbsdf/Brdf/Analyzer.h>
 
-#if defined(USE_INTEGRATOR)
+#if defined(USE_LIBBSDF_INTEGRATOR)
 #include <libbsdf/Brdf/Integrator.h>
 #endif
 
@@ -59,7 +59,7 @@ void ReflectanceCalculator::computeReflectances()
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
-#if defined(USE_INTEGRATOR)
+#if defined(USE_LIBBSDF_INTEGRATOR)
     lb::Integrator integrator = lb::Integrator(10000000);
 #endif
 
@@ -75,7 +75,7 @@ void ReflectanceCalculator::computeReflectances()
             continue;
         }
 
-#if defined(USE_INTEGRATOR)
+#if defined(USE_LIBBSDF_INTEGRATOR)
         sp = integrator.computeReflectance(*brdf, inDir);
 #else
         auto spheBrdf = dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf);

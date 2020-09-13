@@ -6,8 +6,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.            //
 // =================================================================== //
 
-#ifndef INFORMATION_DOCKWIDGET_H
-#define INFORMATION_DOCKWIDGET_H
+#ifndef PICK_DOCKWIDGET_H
+#define PICK_DOCKWIDGET_H
 
 #include <QtWidgets>
 
@@ -68,4 +68,4 @@ private:
     Ui::PickDockWidgetBase* ui_;
 };
 
-#endif // INFORMATION_DOCKWIDGET_H
+#endif // PICK_DOCKWIDGET_H

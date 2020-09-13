@@ -548,9 +548,9 @@ void TableView::paintEvent(QPaintEvent* event)
     if (brdf) {
         const lb::SampleSet* ss = brdf->getSampleSet();
 
-        int numAngle1 = ss->getNumAngles1();
+        int numAngles1 = ss->getNumAngles1();
 
-        if (numAngle1 == 1) {
+        if (numAngles1 == 1) {
             painter.translate(angleNameRect.height() + 1, 1);
         }
         else {
@@ -569,7 +569,7 @@ void TableView::paintEvent(QPaintEvent* event)
         painter.resetTransform();
         painter.rotate(-90.0);
 
-        if (numAngle1 == 1) {
+        if (numAngles1 == 1) {
             painter.translate(-angleNameRect.width() - angleNameRect.height() * 2 - 1, -angleNameRect.height() + 1);
         }
         else {
