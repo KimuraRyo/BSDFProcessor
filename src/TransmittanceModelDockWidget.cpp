@@ -11,6 +11,7 @@
 #include <osg/Timer>
 
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
+#include <libbsdf/Brdf/Optimizer.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
@@ -59,6 +60,8 @@ void TransmittanceModelDockWidget::generateBrdf()
 
     auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
 
+    float ior = 1.0f;
+
     // Offset specular directions for refraction.
     if (iorUsed && specBrdf) {
         bool found = false;
@@ -68,8 +71,7 @@ void TransmittanceModelDockWidget::generateBrdf()
         lb::ReflectanceModel::Parameters& params = model->getParameters();
         for (auto it = params.begin(); it != params.end(); ++it) {
             if (it->getName() == iorParamName) {
-                // If the refractive index used for offset is less than 1.0, lb::SpecularCoordinatesBrdf is inefficient.
-                float ior = std::max(*it->getFloat(), 1.0f);
+                ior = *it->getFloat();
                 if (ior == 1.0f) break;
 
                 specBrdf->setupSpecularOffsets(ior);
@@ -84,7 +86,24 @@ void TransmittanceModelDockWidget::generateBrdf()
         }
     }
 
-    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf.get(), lb::BTDF_DATA);
+    lb::ReflectanceModelUtility::setupBrdf(*model, brdf.get(), lb::BTDF_DATA);
+
+    if (ui_->intervalAdjustmentCheckBox->isChecked()) {
+        const lb::SampleSet* ss = brdf->getSampleSet();
+
+        // Save the number of angles before optimization.
+        int numAngles0 = ss->getNumAngles0();
+        int numAngles1 = ss->getNumAngles1();
+        int numAngles2 = ss->getNumAngles2();
+        int numAngles3 = ss->getNumAngles3();
+
+        lb::Optimizer optimizer(brdf.get(), 0.001f, 0.01f);
+        optimizer.optimize();
+
+        lb::ReflectanceModelUtility::setupBrdf(*model, brdf.get(),
+                                               numAngles0, numAngles1, numAngles2, numAngles3,
+                                               lb::BTDF_DATA, ior);
+    }
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);

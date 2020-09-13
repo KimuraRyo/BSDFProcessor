@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>250</width>
-    <height>340</height>
+    <height>351</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>239</width>
-    <height>329</height>
+    <height>351</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -366,6 +366,16 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="intervalAdjustmentCheckBox">
+         <property name="toolTip">
+          <string>Intervals are recalculated with the selected model</string>
+         </property>
+         <property name="text">
+          <string>Adjust intervals</string>
+         </property>
         </widget>
        </item>
       </layout>

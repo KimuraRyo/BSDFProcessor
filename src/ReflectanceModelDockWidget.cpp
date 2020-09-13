@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2019 Kimura Ryo                                  //
+// Copyright (C) 2016-2020 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -11,6 +11,7 @@
 #include <osg/Timer>
 
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
+#include <libbsdf/Brdf/Optimizer.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
@@ -58,7 +59,23 @@ void ReflectanceModelDockWidget::generateBrdf()
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
 
     std::shared_ptr<lb::Brdf> brdf = initializeBrdf(model->isIsotropic());
-    lb::reflectance_model_utility::setupTabularBrdf(*model, brdf.get());
+    lb::ReflectanceModelUtility::setupBrdf(*model, brdf.get());
+
+    if (ui_->intervalAdjustmentCheckBox->isChecked()) {
+        const lb::SampleSet* ss = brdf->getSampleSet();
+
+        // Save the number of angles before optimization.
+        int numAngles0 = ss->getNumAngles0();
+        int numAngles1 = ss->getNumAngles1();
+        int numAngles2 = ss->getNumAngles2();
+        int numAngles3 = ss->getNumAngles3();
+
+        lb::Optimizer optimizer(brdf.get(), 0.001f, 0.01f);
+        optimizer.optimize();
+
+        lb::ReflectanceModelUtility::setupBrdf(*model, brdf.get(),
+                                               numAngles0, numAngles1, numAngles2, numAngles3);
+    }
 
     osg::Timer_t endTick = osg::Timer::instance()->tick();
     double delta = osg::Timer::instance()->delta_s(startTick, endTick);
