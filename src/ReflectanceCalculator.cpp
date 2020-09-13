@@ -86,8 +86,8 @@ void ReflectanceCalculator::computeReflectances()
             sp = lb::computeReflectance(*spheBrdf, inThIndex, inPhIndex);
         }
         else if (specBrdf &&
-                 specBrdf->getNumSpecTheta() >= 2 &&
-                 specBrdf->getNumSpecPhi() >= 2) {
+                 specBrdf->getNumSpecTheta() >= 64 &&
+                 specBrdf->getNumSpecPhi() >= 64) {
             sp = lb::computeReflectance(*specBrdf, inThIndex, inPhIndex);
         }
         else {
