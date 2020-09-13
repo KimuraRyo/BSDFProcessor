@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.5] - 2020-09-13
+
+### Added
+
+- Added BRDF/BTDF generation with the adjested intervals of angles in the "Reflectance/Transmittance" dock widget.
+
 ## [1.2.4] - 2020-08-09
 
 ### Changed
@@ -52,6 +58,7 @@
 - Fixed the click on rendering view without data.
 - Fixed the bug of initial angle display with a nonzero minimum angle.
 
+[1.2.5]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.1...v1.2.2
