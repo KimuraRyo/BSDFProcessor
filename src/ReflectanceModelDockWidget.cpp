@@ -89,8 +89,8 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
 {
     std::vector<lb::ReflectanceModel*> models;
 
-    lb::Vec3 white(1.0, 1.0, 1.0);
-    lb::Vec3 black(0.0, 0.0, 0.0);
+    const lb::Vec3 white(1.0, 1.0, 1.0);
+    const lb::Vec3 black(0.0, 0.0, 0.0);
     models.push_back(new lb::AshikhminShirley(white, black, 100.0f, 20.0f));
     models.push_back(new lb::BlinnPhong(white, 40.0f));
     models.push_back(new lb::CookTorrance(white, 0.3f));
