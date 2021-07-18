@@ -8,6 +8,8 @@
 
 #include "SmoothDockWidget.h"
 
+#include <chrono>
+
 #include <libbsdf/Brdf/Smoother.h>
 
 #include "Utility.h"
@@ -79,6 +81,8 @@ void SmoothDockWidget::process()
 {
     if (!brdf_) return;
 
+    auto start = std::chrono::system_clock::now();
+
     lb::Smoother s(brdf_);
     s.setDiffThreshold(ui_->thresholdDoubleSpinBox->value());
     s.setMaxIteration0(ui_->maxIteration0SpinBox->value());
@@ -86,6 +90,10 @@ void SmoothDockWidget::process()
     s.setMaxIteration2(ui_->maxIteration2SpinBox->value());
     s.setMaxIteration3(ui_->maxIteration3SpinBox->value());
     s.smooth();
+
+    auto end = std::chrono::system_clock::now();
+    auto seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() * 0.001;
+    lbInfo << "[SmoothDockWidget::process] " << seconds << "(s)";
 
     emit processed();
 }
