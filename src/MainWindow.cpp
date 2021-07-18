@@ -129,6 +129,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     renderingScene_.reset(new RenderingScene);
 
     readSettings();
+    setupRecentFiles();
 
     // Initialize the 3D graph view.
     graphScene_->setMaterialData(data_.get());
@@ -227,6 +228,9 @@ void MainWindow::openFile(const QString& fileName)
     QFileInfo fileInfo(fileName);
     this->setWindowTitle(fileInfo.fileName() + " - BSDF Processor");
 
+    Settings::addRecentFileName(fileName);
+    Settings::restoreRecentFileNames(&recentFileActionList_);
+
     lbInfo
         << "[MainWindow::openFile] fileName: " << fileName.toLocal8Bit().data()
         << " (" << timer.elapsed() * 0.001f << "(s)" << ")";
@@ -260,12 +264,7 @@ bool MainWindow::setupBrdf(std::shared_ptr<lb::Brdf> brdf, lb::DataType dataType
     renderingScene_->setData(brdf.get(), data_->getReflectances(), dataType);
 
     initializeUi();
-
-    displayDockWidget_->updateUi();
-    pickDockWidget_->displayReflectance();
-    propertyDockWidget_->updateData(*data_);
-    characteristicDockWidget_->updateData(*data_);
-    ui_->tableGraphicsView->fitView(0.9);
+    updateUi();
 
     return true;
 }
@@ -298,11 +297,7 @@ bool MainWindow::setupSpecularReflectances(std::shared_ptr<lb::SampleSet2D> ss2,
     renderingScene_->setData(nullptr, ss2.get(), dataType);
 
     initializeUi();
-
-    displayDockWidget_->updateUi();
-    propertyDockWidget_->updateData(*data_);
-    characteristicDockWidget_->updateData(*data_);
-    ui_->tableGraphicsView->fitView(0.9);
+    updateUi();
 
     return true;
 }
@@ -333,6 +328,7 @@ void MainWindow::updateBrdf()
     renderingScene_->setData(data_->getBrdfData(), data_->getReflectances(), data_->getDataType());
 
     initializeUi();
+    updateUi();
 }
 
 void MainWindow::openBxdfUsingDialog()
@@ -367,6 +363,14 @@ void MainWindow::openCcbxdfUsingDialog()
     cosineCorrected_ = true;
     openFile(fileName);
     cosineCorrected_ = false;
+}
+
+void MainWindow::openRecentFile()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action) {
+        openFile(action->data().toString());
+    }
 }
 
 void MainWindow::exportDataUsingDialog()
@@ -853,6 +857,19 @@ void MainWindow::readSettings()
     settings.restore(this);
 }
 
+void MainWindow::setupRecentFiles()
+{
+    for (auto i = 0; i < MAX_RECENT_FILES; ++i) {
+        QAction* action = new QAction(this);
+        action->setVisible(false);
+        QObject::connect(action, SIGNAL(triggered()), this, SLOT(openRecentFile()));
+        recentFileActionList_.append(action);
+        ui_->menuRecentFiles->addAction(recentFileActionList_.at(i));
+    }
+
+    Settings::restoreRecentFileNames(&recentFileActionList_);
+}
+
 void MainWindow::createActions()
 {
     ui_->viewMenu->addAction(ui_->graphOpenGLWidget->getLogPlotAction());
@@ -1090,6 +1107,15 @@ void MainWindow::initializeUi()
     pickDockWidget_->clearPickedValue();
     pickDockWidget_->displayReflectance();
     createTable();
+}
+
+void MainWindow::updateUi()
+{
+    displayDockWidget_->updateUi();
+    pickDockWidget_->displayReflectance();
+    propertyDockWidget_->updateData(*data_);
+    characteristicDockWidget_->updateData(*data_);
+    ui_->tableGraphicsView->fitView(0.9);
 }
 
 void MainWindow::initializeDisplayModeUi(QString modeName)
@@ -1588,8 +1614,12 @@ void MainWindow::exportFile(const QString& fileName)
     }
 
     if (!saved) {
-        lbInfo << "[MainWindow::exportFile] fileName: " << fileName.toLocal8Bit().data();
+        lbError << "[MainWindow::exportFile] fileName: " << fileName.toLocal8Bit().data();
+        return;
     }
+
+    Settings::addRecentFileName(fileName);
+    Settings::restoreRecentFileNames(&recentFileActionList_);
 }
 
 std::shared_ptr<lb::Brdf> reduceAnglesUsingBilateralSymmetry(std::shared_ptr<lb::Brdf> brdf, float threshold)

@@ -38,6 +38,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+    static constexpr int MAX_RECENT_FILES = 10;
+
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
@@ -58,6 +60,8 @@ private slots:
 
     void openBxdfUsingDialog();
     void openCcbxdfUsingDialog();
+
+    void openRecentFile();
 
     void exportDataUsingDialog();
 
@@ -106,10 +110,12 @@ private:
     void closeEvent(QCloseEvent* event) override;
 
     void readSettings();
-
+    void setupRecentFiles();
+    
     void createActions();
 
     void initializeUi();
+    void updateUi();
     void initializeDisplayModeUi(QString modeName);
     void initializeWavelengthUi(int index);
 
@@ -164,6 +170,8 @@ private:
     TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;
     InsertIncomingAzimuthalAngleDockWidget* insertAngleDockWidget_;
+
+    QList<QAction*> recentFileActionList_;
 
     QTimer timer_;
 

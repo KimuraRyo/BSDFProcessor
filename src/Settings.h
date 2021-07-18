@@ -6,8 +6,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.            //
 // =================================================================== //
 
-#ifndef SETTINGS_DIALOG_H
-#define SETTINGS_DIALOG_H
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #include "MainWindow.h"
 
@@ -20,6 +20,9 @@ class Settings
 public:
     static void save(const MainWindow& mainWindow);
     static void restore(MainWindow* mainWindow);
+
+    static void addRecentFileName(const QString& fileName);
+    static void restoreRecentFileNames(QList<QAction*>* recentFileActionList);
 };
 
-#endif // SETTINGS_DIALOG_H
+#endif // SETTINGS_H

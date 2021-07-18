@@ -10,12 +10,13 @@
 
 #include <QtWidgets>
 
-const QString MAIN_WINDOW_GEOMETRY  = "MainWindow/geometry";
-const QString MAIN_WINDOW_STATE     = "MainWindow/windowState";
+const QString MAIN_WINDOW_GEOMETRY      = "MainWindow/geometry";
+const QString MAIN_WINDOW_STATE         = "MainWindow/windowState";
+const QString MAIN_WINDOW_RECENT_FILES  = "MainWindow/recentFiles";
 
-const QString GRAPH_WIDGET_LOG_PLOT = "GraphWidget/logPlot";
+const QString GRAPH_WIDGET_LOG_PLOT     = "GraphWidget/logPlot";
 
-const QString TABLE_WIDGET_BACK_SIDE = "TableWidget/backSide";
+const QString TABLE_WIDGET_BACK_SIDE    = "TableWidget/backSide";
 
 void Settings::save(const MainWindow& mainWindow)
 {
@@ -39,4 +40,38 @@ void Settings::restore(MainWindow* mainWindow)
 
     bool backSideShown = settings.value(TABLE_WIDGET_BACK_SIDE, false).toBool();
     mainWindow->getTableView()->showBackSide(backSideShown);
+}
+
+void Settings::addRecentFileName(const QString& fileName)
+{
+    QString fnStr = QDir::toNativeSeparators(fileName);
+
+    QSettings settings;
+    QStringList fileNames = settings.value(MAIN_WINDOW_RECENT_FILES).toStringList();
+    fileNames.removeAll(fnStr);
+    fileNames.prepend(fnStr);
+
+    while (fileNames.size() > MainWindow::MAX_RECENT_FILES) {
+        fileNames.removeLast();
+    }
+
+    settings.setValue(MAIN_WINDOW_RECENT_FILES, fileNames);
+}
+
+void Settings::restoreRecentFileNames(QList<QAction*>* recentFileActionList)
+{
+    QSettings settings;
+    QStringList fileNames = settings.value(MAIN_WINDOW_RECENT_FILES).toStringList();
+
+    int numNames = std::min(fileNames.size(), MainWindow::MAX_RECENT_FILES);
+
+    for (int i = 0; i < numNames; ++i) {
+        recentFileActionList->at(i)->setText(fileNames.at(i));
+        recentFileActionList->at(i)->setData(fileNames.at(i));
+        recentFileActionList->at(i)->setVisible(true);
+    }
+
+    for (int i = numNames; i < MainWindow::MAX_RECENT_FILES; ++i) {
+        recentFileActionList->at(i)->setVisible(false);
+    }
 }

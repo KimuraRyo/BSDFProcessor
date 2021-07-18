@@ -790,8 +790,15 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuRecentFiles">
+     <property name="title">
+      <string>Recent files</string>
+     </property>
+    </widget>
     <addaction name="actionOpenBrdf"/>
     <addaction name="actionOpenCcbrdf"/>
+    <addaction name="separator"/>
+    <addaction name="menuRecentFiles"/>
     <addaction name="separator"/>
     <addaction name="actionExport"/>
     <addaction name="separator"/>
@@ -890,6 +897,11 @@
   <action name="actionOpenCcbrdf">
    <property name="text">
     <string>&amp;Open CCBRDF/CCBTDF...</string>
+   </property>
+  </action>
+  <action name="actionfile1">
+   <property name="text">
+    <string>file1</string>
    </property>
   </action>
  </widget>
