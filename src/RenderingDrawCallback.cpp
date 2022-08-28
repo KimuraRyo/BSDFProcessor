@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2022 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -80,25 +80,15 @@ void RenderingDrawCallback::render() const
     }
 }
 
-void RenderingDrawCallback::renderBrdf(const lb::Vec3f& inDir, const lb::Vec3f& outDir, float* pixel) const
+void RenderingDrawCallback::renderBrdf(const lb::Vec3f& inDir,
+                                       const lb::Vec3f& outDir,
+                                       float*           pixel) const
 {
-    lb::Spectrum sp = brdf_->getSpectrum(inDir.cast<lb::Vec3::Scalar>(), outDir.cast<lb::Vec3::Scalar>());
+    lb::Spectrum sp =
+        brdf_->getSpectrum(inDir.cast<lb::Vec3::Scalar>(), outDir.cast<lb::Vec3::Scalar>());
     const lb::SampleSet* ss = brdf_->getSampleSet();
 
-    lb::Vec3f rgb;
-    if (ss->getColorModel() == lb::RGB_MODEL) {
-        rgb = sp;
-    }
-    else if (ss->getColorModel() == lb::XYZ_MODEL) {
-        rgb = lb::xyzToSrgb<lb::Vec3f>(sp);
-    }
-    else if (ss->getNumWavelengths() == 1) {
-        rgb[0] = rgb[1] = rgb[2] = sp[0];
-    }
-    else {
-        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, ss->getWavelengths()).cast<lb::Vec3f::Scalar>();
-    }
-
+    lb::Vec3f rgb = lb::SpectrumUtility::toSrgb<lb::Vec3f, lb::SampleSet>(sp, *ss);
     rgb *= lb::PI_F * inDir[2] * lightIntensity_;
     pixel[0] += rgb[0];
     pixel[1] += rgb[1];
@@ -109,20 +99,7 @@ void RenderingDrawCallback::renderReflectance(const lb::Vec3f& outDir, float* pi
 {
     lb::Spectrum sp = reflectances_->getSpectrum(outDir.cast<lb::Vec3::Scalar>());
 
-    lb::Vec3f rgb;
-    if (reflectances_->getColorModel() == lb::RGB_MODEL) {
-        rgb = sp;
-    }
-    else if (reflectances_->getColorModel() == lb::XYZ_MODEL) {
-        rgb = lb::xyzToSrgb<lb::Vec3f>(sp);
-    }
-    else if (reflectances_->getNumWavelengths() == 1) {
-        rgb[0] = rgb[1] = rgb[2] = sp[0];
-    }
-    else {
-        rgb = lb::SpectrumUtility::spectrumToSrgb(sp, reflectances_->getWavelengths()).cast<lb::Vec3f::Scalar>();
-    }
-
+    lb::Vec3f rgb = lb::SpectrumUtility::toSrgb<lb::Vec3f, lb::SampleSet2D>(sp, *reflectances_);
     rgb *= environmentIntensity_;
     pixel[0] += rgb[0];
     pixel[1] += rgb[1];

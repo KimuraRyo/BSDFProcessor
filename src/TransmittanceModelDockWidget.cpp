@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2020 Kimura Ryo                                  //
+// Copyright (C) 2018-2021 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -120,7 +120,7 @@ void TransmittanceModelDockWidget::initializeReflectanceModels()
     lb::Vec3 white(1.0, 1.0, 1.0);
     lb::Vec3 black(0.0, 0.0, 0.0);
 #if !defined(LIBBSDF_USE_COLOR_INSTEAD_OF_REFRACTIVE_INDEX)
-    models.push_back(new lb::Ggx(white, 0.3f));
+    models.push_back(new lb::Ggx(white, 0.3f, 1.5f, 0.0f));
     models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f, 1.5f, 0.0f));
 #endif
     models.push_back(new lb::Lambertian(white));

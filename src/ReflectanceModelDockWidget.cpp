@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2020 Kimura Ryo                                  //
+// Copyright (C) 2016-2021 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -29,6 +29,7 @@
 #include <libbsdf/ReflectanceModel/Phong.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
 #include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
+#include <libbsdf/ReflectanceModel/UnrealEngine4.h>
 #include <libbsdf/ReflectanceModel/WardAnisotropic.h>
 #include <libbsdf/ReflectanceModel/WardIsotropic.h>
 
@@ -91,12 +92,22 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
 
     const lb::Vec3 white(1.0, 1.0, 1.0);
     const lb::Vec3 black(0.0, 0.0, 0.0);
+    
+    // The refractive index and extinction coefficient of aluminium at 550nm.
+    constexpr float n = 0.96521f;
+    constexpr float k = 6.3995f;
+
     models.push_back(new lb::AshikhminShirley(white, black, 100.0f, 20.0f));
     models.push_back(new lb::BlinnPhong(white, 40.0f));
     models.push_back(new lb::CookTorrance(white, 0.3f));
     models.push_back(new lb::Disney(white, black, 0.2f, 0.4f));
+#if defined(LIBBSDF_USE_COLOR_INSTEAD_OF_REFRACTIVE_INDEX)
     models.push_back(new lb::Ggx(white, 0.3f));
     models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f));
+#else
+    models.push_back(new lb::Ggx(white, 0.3f, 1.5f, 0.0f));
+    models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f, n, k));
+#endif
     models.push_back(new lb::Lambertian(white));
     models.push_back(new lb::Minnaert(white, 0.83f));
     models.push_back(new lb::ModifiedPhong(white, 10.0f));
@@ -108,6 +119,7 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::OrenNayar(white, 0.3f));
     models.push_back(new lb::Phong(white, 10.0f));
     models.push_back(new lb::SimplifiedOrenNayar(white, 0.3f));
+    models.push_back(new lb::UnrealEngine4(white, 0.0f, 0.5f, 0.3f));
     models.push_back(new lb::WardAnisotropic(white, 0.05f, 0.2f));
     models.push_back(new lb::WardIsotropic(white, 0.2f));
 
