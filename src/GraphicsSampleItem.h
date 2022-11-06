@@ -23,7 +23,7 @@ public:
 
     QRectF boundingRect() const;
     QPainterPath shape() const;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem* item, QWidget* widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
 
     bool isWhitish() { return whitish_; }
 
