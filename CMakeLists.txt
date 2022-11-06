@@ -1,12 +1,12 @@
 ## =================================================================== ##
-## Copyright (C) 2014-2020 Kimura Ryo                                  ##
+## Copyright (C) 2014-2022 Kimura Ryo                                  ##
 ##                                                                     ##
 ## This Source Code Form is subject to the terms of the Mozilla Public ##
 ## License, v. 2.0. If a copy of the MPL was not distributed with this ##
 ## file, You can obtain one at http://mozilla.org/MPL/2.0/.            ##
 ## =================================================================== ##
 
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.5)
 
 # Let AUTOMOC and AUTOUIC process GENERATED files.
 cmake_policy(SET CMP0071 NEW)
@@ -34,8 +34,10 @@ file(GLOB SOURCES
 
 include_directories(${SOURCE_PATH})
 
-# Enable all warnings
-#add_definitions(-Wall)
+option(BSDFPROCESSOR_DEVELOPER_MODE "Developer mode" OFF)
+if(BSDFPROCESSOR_DEVELOPER_MODE)
+    add_definitions(-DDEVELOPER)
+endif()
 
 if(NOT EIGEN3_INCLUDE_DIR)
     message(FATAL_ERROR "Please set the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
