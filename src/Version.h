@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2015-2020 Kimura Ryo                                  //
+// Copyright (C) 2015-2022 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -16,7 +16,7 @@
 
 #define BSDFPROCESSOR_MAJOR_VERSION 1
 #define BSDFPROCESSOR_MINOR_VERSION 2
-#define BSDFPROCESSOR_PATCH_VERSION 5
+#define BSDFPROCESSOR_PATCH_VERSION 6
 
 /*! Returns the version number of BSDF Processor. */
 const char* getVersion();
