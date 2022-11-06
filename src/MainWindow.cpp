@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2022 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -64,6 +64,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     reflectanceModelDockWidget_     = new ReflectanceModelDockWidget(ui_->centralWidget);
     transmittanceModelDockWidget_   = new TransmittanceModelDockWidget(ui_->centralWidget);
     smoothDockWidget_               = new SmoothDockWidget(ui_->centralWidget);
+    scatteredSampleSetDockWidget_   = new ScatteredSampleSetDockWidget(ui_->centralWidget);
     insertAngleDockWidget_          = new InsertIncomingAzimuthalAngleDockWidget(ui_->centralWidget);
 
     transmittanceModelDockWidget_->setWindowTitle("Transmittance model");
@@ -99,6 +100,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
 
     addDockWidget(Qt::LeftDockWidgetArea, transmittanceModelDockWidget_);
     transmittanceModelDockWidget_->hide();
+
+    addDockWidget(Qt::BottomDockWidgetArea, scatteredSampleSetDockWidget_);
+    scatteredSampleSetDockWidget_->hide();
 
     addDockWidget(Qt::LeftDockWidgetArea, smoothDockWidget_);
     smoothDockWidget_->hide();
@@ -511,6 +515,8 @@ void MainWindow::updateIncomingPolarAngle(int index)
 
     pickDockWidget_->clearPickedValue();
     pickDockWidget_->displayReflectance();
+
+    scatteredSampleSetDockWidget_->setInDirIndex(index);
 }
 
 void MainWindow::updateIncomingPolarAngle()
@@ -881,6 +887,9 @@ void MainWindow::createActions()
     ui_->viewMenu->addAction(ui_->tableDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(propertyDockWidget_->toggleViewAction());
     ui_->viewMenu->addAction(characteristicDockWidget_->toggleViewAction());
+#if defined(DEVELOPER)
+    ui_->viewMenu->addAction(scatteredSampleSetDockWidget_->toggleViewAction());
+#endif
     ui_->viewMenu->addSeparator();
     ui_->viewMenu->addAction(ui_->editorDockWidget->toggleViewAction());
     ui_->viewMenu->addAction(reflectanceModelDockWidget_->toggleViewAction());

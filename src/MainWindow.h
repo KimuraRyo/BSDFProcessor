@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2022 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -27,6 +27,7 @@
 #include "RenderingScene.h"
 #include "RenderingWidget.h"
 #include "TransmittanceModelDockWidget.h"
+#include "ScatteredSampleSetDockWidget.h"
 #include "SmoothDockWidget.h"
 
 /*!
@@ -168,6 +169,7 @@ private:
     PropertyDockWidget*                     propertyDockWidget_;
     ReflectanceModelDockWidget*             reflectanceModelDockWidget_;
     TransmittanceModelDockWidget*           transmittanceModelDockWidget_;
+    ScatteredSampleSetDockWidget*           scatteredSampleSetDockWidget_;
     SmoothDockWidget*                       smoothDockWidget_;
     InsertIncomingAzimuthalAngleDockWidget* insertAngleDockWidget_;
 
