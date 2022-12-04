@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.6] - 2022-11-06
+
+### Added
+
+- Added the view of 2D scattered data for developers.
+
+### Changed
+
+- Updated code to support libbsdf-0.10.1.
+
 ## [1.2.5] - 2020-09-13
 
 ### Added
@@ -58,6 +68,7 @@
 - Fixed the click on rendering view without data.
 - Fixed the bug of initial angle display with a nonzero minimum angle.
 
+[1.2.6]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.5...v1.2.6
 [1.2.5]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.2...v1.2.3
