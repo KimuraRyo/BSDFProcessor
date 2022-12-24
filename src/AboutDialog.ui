@@ -105,7 +105,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Copyright © 2014-2020 Kimura Ryo.</string>
+    <string>Copyright © 2014-2022 Kimura Ryo.</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
