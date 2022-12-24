@@ -156,6 +156,7 @@ private:
     void exportFile(const QString& fileName);
     bool exportSsdd(const QString& fileName);
     bool exportDdrDdt(const QString& fileName, lb::DataType dataType);
+    bool exportSdrSdt(const QString& fileName, lb::DataType dataType);
 
     osgViewer::View* getGraphView() const { return ui_->graphOpenGLWidget->getViewer(); }
 

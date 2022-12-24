@@ -31,6 +31,7 @@
 #include <libbsdf/Reader/ZemaxBsdfReader.h>
 
 #include <libbsdf/Writer/DdrWriter.h>
+#include <libbsdf/Writer/SdrWriter.h>
 #include <libbsdf/Writer/SsddWriter.h>
 
 #include "AboutDialog.h"
@@ -343,7 +344,7 @@ void MainWindow::openBxdfUsingDialog()
                                                     "Integra DDR (*.ddr);;"
                                                     "Integra DDT (*.ddt);;"
                                                     "Integra SDR (*.sdr);;"
-                                                    "Integra SDR (*.sdt);;"
+                                                    "Integra SDT (*.sdt);;"
                                                     "LightTools/Zemax (*.bsdf);;"
                                                     "ASTM E1392-96(2002) (*.astm);;"
                                                     "MERL binary (*.binary)");
@@ -389,6 +390,12 @@ void MainWindow::exportDataUsingDialog()
     }
     else if (data_->getBtdf()) {
         ddrFilter = "Integra DDT (*.ddt)";
+    }
+    else if (data_->getSpecularReflectances()) {
+        ddrFilter = "Integra SDR (*.sdr)";
+    }
+    else if (data_->getSpecularTransmittances()) {
+        ddrFilter = "Integra SDT (*.sdt)";
     }
 
     QString filter = ssddFilterSSDD + ";;" + ddrFilter;
@@ -1719,6 +1726,12 @@ void MainWindow::exportFile(const QString& fileName)
     else if (fileName.endsWith(".ddt")) {
         fileType = lb::INTEGRA_DDT_FILE;
     }
+    else if (fileName.endsWith(".sdr")) {
+        fileType = lb::INTEGRA_SDR_FILE;
+    }
+    else if (fileName.endsWith(".sdt")) {
+        fileType = lb::INTEGRA_SDT_FILE;
+    }
     else {
         lbError << "[MainWindow::exportFile] Invalid file extension: " << fileName.toLocal8Bit().data();
         return;
@@ -1726,18 +1739,24 @@ void MainWindow::exportFile(const QString& fileName)
 
     bool saved;
     switch (fileType) {
-        case lb::SSDD_FILE:
-            saved = exportSsdd(fileName);
-            break;
-        case lb::INTEGRA_DDR_FILE:
-            saved = exportDdrDdt(fileName, lb::BRDF_DATA);
-            break;
-        case lb::INTEGRA_DDT_FILE:
-            saved = exportDdrDdt(fileName, lb::BTDF_DATA);
-            break;
-        default:
-            saved = false;
-            break;
+    case lb::SSDD_FILE:
+        saved = exportSsdd(fileName);
+        break;
+    case lb::INTEGRA_DDR_FILE:
+        saved = exportDdrDdt(fileName, lb::BRDF_DATA);
+        break;
+    case lb::INTEGRA_DDT_FILE:
+        saved = exportDdrDdt(fileName, lb::BTDF_DATA);
+        break;
+    case lb::INTEGRA_SDR_FILE:
+        saved = exportSdrSdt(fileName, lb::SPECULAR_REFLECTANCE_DATA);
+        break;
+    case lb::INTEGRA_SDT_FILE:
+        saved = exportSdrSdt(fileName, lb::SPECULAR_TRANSMITTANCE_DATA);
+        break;
+    default:
+        saved = false;
+        break;
     }
 
     if (!saved) {
@@ -1835,6 +1854,24 @@ bool MainWindow::exportDdrDdt(const QString& fileName, lb::DataType dataType)
 
     std::string comments("Software: BSDFProcessor-" + std::string(getVersion()));
     return lb::DdrWriter::write(fileName.toLocal8Bit().data(), *brdf, dataType, comments);
+}
+
+bool MainWindow::exportSdrSdt(const QString& fileName, lb::DataType dataType)
+{
+    lb::SampleSet2D* ss2;
+    if (dataType == lb::SPECULAR_REFLECTANCE_DATA && data_->getSpecularReflectances()) {
+        ss2 = data_->getSpecularReflectances().get();
+    }
+    else if (dataType == lb::SPECULAR_TRANSMITTANCE_DATA && data_->getSpecularTransmittances()) {
+        ss2 = data_->getSpecularTransmittances().get();
+    }
+    else {
+        lbError << "[MainWindow::exportSdrSdt] Invalid data for export.";
+        return false;
+    }
+
+    std::string comments("Software: BSDFProcessor-" + std::string(getVersion()));
+    return lb::SdrWriter::write(fileName.toLocal8Bit().data(), *ss2, comments);
 }
 
 void MainWindow::updateCameraPosition()
