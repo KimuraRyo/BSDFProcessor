@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2021 Kimura Ryo                                  //
+// Copyright (C) 2016-2022 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -15,12 +15,14 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
+#include <libbsdf/ReflectanceModel/AnisotropicGgx.h>
+#include <libbsdf/ReflectanceModel/AnisotropicWard.h>
 #include <libbsdf/ReflectanceModel/AshikhminShirley.h>
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
 #include <libbsdf/ReflectanceModel/Disney.h>
 #include <libbsdf/ReflectanceModel/GGX.h>
-#include <libbsdf/ReflectanceModel/GgxAnisotropic.h>
+#include <libbsdf/ReflectanceModel/IsotropicWard.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
 #include <libbsdf/ReflectanceModel/Minnaert.h>
 #include <libbsdf/ReflectanceModel/ModifiedPhong.h>
@@ -28,10 +30,10 @@
 #include <libbsdf/ReflectanceModel/OrenNayar.h>
 #include <libbsdf/ReflectanceModel/Phong.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
+#include <libbsdf/ReflectanceModel/SimpleAnisotropicGgx.h>
+#include <libbsdf/ReflectanceModel/SimpleGGX.h>
 #include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
 #include <libbsdf/ReflectanceModel/UnrealEngine4.h>
-#include <libbsdf/ReflectanceModel/WardAnisotropic.h>
-#include <libbsdf/ReflectanceModel/WardIsotropic.h>
 
 ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
                                                        : AnalyticBsdfDockWidget(parent)
@@ -91,6 +93,8 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     std::vector<lb::ReflectanceModel*> models;
 
     const lb::Vec3 white(1.0, 1.0, 1.0);
+    const lb::Vec3 gray5(0.05, 0.05, 0.05);
+    const lb::Vec3 gray90(0.9, 0.9, 0.9);
     const lb::Vec3 black(0.0, 0.0, 0.0);
     
     // The refractive index and extinction coefficient of aluminium at 550nm.
@@ -101,27 +105,24 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::BlinnPhong(white, 40.0f));
     models.push_back(new lb::CookTorrance(white, 0.3f));
     models.push_back(new lb::Disney(white, black, 0.2f, 0.4f));
-#if defined(LIBBSDF_USE_COLOR_INSTEAD_OF_REFRACTIVE_INDEX)
-    models.push_back(new lb::Ggx(white, 0.3f));
-    models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f));
-#else
     models.push_back(new lb::Ggx(white, 0.3f, 1.5f, 0.0f));
-    models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f, n, k));
-#endif
+    models.push_back(new lb::SimpleGgx(gray5, 0.3f));
+    models.push_back(new lb::AnisotropicGgx(white, 0.2f, 0.4f, n, k));
+    models.push_back(new lb::SimpleAnisotropicGgx(gray90, 0.2f, 0.4f));
     models.push_back(new lb::Lambertian(white));
     models.push_back(new lb::Minnaert(white, 0.83f));
-    models.push_back(new lb::ModifiedPhong(white, 10.0f));
     models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
                                                      int(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
                                                      int(lb::MultipleScatteringSmith::GAUSSIAN_HEIGHT),
                                                      int(lb::MultipleScatteringSmith::BECKMANN_SLOPE),
                                                      10));
     models.push_back(new lb::OrenNayar(white, 0.3f));
-    models.push_back(new lb::Phong(white, 10.0f));
     models.push_back(new lb::SimplifiedOrenNayar(white, 0.3f));
+    models.push_back(new lb::Phong(white, 10.0f));
+    models.push_back(new lb::ModifiedPhong(white, 10.0f));
     models.push_back(new lb::UnrealEngine4(white, 0.0f, 0.5f, 0.3f));
-    models.push_back(new lb::WardAnisotropic(white, 0.05f, 0.2f));
-    models.push_back(new lb::WardIsotropic(white, 0.2f));
+    models.push_back(new lb::AnisotropicWard(white, 0.05f, 0.2f));
+    models.push_back(new lb::IsotropicWard(white, 0.2f));
 
     for (auto it = models.begin(); it != models.end(); ++it) {
         reflectanceModels_[(*it)->getName()] = *it;

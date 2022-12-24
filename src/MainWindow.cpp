@@ -1772,7 +1772,7 @@ std::shared_ptr<lb::Brdf> reduceAnglesUsingBilateralSymmetry(std::shared_ptr<lb:
 {
     const lb::SampleSet* ss = brdf->getSampleSet();
 
-    lb::Spectrum diffSp = lb::computeBilateralSymmetry(*brdf);
+    lb::Spectrum diffSp = lb::computeDegreeOfBilateralSymmetry(*brdf);
     float y = lb::SpectrumUtility::spectrumToY(diffSp, ss->getColorModel(), ss->getWavelengths());
     if (y < threshold) {
         brdf.reset(lb::reduceAnglesUsingBilateralSymmetry(*brdf));
@@ -1789,7 +1789,7 @@ std::shared_ptr<lb::Brdf> reduceAnglesUsingReciprocity(std::shared_ptr<lb::Brdf>
 
     const lb::SampleSet* ss = brdf->getSampleSet();
 
-    lb::Spectrum diffSp = lb::computeReciprocity(*brdf);
+    lb::Spectrum diffSp = lb::computeReciprocityError(*brdf);
     float y = lb::SpectrumUtility::spectrumToY(diffSp, ss->getColorModel(), ss->getWavelengths());
     if (y < threshold) {
         brdf.reset(lb::reduceAnglesUsingReciprocity(*hdBrdf));

@@ -200,7 +200,7 @@ void CharacteristicDockWidget::addReciprocityItems(const lb::Brdf& brdf)
     reciprocityItem->setText(0, "Reciprocity error");
     reciprocityItem->setToolTip(0, "Bihemispherical reflectance of the absolute difference between the original and reversed BRDF");
 
-    lb::Spectrum sp = lb::computeReciprocity(brdf);
+    lb::Spectrum sp = lb::computeReciprocityError(brdf);
     addColors(reciprocityItem, sp, false, false);
 }
 

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2021 Kimura Ryo                                  //
+// Copyright (C) 2018-2022 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -15,8 +15,8 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
+#include <libbsdf/ReflectanceModel/AnisotropicGgx.h>
 #include <libbsdf/ReflectanceModel/GGX.h>
-#include <libbsdf/ReflectanceModel/GgxAnisotropic.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
 #include <libbsdf/ReflectanceModel/MultipleScatteringSmith.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
@@ -55,7 +55,7 @@ void TransmittanceModelDockWidget::generateBrdf()
     std::shared_ptr<lb::Brdf> brdf = initializeBrdf(model->isIsotropic());
 
     bool iorUsed = (dynamic_cast<lb::Ggx*>(model) ||
-                    dynamic_cast<lb::GgxAnisotropic*>(model) ||
+                    dynamic_cast<lb::AnisotropicGgx*>(model) ||
                     dynamic_cast<lb::MultipleScatteringSmith*>(model));
 
     auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
@@ -119,10 +119,8 @@ void TransmittanceModelDockWidget::initializeReflectanceModels()
 
     lb::Vec3 white(1.0, 1.0, 1.0);
     lb::Vec3 black(0.0, 0.0, 0.0);
-#if !defined(LIBBSDF_USE_COLOR_INSTEAD_OF_REFRACTIVE_INDEX)
     models.push_back(new lb::Ggx(white, 0.3f, 1.5f, 0.0f));
-    models.push_back(new lb::GgxAnisotropic(white, 0.2f, 0.4f, 1.5f, 0.0f));
-#endif
+    models.push_back(new lb::AnisotropicGgx(white, 0.2f, 0.4f, 1.5f, 0.0f));
     models.push_back(new lb::Lambertian(white));
     models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
                                                      int(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
