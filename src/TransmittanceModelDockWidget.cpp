@@ -16,7 +16,7 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
 #include <libbsdf/ReflectanceModel/AnisotropicGgx.h>
-#include <libbsdf/ReflectanceModel/GGX.h>
+#include <libbsdf/ReflectanceModel/Ggx.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
 #include <libbsdf/ReflectanceModel/MultipleScatteringSmith.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>

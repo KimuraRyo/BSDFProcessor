@@ -21,7 +21,7 @@
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
 #include <libbsdf/ReflectanceModel/Disney.h>
-#include <libbsdf/ReflectanceModel/GGX.h>
+#include <libbsdf/ReflectanceModel/Ggx.h>
 #include <libbsdf/ReflectanceModel/IsotropicWard.h>
 #include <libbsdf/ReflectanceModel/Lambertian.h>
 #include <libbsdf/ReflectanceModel/Minnaert.h>
@@ -31,7 +31,7 @@
 #include <libbsdf/ReflectanceModel/Phong.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
 #include <libbsdf/ReflectanceModel/SimpleAnisotropicGgx.h>
-#include <libbsdf/ReflectanceModel/SimpleGGX.h>
+#include <libbsdf/ReflectanceModel/SimpleGgx.h>
 #include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
 #include <libbsdf/ReflectanceModel/UnrealEngine4.h>
 
