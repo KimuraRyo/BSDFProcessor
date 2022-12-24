@@ -844,6 +844,97 @@ void MainWindow::updateDiffuseIntensity(double intensity)
              intensity);
 }
 
+void MainWindow::raiseControlDockWidget()
+{
+    if (ui_->controlDockWidget->isVisible()) {
+        ui_->controlDockWidget->raise();
+    }
+}
+
+void MainWindow::raiseDisplayDockWidget()
+{
+    if (displayDockWidget_->isVisible()) {
+        displayDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseRenderingDockWidget()
+{
+    if (ui_->renderingDockWidget->isVisible()) {
+        ui_->renderingDockWidget->raise();
+    }
+}
+
+void MainWindow::raisePickDockWidget()
+{
+    if (pickDockWidget_->isVisible()) {
+        pickDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseTableDockWidget()
+{
+    if (ui_->tableDockWidget->isVisible()) {
+        ui_->tableDockWidget->raise();
+    }
+}
+
+void MainWindow::raisePropertyDockWidget()
+{
+    if (propertyDockWidget_->isVisible()) {
+        propertyDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseCharacteristicDockWidget()
+{
+    if (characteristicDockWidget_->isVisible()) {
+        characteristicDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseScatteredSampleSetDockWidget()
+{
+    if (scatteredSampleSetDockWidget_->isVisible()) {
+        scatteredSampleSetDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseEditorDockWidget()
+{
+    if (ui_->editorDockWidget->isVisible()) {
+        ui_->editorDockWidget->raise();
+    }
+}
+
+void MainWindow::raiseReflectanceModelDockWidget()
+{
+    if (reflectanceModelDockWidget_->isVisible()) {
+        reflectanceModelDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseTransmittanceModelDockWidget()
+{
+    if (transmittanceModelDockWidget_->isVisible()) {
+        transmittanceModelDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseSmoothDockWidget()
+{
+    if (smoothDockWidget_->isVisible()) {
+        smoothDockWidget_->raise();
+    }
+}
+
+void MainWindow::raiseInsertAngleDockWidget()
+{
+    if (insertAngleDockWidget_->isVisible()) {
+        insertAngleDockWidget_->raise();
+    }
+}
+
 void MainWindow::clearFileType()
 {
     data_->setFileType(lb::UNKNOWN_FILE);
@@ -899,6 +990,33 @@ void MainWindow::createActions()
     ui_->processorsMenu->addAction(insertAngleDockWidget_->toggleViewAction());
 
     ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL + Qt::Key_T);
+
+    connect(ui_->controlDockWidget->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseControlDockWidget()));
+    connect(displayDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseDisplayDockWidget()));
+    connect(ui_->renderingDockWidget->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseRenderingDockWidget()));
+    connect(pickDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raisePickDockWidget()));
+    connect(ui_->tableDockWidget->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseTableDockWidget()));
+    connect(propertyDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raisePropertyDockWidget()));
+    connect(characteristicDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseCharacteristicDockWidget()));
+    connect(scatteredSampleSetDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseScatteredSampleSetDockWidget()));
+    connect(ui_->editorDockWidget->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseEditorDockWidget()));
+    connect(reflectanceModelDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseReflectanceModelDockWidget()));
+    connect(transmittanceModelDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseTransmittanceModelDockWidget()));
+    connect(smoothDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseSmoothDockWidget()));
+    connect(insertAngleDockWidget_->toggleViewAction(), SIGNAL(triggered()), this,
+            SLOT(raiseInsertAngleDockWidget()));
 
     connect(ui_->actionOpenBrdf,    SIGNAL(triggered()), this, SLOT(openBxdfUsingDialog()));
     connect(ui_->actionOpenCcbrdf,  SIGNAL(triggered()), this, SLOT(openCcbxdfUsingDialog()));

@@ -101,6 +101,21 @@ private slots:
     void updateDiffuseIntensity(int intensity);
     void updateDiffuseIntensity(double intensity);
 
+    // Raises a dockwidget to the top when it is shown.
+    void raiseControlDockWidget();
+    void raiseDisplayDockWidget();
+    void raiseRenderingDockWidget();
+    void raisePickDockWidget();
+    void raiseTableDockWidget();
+    void raisePropertyDockWidget();
+    void raiseCharacteristicDockWidget();
+    void raiseScatteredSampleSetDockWidget();
+    void raiseEditorDockWidget();
+    void raiseReflectanceModelDockWidget();
+    void raiseTransmittanceModelDockWidget();
+    void raiseSmoothDockWidget();
+    void raiseInsertAngleDockWidget();
+
     void createTable();
 
     void clearFileType();
