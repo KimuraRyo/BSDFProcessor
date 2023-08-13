@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.3.0] - 2022-11-06
+## [1.3.0] - 2023-08-13
 
 ### Changed
 
@@ -75,6 +75,7 @@
 - Fixed the click on rendering view without data.
 - Fixed the bug of initial angle display with a nonzero minimum angle.
 
+[1.3.0]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.6...v1.3.0
 [1.2.6]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.5...v1.2.6
 [1.2.5]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/KimuraRyo/BSDFProcessor/compare/v1.2.3...v1.2.4
