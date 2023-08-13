@@ -68,7 +68,7 @@ BSDF Processor uses the following open source libraries:
 * [Qt 5][4]
 
 CMake is used as the build system.
-Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_DIR`, `EIGEN3_INCLUDE_DIR`, and `Qt5_DIR`.
+Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_DIR`, `Eigen3_DIR`, and `Qt5_DIR`.
 
 ## Sponsor
 

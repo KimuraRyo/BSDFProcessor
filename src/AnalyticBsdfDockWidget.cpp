@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2020 Kimura Ryo                                  //
+// Copyright (C) 2018-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -50,12 +50,12 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
         QWidget* paramWidget = 0;
 
         switch (it->getType()) {
-            case lb::ReflectanceModel::Parameter::FLOAT_PARAMETER:
+            case lb::ReflectanceModel::Parameter::REAL_PARAMETER:
             {
                 QDoubleSpinBox* spinBox = new QDoubleSpinBox(ui_->parameterWidget);
 
-                spinBox->setMinimum(*it->getMinFloat());
-                spinBox->setMaximum(*it->getMaxFloat());
+                spinBox->setMinimum(*it->getMinReal());
+                spinBox->setMaximum(*it->getMaxReal());
                 spinBox->setMaximumWidth(75);
 
                 if (spinBox->maximum() >= 9999.9) {
@@ -67,7 +67,7 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
                     spinBox->setSingleStep(0.1);
                 }
 
-                spinBox->setValue(*it->getFloat());
+                spinBox->setValue(*it->getReal());
 
                 connect(spinBox, SIGNAL(editingFinished()),
                         this, SLOT(updateParameter()));
@@ -168,7 +168,7 @@ void AnalyticBsdfDockWidget::updateParameter()
 {
     for (auto it = currentParameters_.begin(); it != currentParameters_.end(); ++it) {
         if (QDoubleSpinBox* dSpinBox = dynamic_cast<QDoubleSpinBox*>(it->first)) {
-            *it->second->getFloat() = dSpinBox->value();
+            *it->second->getReal() = dSpinBox->value();
         }
         else if (ColorButton* colorButton = dynamic_cast<ColorButton*>(it->first)) {
             *it->second->getVec3() = util::qtToLb(colorButton->getColor());
@@ -198,24 +198,25 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
     std::string coordinateSystemName(ui_->coordSysComboBox->currentText().toLocal8Bit());
     if (coordinateSystemName == "Half-difference coordinate system") {
         // Create narrow intervals near specular directions.
-        lb::Arrayf halfThetaAngles =
-            lb::array_util::createExponential<lb::Arrayf>(ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
-                                                          lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0,
-                                                          2.0f);
+        lb::Arrayd halfThetaAngles = lb::array_util::createExponential<lb::Arrayd>(
+            ui_->halfDiffCsNumAngle0SpinBox->value() + 1,
+            lb::HalfDifferenceCoordinateSystem::MAX_ANGLE0, 2.0);
 
-        lb::Arrayf halfPhiAngles;
+        lb::Arrayd halfPhiAngles;
         if (isotropic || ui_->halfDiffCsNumAngle1SpinBox->value() <= 1) {
             halfPhiAngles.setZero(1);
         }
         else {
-            halfPhiAngles.setLinSpaced(ui_->halfDiffCsNumAngle1SpinBox->value() + 1,
-                                       0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE1);
+            halfPhiAngles.setLinSpaced(ui_->halfDiffCsNumAngle1SpinBox->value() + 1, 0.0,
+                                       lb::HalfDifferenceCoordinateSystem::MAX_ANGLE1);
         }
 
-        lb::Arrayf diffThetaAngles  = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle2SpinBox->value() + 1,
-                                                            0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2);
-        lb::Arrayf diffPhiAngles    = lb::Arrayf::LinSpaced(ui_->halfDiffCsNumAngle3SpinBox->value() + 1,
-                                                            0.0, lb::HalfDifferenceCoordinateSystem::MAX_ANGLE3);
+        lb::Arrayd diffThetaAngles =
+            lb::Arrayd::LinSpaced(ui_->halfDiffCsNumAngle2SpinBox->value() + 1, 0.0,
+                                  lb::HalfDifferenceCoordinateSystem::MAX_ANGLE2);
+        lb::Arrayd diffPhiAngles =
+            lb::Arrayd::LinSpaced(ui_->halfDiffCsNumAngle3SpinBox->value() + 1, 0.0,
+                                  lb::HalfDifferenceCoordinateSystem::MAX_ANGLE3);
 
         brdf = new lb::HalfDifferenceCoordinatesBrdf(halfThetaAngles.size(),
                                                      halfPhiAngles.size(),
@@ -242,7 +243,7 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
                                                numInPhi,
                                                ui_->specularCsNumAngle2SpinBox->value() + 1,
                                                ui_->specularCsNumAngle3SpinBox->value() + 1,
-                                               2.0f,
+                                               2.0,
                                                lb::RGB_MODEL, 3);
     }
     else if (coordinateSystemName == "Spherical coordinate system") {

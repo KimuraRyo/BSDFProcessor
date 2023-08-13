@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020 Kimura Ryo                                       //
+// Copyright (C) 2020-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -25,7 +25,7 @@ public:
     explicit PropertyDockWidget(QWidget* parent);
     ~PropertyDockWidget();
 
-    void updateData(const MaterialData& data);
+    void updateData(const MaterialData& materialData);
 
 private:
     Q_DISABLE_COPY(PropertyDockWidget)

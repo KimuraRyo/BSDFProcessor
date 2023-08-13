@@ -528,7 +528,7 @@ void MainWindow::updateIncomingPolarAngle(int index)
 
 void MainWindow::updateIncomingPolarAngle()
 {
-    float inTheta;
+    double inTheta;
     if (!updateIncomingPolarAngle(&inTheta)) return;
 
     if (inTheta == graphScene_->getInTheta()) return;
@@ -560,7 +560,7 @@ void MainWindow::updateIncomingAzimuthalAngle(int index)
 
 void MainWindow::updateIncomingAzimuthalAngle()
 {
-    float inPhi;
+    double inPhi;
     if (!updateIncomingAzimuthalAngle(&inPhi)) return;
 
     if (inPhi == graphScene_->getInPhi()) return;
@@ -1417,16 +1417,16 @@ void MainWindow::initializeWavelengthUi(int index)
     }
 }
 
-void MainWindow::adjustIncomingPolarAngleSlider(float inTheta)
+void MainWindow::adjustIncomingPolarAngleSlider(double inTheta)
 {
     if (data_->isEmpty()) return;
 
     // Find the nearest index and adjust the slider.
     int nearestIndex = 0;
-    lb::Arrayf inThetaArray = data_->getReflectances()->getThetaArray();
-    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE0;
+    const lb::Arrayd& inThetaArray = data_->getReflectances()->getThetaArray();
+    double            minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE0;
     for (int i = 0; i < inThetaArray.size(); ++i) {
-        float diff = std::abs(inTheta - inThetaArray[i]);
+        double diff = std::abs(inTheta - inThetaArray[i]);
         if (minDiff > diff) {
             minDiff = diff;
             nearestIndex = i;
@@ -1438,16 +1438,16 @@ void MainWindow::adjustIncomingPolarAngleSlider(float inTheta)
     signalEmittedFromUi_ = true;
 }
 
-void MainWindow::adjustIncomingAzimuthalAngleSlider(float inPhi)
+void MainWindow::adjustIncomingAzimuthalAngleSlider(double inPhi)
 {
     if (data_->isEmpty()) return;
 
     // Find the nearest index and adjust the slider.
     int nearestIndex = 0;
-    lb::Arrayf inPhiArray = data_->getReflectances()->getPhiArray();
-    float minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE1;
+    const lb::Arrayd& inPhiArray = data_->getReflectances()->getPhiArray();
+    double            minDiff = lb::SphericalCoordinateSystem::MAX_ANGLE1;
     for (int i = 0; i < inPhiArray.size(); ++i) {
-        float diff = std::abs(inPhi - inPhiArray[i]);
+        double diff = std::abs(inPhi - inPhiArray[i]);
         if (minDiff > diff) {
             minDiff = diff;
             nearestIndex = i;
@@ -1459,7 +1459,7 @@ void MainWindow::adjustIncomingAzimuthalAngleSlider(float inPhi)
     signalEmittedFromUi_ = true;
 }
 
-bool MainWindow::updateIncomingPolarAngle(float* inTheta)
+bool MainWindow::updateIncomingPolarAngle(double* inTheta)
 {
     if (data_->isEmpty()) return false;
 
@@ -1472,7 +1472,7 @@ bool MainWindow::updateIncomingPolarAngle(float* inTheta)
     QString inThetaStr = ui_->incomingPolarAngleLineEdit->text();
 
     bool ok;
-    float inThetaDegree = inThetaStr.toFloat(&ok);
+    double inThetaDegree = inThetaStr.toDouble(&ok);
     if (!ok) {
         inThetaDegree = lb::toDegree(graphScene_->getInTheta());
         ui_->incomingPolarAngleLineEdit->setText(QString::number(inThetaDegree));
@@ -1480,8 +1480,8 @@ bool MainWindow::updateIncomingPolarAngle(float* inTheta)
         return false;
     }
 
-    if (inThetaDegree < 0.0f || inThetaDegree > 90.0f) {
-        inThetaDegree = lb::clamp(inThetaDegree, 0.0f, 90.0f);
+    if (inThetaDegree < 0 || inThetaDegree > 90) {
+        inThetaDegree = lb::clamp(inThetaDegree, 0.0, 90.0);
         ui_->incomingPolarAngleLineEdit->setText(QString::number(inThetaDegree));
         ui_->incomingPolarAngleLineEdit->home(false);
     }
@@ -1493,7 +1493,7 @@ bool MainWindow::updateIncomingPolarAngle(float* inTheta)
     return true;
 }
 
-bool MainWindow::updateIncomingAzimuthalAngle(float* inPhi)
+bool MainWindow::updateIncomingAzimuthalAngle(double* inPhi)
 {
     if (data_->isEmpty()) return false;
 
@@ -1506,7 +1506,7 @@ bool MainWindow::updateIncomingAzimuthalAngle(float* inPhi)
     QString inPhiStr = ui_->incomingAzimuthalAngleLineEdit->text();
 
     bool ok;
-    float inPhiDegree = inPhiStr.toFloat(&ok);
+    double inPhiDegree = inPhiStr.toDouble(&ok);
     if (!ok) {
         inPhiDegree = lb::toDegree(graphScene_->getInPhi());
         ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inPhiDegree));
@@ -1514,8 +1514,8 @@ bool MainWindow::updateIncomingAzimuthalAngle(float* inPhi)
         return false;
     }
 
-    if (inPhiDegree < 0.0f || inPhiDegree > 360.0f) {
-        inPhiDegree = lb::clamp(inPhiDegree, 0.0f, 360.0f);
+    if (inPhiDegree < 0.0 || inPhiDegree > 360.0) {
+        inPhiDegree = lb::clamp(inPhiDegree, 0.0, 360.0);
         ui_->incomingAzimuthalAngleLineEdit->setText(QString::number(inPhiDegree));
         ui_->incomingAzimuthalAngleLineEdit->home(false);
     }

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -56,7 +56,7 @@ public:
     void updateScaleInPlaneOfIncidence();
 
     void updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavelengthIndex);
-    void updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex);
+    void updateGraphGeometry(double inTheta, double inPhi, int wavelengthIndex);
     void updateGraphGeometry();
 
     void updateInOutDirLine(const lb::Vec3& inDir,
@@ -85,8 +85,8 @@ public:
 
     int getWavelengthIndex() const { return wavelengthIndex_; }
 
-    float getInTheta() const { return lb::SphericalCoordinateSystem::toTheta(pickedInDir_); }
-    float getInPhi()   const { return lb::SphericalCoordinateSystem::toPhi(pickedInDir_); }
+    double getInTheta() const { return lb::SphericalCoordinateSystem::toTheta(pickedInDir_); }
+    double getInPhi()   const { return lb::SphericalCoordinateSystem::toPhi(pickedInDir_); }
 
     const lb::Vec3& getPickedInDir()  const { return pickedInDir_; }
     const lb::Vec3& getPickedOutDir() const { return pickedOutDir_; }

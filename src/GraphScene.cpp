@@ -306,7 +306,7 @@ void GraphScene::updateGraphGeometry(int inThetaIndex, int inPhiIndex, int wavel
     }
 }
 
-void GraphScene::updateGraphGeometry(float inTheta, float inPhi, int wavelengthIndex)
+void GraphScene::updateGraphGeometry(double inTheta, double inPhi, int wavelengthIndex)
 {
     pickedInDir_ = lb::SphericalCoordinateSystem::toXyz(inTheta, inPhi);
 
@@ -323,7 +323,7 @@ void GraphScene::updateGraphGeometry()
         updateGraphGeometry(inThetaIndex_, inPhiIndex_, wavelengthIndex_);
     }
     else {
-        float inTheta, inPhi;
+        double inTheta, inPhi;
         lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
         updateGraphGeometry(inTheta, inPhi, wavelengthIndex_);
     }
@@ -480,7 +480,7 @@ void GraphScene::setupHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
                                                        NUM_ARC_SEGMENTS, RED, lineWidth);
     geode->addDrawable(angleGeomHN);
 
-    float halfTheta, halfPhi, diffTheta, diffPhi;
+    double halfTheta, halfPhi, diffTheta, diffPhi;
     data_->getHalfDiffCoordAngles(inDir, outDir, &halfTheta, &halfPhi, &diffTheta, &diffPhi);
 
     // half azimuthal angle
@@ -507,7 +507,7 @@ void GraphScene::setupSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
 {
     bool transparent = (data_->getBtdf() || data_->getSpecularTransmittances());
 
-    float inTheta, inPhi, specTheta, specPhi;
+    double inTheta, inPhi, specTheta, specPhi;
     data_->getSpecularCoordAngles(inDir, outDir, &inTheta, &inPhi, &specTheta, &specPhi);
 
     lb::Vec3 specDir;
@@ -628,7 +628,7 @@ void GraphScene::setupSphericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3
 
     osg::Vec3 anglePosX = osg::Vec3(1.0, 0.0, 0.0) * arcRadius;
 
-    float inTheta, inPhi, outTheta, outPhi;
+    double inTheta, inPhi, outTheta, outPhi;
     data_->getShericalCoordAngles(inDir, outDir, &inTheta, &inPhi, &outTheta, &outPhi);
 
     // incoming azimuthal angle
@@ -982,7 +982,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
                        wavelengthIndex < ss->getNumWavelengths());
     if (!paramValid) return;
 
-    float inTheta, inPhi;
+    double inTheta, inPhi;
     lb::SphericalCoordinateSystem::fromXyz(pickedInDir_, &inTheta, &inPhi);
 
     const lb::Brdf* brdf = data_->getBrdfData();
@@ -1011,7 +1011,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_INCOMING_POLAR_ANGLES_DISPLAY: {
             inOutDirGroup_->removeChildren(0, inOutDirGroup_->getNumChildren());
 
-            float curInTheta;
+            double curInTheta;
             #pragma omp parallel for private(curInTheta)
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
                 curInTheta = data_->getIncomingPolarAngle(i);
@@ -1020,7 +1020,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 
             for (int i = 0; i < data_->getNumInTheta(); ++i) {
                 curInTheta = data_->getIncomingPolarAngle(i);
-                float inThetaRatio = curInTheta / lb::PI_2_F;
+                double    inThetaRatio = curInTheta / lb::PI_2_D;
                 osg::Vec4 color(scene_util::hueToRgb(inThetaRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(curInTheta, inPhi);
@@ -1038,11 +1038,11 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         case ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY: {
             inOutDirGroup_->removeChildren(0, inOutDirGroup_->getNumChildren());
 
-            float endInPhi = data_->getIncomingAzimuthalAngle(data_->getNumInPhi() - 1)
-                           - lb::SphericalCoordinateSystem::MAX_ANGLE1;
+            double endInPhi = data_->getIncomingAzimuthalAngle(data_->getNumInPhi() - 1) -
+                              lb::SphericalCoordinateSystem::MAX_ANGLE1;
             bool duplicate = lb::isEqual(data_->getIncomingAzimuthalAngle(0), endInPhi);
             int numInPhi = duplicate ? data_->getNumInPhi() - 1 : data_->getNumInPhi();
-            float curInPhi;
+            double curInPhi;
             #pragma omp parallel for private(curInPhi)
             for (int i = 0; i < numInPhi; ++i) {
                 curInPhi = data_->getIncomingAzimuthalAngle(i);
@@ -1051,7 +1051,7 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
 
             for (int i = 0; i < numInPhi; ++i) {
                 curInPhi = data_->getIncomingAzimuthalAngle(i);
-                float inPhiRatio = curInPhi / lb::TAU_F;
+                double    inPhiRatio = curInPhi / lb::TAU_D;
                 osg::Vec4 color(scene_util::hueToRgb(inPhiRatio), 1.0);
 
                 lb::Vec3 curInDir = lb::SphericalCoordinateSystem::toXyz(inTheta, curInPhi);

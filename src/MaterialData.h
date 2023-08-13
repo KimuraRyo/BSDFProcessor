@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2020 Kimura Ryo                                  //
+// Copyright (C) 2016-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -60,17 +60,29 @@ public:
     bool isEmpty() const;
     bool isIsotropic() const;
 
-    float getIncomingPolarAngle(int index) const;
-    float getIncomingAzimuthalAngle(int index) const;
+    double getIncomingPolarAngle(int index) const;
+    double getIncomingAzimuthalAngle(int index) const;
 
-    void getHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
-                                float* halfTheta, float* halfPhi, float* diffTheta, float* diffPhi);
+    void getHalfDiffCoordAngles(const lb::Vec3& inDir,
+                                const lb::Vec3& outDir,
+                                double*         halfTheta,
+                                double*         halfPhi,
+                                double*         diffTheta,
+                                double*         diffPhi);
 
-    void getSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
-                                float* inTheta, float* inPhi, float* specTheta, float* specPhi);
+    void getSpecularCoordAngles(const lb::Vec3& inDir,
+                                const lb::Vec3& outDir,
+                                double*         inTheta,
+                                double*         inPhi,
+                                double*         specTheta,
+                                double*         specPhi);
 
-    void getShericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
-                                float* inTheta, float* inPhi, float* outTheta, float* outPhi);
+    void getShericalCoordAngles(const lb::Vec3& inDir,
+                                const lb::Vec3& outDir,
+                                double*         inTheta,
+                                double*         inPhi,
+                                double*         outTheta,
+                                double*         outPhi);
 
     float getWavelength(int index) const;
 

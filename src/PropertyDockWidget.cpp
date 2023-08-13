@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020 Kimura Ryo                                       //
+// Copyright (C) 2020-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -30,11 +30,12 @@ PropertyDockWidget::~PropertyDockWidget()
     delete ui_;
 }
 
-void PropertyDockWidget::updateData(const MaterialData& data)
+void PropertyDockWidget::updateData(const MaterialData& materialData)
 {
-    if (!&data) return;
+    if (!&materialData)
+        return;
 
-    data_ = &data;
+    data_ = &materialData;
 
     ui_->propertyTreeWidget->clear();
 

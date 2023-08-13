@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2022 Kimura Ryo                                  //
+// Copyright (C) 2014-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -135,11 +135,11 @@ private:
     void initializeDisplayModeUi(QString modeName);
     void initializeWavelengthUi(int index);
 
-    void adjustIncomingPolarAngleSlider(float inTheta);
-    void adjustIncomingAzimuthalAngleSlider(float inPhi);
+    void adjustIncomingPolarAngleSlider(double inTheta);
+    void adjustIncomingAzimuthalAngleSlider(double inPhi);
 
-    bool updateIncomingPolarAngle(float* inTheta);
-    bool updateIncomingAzimuthalAngle(float* inPhi);
+    bool updateIncomingPolarAngle(double* inTheta);
+    bool updateIncomingAzimuthalAngle(double* inPhi);
 
     void updateInDir(const lb::Vec3& inDir);
 

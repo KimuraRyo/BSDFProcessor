@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020 Kimura Ryo                                       //
+// Copyright (C) 2020-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -39,7 +39,7 @@ PickDockWidget::~PickDockWidget()
     delete ui_;
 }
 
-void PickDockWidget::updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& outDir, bool isotropic)
+void PickDockWidget::updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& outDir)
 {
     auto toNumber = [](double value) {
         if (std::abs(value) < 0.000001) {
@@ -50,7 +50,7 @@ void PickDockWidget::updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& ou
 
     // Set angles of lb::HalfDifferenceCoordinateSystem.
     {
-        float halfTheta, halfPhi, diffTheta, diffPhi;
+        double halfTheta, halfPhi, diffTheta, diffPhi;
         data_->getHalfDiffCoordAngles(inDir, outDir, &halfTheta, &halfPhi, &diffTheta, &diffPhi);
 
         ui_->halfDiffCsAngle0LineEdit->setText(toNumber(halfTheta));
@@ -61,7 +61,7 @@ void PickDockWidget::updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& ou
 
     // Set angles of lb::SpecularCoordinateSystem.
     {
-        float inTheta, inPhi, specTheta, specPhi;
+        double inTheta, inPhi, specTheta, specPhi;
         data_->getSpecularCoordAngles(inDir, outDir, &inTheta, &inPhi, &specTheta, &specPhi);
 
         ui_->specularCsAngle0LineEdit->setText(toNumber(inTheta));
@@ -72,7 +72,7 @@ void PickDockWidget::updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& ou
 
     // Set angles of lb::SphericalCoordinateSystem.
     {
-        float inTheta, inPhi, outTheta, outPhi;
+        double inTheta, inPhi, outTheta, outPhi;
         data_->getShericalCoordAngles(inDir, outDir, &inTheta, &inPhi, &outTheta, &outPhi);
 
         ui_->sphericalCsAngle0LineEdit->setText(toNumber(inTheta));
@@ -90,31 +90,26 @@ void PickDockWidget::updatePickedValue(const lb::Vec3& inDir, const lb::Vec3& ou
         return;
     }
 
-    bool isotropic;
     lb::Spectrum sp;
     lb::Arrayf wls;
     lb::ColorModel cm;
 
     if (lb::Brdf* brdf = data_->getBrdf().get()) {
-        isotropic = brdf->getSampleSet()->isIsotropic();
         sp = brdf->getSpectrum(inDir, outDir);
         wls = brdf->getSampleSet()->getWavelengths();
         cm = brdf->getSampleSet()->getColorModel();
     }
     else if (lb::SampleSet2D* sr = data_->getSpecularReflectances().get()) {
-        isotropic = sr->isIsotropic();
         sp = sr->getSpectrum(inDir);
         wls = sr->getWavelengths();
         cm = sr->getColorModel();
     }
     else if (lb::Btdf* btdf = data_->getBtdf().get()) {
-        isotropic = btdf->getSampleSet()->isIsotropic();
         sp = btdf->getSpectrum(inDir, outDir);
         wls = btdf->getSampleSet()->getWavelengths();
         cm = btdf->getSampleSet()->getColorModel();
     }
     else if (lb::SampleSet2D* st = data_->getSpecularTransmittances().get()) {
-        isotropic = st->isIsotropic();
         sp = st->getSpectrum(inDir);
         wls = st->getWavelengths();
         cm = st->getColorModel();
@@ -123,7 +118,7 @@ void PickDockWidget::updatePickedValue(const lb::Vec3& inDir, const lb::Vec3& ou
         return;
     }
 
-    updatePickedAngle(inDir, outDir, isotropic);
+    updatePickedAngle(inDir, outDir);
 
     if (ui_->pickedValueLineEdit->isEnabled()) {
         float pickedValue;

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2022 Kimura Ryo                                  //
+// Copyright (C) 2016-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -73,7 +73,7 @@ void ReflectanceModelDockWidget::generateBrdf()
         int numAngles2 = ss->getNumAngles2();
         int numAngles3 = ss->getNumAngles3();
 
-        lb::Optimizer optimizer(brdf.get(), 0.001f, 0.01f);
+        lb::Optimizer optimizer(brdf.get(), 0.001, 0.01);
         optimizer.optimize();
 
         lb::ReflectanceModelUtility::setupBrdf(*model, brdf.get(),
@@ -96,33 +96,33 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     const lb::Vec3 gray5(0.05, 0.05, 0.05);
     const lb::Vec3 gray90(0.9, 0.9, 0.9);
     const lb::Vec3 black(0.0, 0.0, 0.0);
-    
-    // The refractive index and extinction coefficient of aluminium at 550nm.
-    constexpr float n = 0.96521f;
-    constexpr float k = 6.3995f;
 
-    models.push_back(new lb::AshikhminShirley(white, black, 100.0f, 20.0f));
-    models.push_back(new lb::BlinnPhong(white, 40.0f));
-    models.push_back(new lb::CookTorrance(white, 0.3f));
-    models.push_back(new lb::Disney(white, black, 0.2f, 0.4f));
-    models.push_back(new lb::Ggx(white, 0.3f, 1.5f, 0.0f));
-    models.push_back(new lb::SimpleGgx(gray5, 0.3f));
-    models.push_back(new lb::AnisotropicGgx(white, 0.2f, 0.4f, n, k));
-    models.push_back(new lb::SimpleAnisotropicGgx(gray90, 0.2f, 0.4f));
+    // The refractive index and extinction coefficient of aluminium at 550nm.
+    constexpr double n = 0.96521;
+    constexpr double k = 6.3995;
+
+    models.push_back(new lb::AshikhminShirley(white, black, 100.0, 20.0));
+    models.push_back(new lb::BlinnPhong(white, 40.0));
+    models.push_back(new lb::CookTorrance(white, 0.3));
+    models.push_back(new lb::Disney(white, black, 0.2, 0.4));
+    models.push_back(new lb::Ggx(white, 0.3, 1.5, 0.0));
+    models.push_back(new lb::SimpleGgx(gray5, 0.3));
+    models.push_back(new lb::AnisotropicGgx(white, 0.2, 0.4, n, k));
+    models.push_back(new lb::SimpleAnisotropicGgx(gray90, 0.2, 0.4));
     models.push_back(new lb::Lambertian(white));
-    models.push_back(new lb::Minnaert(white, 0.83f));
-    models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
+    models.push_back(new lb::Minnaert(white, 0.83));
+    models.push_back(new lb::ModifiedPhong(white, 10.0));
+    models.push_back(new lb::MultipleScatteringSmith(white, 0.2, 0.4, 1.5,
                                                      int(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
                                                      int(lb::MultipleScatteringSmith::GAUSSIAN_HEIGHT),
                                                      int(lb::MultipleScatteringSmith::BECKMANN_SLOPE),
                                                      10));
-    models.push_back(new lb::OrenNayar(white, 0.3f));
-    models.push_back(new lb::SimplifiedOrenNayar(white, 0.3f));
-    models.push_back(new lb::Phong(white, 10.0f));
-    models.push_back(new lb::ModifiedPhong(white, 10.0f));
-    models.push_back(new lb::UnrealEngine4(white, 0.0f, 0.5f, 0.3f));
-    models.push_back(new lb::AnisotropicWard(white, 0.05f, 0.2f));
-    models.push_back(new lb::IsotropicWard(white, 0.2f));
+    models.push_back(new lb::OrenNayar(white, 0.3));
+    models.push_back(new lb::Phong(white, 10.0));
+    models.push_back(new lb::SimplifiedOrenNayar(white, 0.3));
+    models.push_back(new lb::UnrealEngine4(white, 0.0, 0.5, 0.3));
+    models.push_back(new lb::AnisotropicWard(white, 0.05, 0.2));
+    models.push_back(new lb::IsotropicWard(white, 0.2));
 
     for (auto it = models.begin(); it != models.end(); ++it) {
         reflectanceModels_[(*it)->getName()] = *it;

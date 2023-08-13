@@ -102,34 +102,6 @@ void MaterialData::updateBtdf()
     updateSampleSet(btdf_->getSampleSet());
 }
 
-float MaterialData::getIncomingPolarAngle(int index) const
-{
-    if (brdf_ || btdf_) {
-        const lb::SampleSet* ss = getSampleSet();
-
-        if (isInDirDependentCoordinateSystem()) {
-            return ss->getAngle0(index);
-        }
-        else {
-            if (numInTheta_ == 1) {
-                return 0.0f;
-            }
-            else {
-                return index * lb::SphericalCoordinateSystem::MAX_ANGLE0 / (numInTheta_ - 1);
-            }
-        }
-    }
-    else if (specularReflectances_) {
-        return specularReflectances_->getTheta(index);
-    }
-    else if (specularTransmittances_) {
-        return specularTransmittances_->getTheta(index);
-    }
-    else {
-        return 0.0f;
-    }
-}
-
 bool MaterialData::isEmpty() const
 {
     return !(brdf_ || btdf_ || specularReflectances_ || specularTransmittances_);
@@ -137,7 +109,7 @@ bool MaterialData::isEmpty() const
 
 bool MaterialData::isIsotropic() const
 {
-    const lb::SampleSet* ss = getSampleSet();
+    const lb::SampleSet*   ss = getSampleSet();
     const lb::SampleSet2D* ss2 = getSampleSet2D();
 
     bool isotropic;
@@ -154,7 +126,35 @@ bool MaterialData::isIsotropic() const
     return isotropic;
 }
 
-float MaterialData::getIncomingAzimuthalAngle(int index) const
+double MaterialData::getIncomingPolarAngle(int index) const
+{
+    if (brdf_ || btdf_) {
+        const lb::SampleSet* ss = getSampleSet();
+
+        if (isInDirDependentCoordinateSystem()) {
+            return ss->getAngle0(index);
+        }
+        else {
+            if (numInTheta_ == 1) {
+                return 0;
+            }
+            else {
+                return index * lb::SphericalCoordinateSystem::MAX_ANGLE0 / (numInTheta_ - 1);
+            }
+        }
+    }
+    else if (specularReflectances_) {
+        return specularReflectances_->getTheta(index);
+    }
+    else if (specularTransmittances_) {
+        return specularTransmittances_->getTheta(index);
+    }
+    else {
+        return 0;
+    }
+}
+
+double MaterialData::getIncomingAzimuthalAngle(int index) const
 {
     if (brdf_ || btdf_) {
         const lb::SampleSet* ss = getSampleSet();
@@ -164,7 +164,7 @@ float MaterialData::getIncomingAzimuthalAngle(int index) const
         }
         else {
             if (numInPhi_ == 1) {
-                return 0.0f;
+                return 0;
             }
             else {
                 return index * lb::SphericalCoordinateSystem::MAX_ANGLE1 / (numInPhi_ - 1);
@@ -178,12 +178,16 @@ float MaterialData::getIncomingAzimuthalAngle(int index) const
         return specularTransmittances_->getPhi(index);
     }
     else {
-        return 0.0f;
+        return 0;
     }
 }
 
-void MaterialData::getHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
-                                          float* halfTheta, float* halfPhi, float* diffTheta, float* diffPhi)
+void MaterialData::getHalfDiffCoordAngles(const lb::Vec3& inDir,
+                                          const lb::Vec3& outDir,
+                                          double*         halfTheta,
+                                          double*         halfPhi,
+                                          double*         diffTheta,
+                                          double*         diffPhi)
 {
     lb::Vec3 brdfOutDir = outDir;
     if (btdf_ || specularTransmittances_) {
@@ -191,20 +195,24 @@ void MaterialData::getHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
     }
 
     if (isIsotropic()) {
-        *halfPhi = 0.0f;
+        *halfPhi = 0;
         lb::HalfDifferenceCoordinateSystem::fromXyz(inDir, brdfOutDir, halfTheta, diffTheta, diffPhi);
     }
     else {
         lb::HalfDifferenceCoordinateSystem::fromXyz(inDir, brdfOutDir, halfTheta, halfPhi, diffTheta, diffPhi);
     }
 
-    if (lb::isEqual(*halfTheta, 0.0f)) {
-        *diffPhi = 0.0f;
+    if (lb::isEqual(*halfTheta, 0.0)) {
+        *diffPhi = 0;
     }
 }
 
-void MaterialData::getSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
-                                          float* inTheta, float* inPhi, float* specTheta, float* specPhi)
+void MaterialData::getSpecularCoordAngles(const lb::Vec3& inDir,
+                                          const lb::Vec3& outDir,
+                                          double*         inTheta,
+                                          double*         inPhi,
+                                          double*         specTheta,
+                                          double*         specPhi)
 {
     lb::Vec3 brdfOutDir = outDir;
     if (btdf_ || specularTransmittances_) {
@@ -222,7 +230,7 @@ void MaterialData::getSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
     }
     else {
         if (isIsotropic()) {
-            *inPhi = 0.0f;
+            *inPhi = 0;
             lb::SpecularCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, specTheta, specPhi);
         }
         else {
@@ -231,8 +239,12 @@ void MaterialData::getSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
     }
 }
 
-void MaterialData::getShericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3& outDir,
-                                          float* inTheta, float* inPhi, float* outTheta, float* outPhi)
+void MaterialData::getShericalCoordAngles(const lb::Vec3& inDir,
+                                          const lb::Vec3& outDir,
+                                          double*         inTheta,
+                                          double*         inPhi,
+                                          double*         outTheta,
+                                          double*         outPhi)
 {
     lb::Vec3 brdfOutDir = outDir;
     if (btdf_ || specularTransmittances_) {
@@ -240,7 +252,7 @@ void MaterialData::getShericalCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
     }
 
     if (isIsotropic()) {
-        *inPhi = 0.0f;
+        *inPhi = 0;
         lb::SphericalCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, outTheta, outPhi);
     }
     else {

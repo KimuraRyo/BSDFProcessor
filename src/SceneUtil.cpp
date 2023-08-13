@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -771,23 +771,23 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
     return geom.release();
 }
 
-void scene_util::attachBrdfTextLabels(osg::Geode*       geode,
-                                      const lb::Brdf&   brdf,
-                                      int               inThetaIndex,
-                                      int               inPhiIndex,
-                                      int               wavelengthIndex,
-                                      bool              logPlotUsed,
-                                      float             baseOfLogarithm,
-                                      lb::DataType      dataType)
+void scene_util::attachBrdfTextLabels(osg::Geode*     geode,
+                                      const lb::Brdf& brdf,
+                                      int             inThetaIndex,
+                                      int             inPhiIndex,
+                                      int             wavelengthIndex,
+                                      bool            logPlotUsed,
+                                      float           baseOfLogarithm,
+                                      lb::DataType    dataType)
 {
     const lb::SampleSet* ss = brdf.getSampleSet();
 
-    const int maxSamples = 5000; // reduction threshold of samples
+    constexpr int maxSamples = 5000; // reduction threshold of samples
 
     osg::Vec3Array* pointVertices = new osg::Vec3Array;
 
-    bool overlapped = (lb::isEqual(ss->getAngle3(0), 0.0f) &&
-                       lb::isEqual(ss->getAngle3(ss->getNumAngles3() - 1), lb::TAU_F));
+    bool overlapped = (lb::isEqual(ss->getAngle3(0), 0.0) &&
+                       lb::isEqual(ss->getAngle3(ss->getNumAngles3() - 1), lb::TAU_D));
     int numPhi = overlapped ? (ss->getNumAngles3() - 1) : ss->getNumAngles3();
 
     // Add labels.

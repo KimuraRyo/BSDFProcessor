@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2022 Kimura Ryo                                  //
+// Copyright (C) 2018-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -60,7 +60,7 @@ void TransmittanceModelDockWidget::generateBrdf()
 
     auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
 
-    float ior = 1.0f;
+    double ior = 1;
 
     // Offset specular directions for refraction.
     if (iorUsed && specBrdf) {
@@ -71,8 +71,8 @@ void TransmittanceModelDockWidget::generateBrdf()
         lb::ReflectanceModel::Parameters& params = model->getParameters();
         for (auto it = params.begin(); it != params.end(); ++it) {
             if (it->getName() == iorParamName) {
-                ior = *it->getFloat();
-                if (ior == 1.0f) break;
+                ior = *it->getReal();
+                if (ior == 1) break;
 
                 specBrdf->setupSpecularOffsets(ior);
 
@@ -97,7 +97,7 @@ void TransmittanceModelDockWidget::generateBrdf()
         int numAngles2 = ss->getNumAngles2();
         int numAngles3 = ss->getNumAngles3();
 
-        lb::Optimizer optimizer(brdf.get(), 0.001f, 0.01f);
+        lb::Optimizer optimizer(brdf.get(), 0.001, 0.01);
         optimizer.optimize();
 
         lb::ReflectanceModelUtility::setupBrdf(*model, brdf.get(),
@@ -119,10 +119,10 @@ void TransmittanceModelDockWidget::initializeReflectanceModels()
 
     lb::Vec3 white(1.0, 1.0, 1.0);
     lb::Vec3 black(0.0, 0.0, 0.0);
-    models.push_back(new lb::Ggx(white, 0.3f, 1.5f, 0.0f));
-    models.push_back(new lb::AnisotropicGgx(white, 0.2f, 0.4f, 1.5f, 0.0f));
+    models.push_back(new lb::Ggx(white, 0.3, 1.5, 0.0));
+    models.push_back(new lb::AnisotropicGgx(white, 0.2, 0.4, 1.5, 0.0));
     models.push_back(new lb::Lambertian(white));
-    models.push_back(new lb::MultipleScatteringSmith(white, 0.2f, 0.4f, 1.5f,
+    models.push_back(new lb::MultipleScatteringSmith(white, 0.2, 0.4, 1.5,
                                                      int(lb::MultipleScatteringSmith::DIELECTRIC_MATERIAL),
                                                      int(lb::MultipleScatteringSmith::GAUSSIAN_HEIGHT),
                                                      int(lb::MultipleScatteringSmith::BECKMANN_SLOPE),

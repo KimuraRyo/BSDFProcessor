@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2022 Kimura Ryo                                       //
+// Copyright (C) 2022-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -118,7 +118,6 @@ void ScatteredSampleSetView::addPoints()
 void ScatteredSampleSetView::addDelaunayTriangles()
 {
     const lb::DelaunayTriangulation& dt = sss2d_->getDelaunayTriangulation();
-    const std::vector<double>&       coords = dt.getCoords();
 
     QPen pen(QColor(255, 0, 255));
     pen.setWidthF(0.002);

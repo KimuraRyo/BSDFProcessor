@@ -1,5 +1,5 @@
 ## =================================================================== ##
-## Copyright (C) 2014-2022 Kimura Ryo                                  ##
+## Copyright (C) 2014-2023 Kimura Ryo                                  ##
 ##                                                                     ##
 ## This Source Code Form is subject to the terms of the Mozilla Public ##
 ## License, v. 2.0. If a copy of the MPL was not distributed with this ##
@@ -10,9 +10,6 @@ cmake_minimum_required(VERSION 3.5)
 
 # Let AUTOMOC and AUTOUIC process GENERATED files.
 cmake_policy(SET CMP0071 NEW)
-
-# Enable double precision vector types
-add_definitions(-DLIBBSDF_DOUBLE_PRECISION_VECTOR)
 
 if(NOT LIBBSDF_DIR)
     set(LIBBSDF_CORE_FOLDER_NAME "libbsdf Core")
@@ -39,10 +36,7 @@ if(BSDFPROCESSOR_DEVELOPER_MODE)
     add_definitions(-DDEVELOPER)
 endif()
 
-if(NOT EIGEN3_INCLUDE_DIR)
-    message(FATAL_ERROR "Please set the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
-endif()
-include_directories("${EIGEN3_INCLUDE_DIR}")
+find_package(Eigen3 REQUIRED)
 
 set(OpenSceneGraph_MARK_AS_ADVANCED ON)
 find_package(OpenSceneGraph 3.4.0 REQUIRED osgDB osgGA osgText osgUtil osgViewer)
@@ -62,7 +56,7 @@ if(MSVC)
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 else()
-    set (CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
 endif()
@@ -78,7 +72,7 @@ endif()
 set(RESOURCE_PATH resource)
 
 # Set version of a binary file for Windows
-if (MSVC)
+if(MSVC)
     set(RESOURCES ${RESOURCES} ${RESOURCE_PATH}/version.rc)
 endif()
 
@@ -97,5 +91,5 @@ qt5_add_resources(RESOURCES ${RESOURCE_PATH}/resource.qrc)
 add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCES} ${RESOURCES})
 
 target_link_libraries(${PROJECT_NAME}
-                      ${OPENSCENEGRAPH_LIBRARIES} Qt5::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES}
+                      ${OPENSCENEGRAPH_LIBRARIES} Qt5::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} Eigen3::Eigen
                       libbsdf)

@@ -1,5 +1,5 @@
 ﻿// =================================================================== //
-// Copyright (C) 2020 Kimura Ryo                                       //
+// Copyright (C) 2020-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -28,11 +28,12 @@ CharacteristicDockWidget::~CharacteristicDockWidget()
     delete ui_;
 }
 
-void CharacteristicDockWidget::updateData(const MaterialData& data)
+void CharacteristicDockWidget::updateData(const MaterialData& materialData)
 {
-    if (!&data) return;
+    if (!&materialData)
+        return;
 
-    data_ = &data;
+    data_ = &materialData;
 
     ui_->characteristicTreeWidget->clear();
 
@@ -114,7 +115,7 @@ void CharacteristicDockWidget::addReflectanceItems()
     QTreeWidgetItem* parentItem = reflectanceItem;
     for (int phIndex = 0; phIndex < data_->getNumInPhi(); ++phIndex) {
         if (data_->getNumInPhi() > 1) {
-            float inPhi = data_->getIncomingAzimuthalAngle(phIndex);
+            double inPhi = data_->getIncomingAzimuthalAngle(phIndex);
 
             parentItem = new QTreeWidgetItem(reflectanceItem);
             parentItem->setText(0, "Incoming azimuthal angle: " + QString::number(lb::toDegree(inPhi)) + u8"°");
@@ -124,7 +125,7 @@ void CharacteristicDockWidget::addReflectanceItems()
         inThetaItem->setText(0, "Incoming polar angle:");
 
         for (int thIndex = 0; thIndex < data_->getNumInTheta(); ++thIndex) {
-            float inTheta = data_->getIncomingPolarAngle(thIndex);
+            double inTheta = data_->getIncomingPolarAngle(thIndex);
 
             const lb::Spectrum& sp = data_->getReflectances()->getSpectrum(thIndex, phIndex);
 
@@ -162,7 +163,7 @@ void CharacteristicDockWidget::add8DegreeReflectanceItems()
 
     QTreeWidgetItem* parentItem = reflectanceItem;
     for (int phIndex = 0; phIndex < data_->getNumInPhi(); ++phIndex) {
-        float inPhi = data_->getIncomingAzimuthalAngle(phIndex);
+        double inPhi = data_->getIncomingAzimuthalAngle(phIndex);
 
         if (data_->getNumInPhi() > 1) {
             parentItem = new QTreeWidgetItem(reflectanceItem);

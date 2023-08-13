@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020 Kimura Ryo                                       //
+// Copyright (C) 2020-2023 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -31,7 +31,7 @@ public:
     void setGraphScene(GraphScene* scene) { graphScene_ = scene; }
     void setMaterialData(MaterialData* materialData) { data_ = materialData; }
 
-    void updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& outDir, bool isotropic);
+    void updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& outDir);
     void updatePickedValue(const lb::Vec3& inDir, const lb::Vec3& outDir);
     void updatePickedValue();
 
