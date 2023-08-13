@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0] - 2022-11-06
+
+### Changed
+
+- Updated code to support libbsdf-0.11.0.
+- Changed 32-bit variables for processing to 64-bit.
+
 ## [1.2.6] - 2022-11-06
 
 ### Added
