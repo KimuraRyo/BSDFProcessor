@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020 Kimura Ryo                                       //
+// Copyright (C) 2020-2025 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -63,7 +63,7 @@ void Settings::restoreRecentFileNames(QList<QAction*>* recentFileActionList)
     QSettings settings;
     QStringList fileNames = settings.value(MAIN_WINDOW_RECENT_FILES).toStringList();
 
-    int numNames = std::min(fileNames.size(), MainWindow::MAX_RECENT_FILES);
+    int numNames = std::min(static_cast<int>(fileNames.size()), MainWindow::MAX_RECENT_FILES);
 
     for (int i = 0; i < numNames; ++i) {
         recentFileActionList->at(i)->setText(fileNames.at(i));

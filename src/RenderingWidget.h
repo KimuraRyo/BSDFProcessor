@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2025 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -23,7 +23,7 @@ class RenderingWidget : public OsgQWidget
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    explicit RenderingWidget(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
+    explicit RenderingWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     void setRenderingScene(RenderingScene* scene);
 

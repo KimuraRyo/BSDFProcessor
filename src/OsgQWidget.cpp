@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2019-2020 Kimura Ryo                                  //
+// Copyright (C) 2019-2025 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -127,7 +127,7 @@ void OsgQWidget::wheelEvent(QWheelEvent* event)
 {
     mouseMoved_ = true;
 
-    int delta = event->delta();
+    int delta = event->angleDelta().y();
     osgGA::GUIEventAdapter::ScrollingMotion motion = (delta > 0) ? osgGA::GUIEventAdapter::SCROLL_UP
                                                                  : osgGA::GUIEventAdapter::SCROLL_DOWN;
     graphicsWindow_->getEventQueue()->mouseScroll(motion);

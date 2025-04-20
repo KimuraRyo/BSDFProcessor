@@ -1,12 +1,12 @@
 ## =================================================================== ##
-## Copyright (C) 2014-2023 Kimura Ryo                                  ##
+## Copyright (C) 2014-2025 Kimura Ryo                                  ##
 ##                                                                     ##
 ## This Source Code Form is subject to the terms of the Mozilla Public ##
 ## License, v. 2.0. If a copy of the MPL was not distributed with this ##
 ## file, You can obtain one at http://mozilla.org/MPL/2.0/.            ##
 ## =================================================================== ##
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.31)
 
 # Let AUTOMOC and AUTOUIC process GENERATED files.
 cmake_policy(SET CMP0071 NEW)
@@ -21,6 +21,8 @@ endif()
 include_directories(${LIBBSDF_DIR}/include)
 
 project(BSDFProcessor)
+
+set(CMAKE_CXX_STANDARD 17)
 
 set(SOURCE_PATH src)
 
@@ -46,17 +48,17 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets OpenGLWidgets)
 
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 if(MSVC)
+    add_compile_options(/W4)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 else()
-    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
 endif()
@@ -86,10 +88,16 @@ elseif(MSVC)
     set(RESOURCES ${RESOURCES} ${RESOURCE_PATH}/icon.rc)
 endif()
 
-qt5_add_resources(RESOURCES ${RESOURCE_PATH}/resource.qrc)
+set(RESOURCES ${RESOURCES} ${RESOURCE_PATH}/resource.qrc)
 
 add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCES} ${RESOURCES})
 
-target_link_libraries(${PROJECT_NAME}
-                      ${OPENSCENEGRAPH_LIBRARIES} Qt5::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} Eigen3::Eigen
-                      libbsdf)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${OPENSCENEGRAPH_LIBRARIES}
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::OpenGLWidgets
+    ${OPENGL_LIBRARIES}
+    Eigen3::Eigen
+    libbsdf)

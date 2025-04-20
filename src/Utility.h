@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2025 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -44,7 +44,7 @@ inline osg::Vec3 qtToOsg(const QColor& color)
 /*! Converts from QColor to lb::Vec3. */
 inline lb::Vec3 qtToLb(const QColor& color)
 {
-    qreal r, g, b;
+    float r, g, b;
     color.getRgbF(&r, &g, &b);
     return lb::Vec3(r, g, b);
 }

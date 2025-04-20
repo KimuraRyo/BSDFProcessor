@@ -103,7 +103,7 @@ void GraphWidget::copyCameraSettings()
 void GraphWidget::pasteCameraSettings()
 {
     QString paramStr = qApp->clipboard()->text();
-    QStringList paramList = paramStr.split(QRegularExpression("\\s+"), QString::SkipEmptyParts);
+    QStringList paramList = paramStr.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 
     osg::Vec3d pos, center, up;
     if (getParameters(paramList, CAMERA_POSITION, &pos) &&

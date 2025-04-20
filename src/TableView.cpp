@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2025 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -614,7 +614,7 @@ void TableView::paintEvent(QPaintEvent* event)
 
 void TableView::wheelEvent(QWheelEvent* event)
 {
-    if (event->delta() > 0) {
+    if (event->angleDelta().y() > 0) {
         scale(0.9, 0.9);
     }
     else {

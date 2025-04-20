@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2019 Kimura Ryo                                       //
+// Copyright (C) 2019-2025 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -18,7 +18,7 @@
 
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
-#include <QtWidgets/QOpenGLWidget>
+#include <QOpenGLWidget>
 
 #include <osgViewer/Viewer>
 
@@ -29,7 +29,7 @@
 class OsgQWidget : public QOpenGLWidget
 {
 public:
-    explicit OsgQWidget(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
+    explicit OsgQWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     osgViewer::Viewer* getViewer() { return viewer_; }
 
