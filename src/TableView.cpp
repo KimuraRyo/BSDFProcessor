@@ -352,8 +352,6 @@ void TableView::createReflectanceDataItems(const lb::SampleSet2D& ss2, int wavel
     int num0 = ss2.getNumTheta();
     int num1 = ss2.getNumPhi();
 
-    const qreal itemSize = 1.0;
-
     QList<QGraphicsItem*> whiteItems, blackItems;
 
     // data table
