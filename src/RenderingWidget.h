@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2025 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -35,6 +35,7 @@ signals:
 
 private slots:
     void resetCameraPosition();
+    void enableTonemapping(bool on);
     void showSphere();
     void showCylinder();
     void showBox();
@@ -63,6 +64,7 @@ private:
     bool skipRequested_;
 
     QAction* actionResetCamera_;
+    QAction* actionTonemapping_;
     QAction* actionShapeSphere_;
     QAction* actionShapeCylinder_;
     QAction* actionShapeBox_;

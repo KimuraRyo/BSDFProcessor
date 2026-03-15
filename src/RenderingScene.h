@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -44,6 +44,8 @@ public:
     lb::DataType getDataType() { return dataType_; }
 
     void setLightDir(const osg::Vec3& dir) { inDirUniform_->set(dir); }
+
+    void enableTonemapping(bool on) { tonemappingEnabled_ = on; }
 
     void setLightIntensity(float intensity) { lightIntensity_ = intensity; }
     void setEnvironmentIntensity(float intensity) { environmentIntensity_ = intensity; }
@@ -97,6 +99,8 @@ private:
     lb::Brdf*           brdf_;
     lb::SampleSet2D*    reflectances_;
     lb::DataType        dataType_;
+
+    bool tonemappingEnabled_;
 
     float lightIntensity_;
     float environmentIntensity_;

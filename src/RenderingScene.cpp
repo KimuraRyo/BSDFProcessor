@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -15,12 +15,14 @@
 
 #include "SceneUtil.h"
 
-RenderingScene::RenderingScene() : numMultiSamples_(0),
-                                   brdf_(0),
-                                   reflectances_(0),
-                                   dataType_(lb::BRDF_DATA),
-                                   lightIntensity_(1.0f),
-                                   environmentIntensity_(0.0f)
+RenderingScene::RenderingScene()
+    : numMultiSamples_(0),
+      brdf_(0),
+      reflectances_(0),
+      dataType_(lb::BRDF_DATA),
+      tonemappingEnabled_(true),
+      lightIntensity_(1.0f),
+      environmentIntensity_(0.0f)
 {
     const int windowSize = 512;
 
@@ -262,13 +264,20 @@ osg::Group* RenderingScene::createPostProcessing(osg::Node* subgraph, int width,
         "\n"
         "uniform sampler2D renderedTexture;\n"
         "uniform float gamma;\n"
+        "uniform bool tonemapping;\n"
         "\n"
         "void main()\n"
         "{\n"
         "    vec2 uv0 = gl_TexCoord[0].xy;\n"
-        "    vec4 fragColor = texture2D(renderedTexture, uv0);\n"
-        "    fragColor.xyz = pow(fragColor.xyz, vec3(1.0 / gamma));\n"
-        "    gl_FragColor = vec4(fragColor.xyz, 1.0);\n"
+        "    vec3 rgb = texture2D(renderedTexture, uv0).xyz;\n"
+        "    if (tonemapping) {\n"
+        "        // Reinhard-Jodie tonemapping\n"
+        "        float l = 0.2126 * rgb.x + 0.7152 * rgb.y + 0.0722 * rgb.z;\n"
+        "        vec3 reinhard = rgb.xyz / (1.0 + rgb.xyz);"
+        "        rgb.xyz = mix(rgb.xyz / (1.0 + l), reinhard, reinhard);\n"
+        "    }\n"
+        "    rgb.xyz = pow(rgb.xyz, vec3(1.0 / gamma));\n"
+        "    gl_FragColor = vec4(rgb.xyz, 1.0);\n"
         "}\n"
     };
 
@@ -293,6 +302,9 @@ osg::Group* RenderingScene::createPostProcessing(osg::Node* subgraph, int width,
     const float gamma = 2.2f;
     osg::Uniform* gammaUniform = new osg::Uniform("gamma", gamma);
     postProcessingGroup->getOrCreateStateSet()->addUniform(gammaUniform);
+
+    osg::Uniform* tonemappingUniform = new osg::Uniform("tonemapping", tonemappingEnabled_);
+    postProcessingGroup->getOrCreateStateSet()->addUniform(tonemappingUniform);
 
     return postProcessingGroup;
 }

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -19,11 +19,8 @@
 
 #include "SceneUtil.h"
 
-RenderingWidget::RenderingWidget(QWidget*           parent,
-                                 Qt::WindowFlags    f)
-                                 : OsgQWidget(parent, f),
-                                   renderingScene_(nullptr),
-                                   skipRequested_(false)
+RenderingWidget::RenderingWidget(QWidget* parent, Qt::WindowFlags f)
+    : OsgQWidget(parent, f), renderingScene_(nullptr), skipRequested_(false)
 {
     osg::Camera* camera = new osg::Camera;
     QSize viewSize = size() * getPixelRatio();
@@ -43,6 +40,12 @@ RenderingWidget::RenderingWidget(QWidget*           parent,
     actionResetCamera_ = new QAction(this);
     actionResetCamera_->setText("Reset camera position");
     connect(actionResetCamera_, SIGNAL(triggered()), this, SLOT(resetCameraPosition()));
+
+    actionTonemapping_ = new QAction(this);
+    actionTonemapping_->setText("Tonemapping");
+    actionTonemapping_->setCheckable(true);
+    actionTonemapping_->setChecked(true);
+    connect(actionTonemapping_, SIGNAL(triggered(bool)), this, SLOT(enableTonemapping(bool)));
 
     actionShapeSphere_ = new QAction(this);
     actionShapeSphere_->setText("Sphere");
@@ -93,6 +96,12 @@ void RenderingWidget::resetCameraPosition()
     osgGA::CameraManipulator* cm = viewer_->getCameraManipulator();
     cm->setHomePosition(eye, center, up);
     cm->home(0.0);
+}
+
+void RenderingWidget::enableTonemapping(bool on)
+{
+    renderingScene_->enableTonemapping(on);
+    updateView();
 }
 
 void RenderingWidget::showSphere()
@@ -344,6 +353,7 @@ void RenderingWidget::showContextMenu(const QPoint& pos)
 {
     QMenu menu(this);
     menu.addAction(actionResetCamera_);
+    menu.addAction(actionTonemapping_);
 
     QMenu* shapeMenu = menu.addMenu("Shape");
     shapeMenu->addAction(actionShapeSphere_);
