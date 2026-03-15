@@ -16,7 +16,7 @@ ColorButton::ColorButton(QWidget* parent)
                            picked_(false)
 {
 #if defined(_WIN32)
-    setFixedSize(70, 23);
+    setFixedSize(70, 24);
 #elif defined(__APPLE__)
     setFixedSize(70, 26);
 #else
@@ -109,8 +109,8 @@ void ColorButton::paintEvent(QPaintEvent* event)
 #endif
     painter.drawRect(frameWidth + leftMargin,
                      frameWidth + topMargin,
-                     width() - frameWidth * 2 - 2 - leftMargin - sizeDecrease,
-                     height() - frameWidth * 2 - 2 - topMargin - sizeDecrease);
+                     width() - frameWidth * 2 - 1 - leftMargin - sizeDecrease,
+                     height() - frameWidth * 2 - 1 - topMargin - sizeDecrease);
 }
 
 void ColorButton::nextCheckState()
