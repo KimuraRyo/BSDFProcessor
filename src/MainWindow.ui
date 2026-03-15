@@ -53,7 +53,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>141</height>
+      <height>154</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -67,7 +67,7 @@
       <item>
        <layout class="QFormLayout" name="formLayout_2">
         <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+         <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label_13">
@@ -91,7 +91,7 @@
       <item>
        <layout class="QFormLayout" name="formLayout_6">
         <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+         <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label">
@@ -108,7 +108,7 @@
              <number>1</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -155,7 +155,7 @@
              <number>1</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -191,7 +191,7 @@
              <number>1</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -221,7 +221,7 @@
       <item>
        <spacer name="verticalSpacer">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -299,16 +299,16 @@
          <bool>false</bool>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Plain</enum>
+         <enum>QFrame::Shadow::Plain</enum>
         </property>
         <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
+         <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
         </property>
         <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
+         <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
         </property>
         <property name="backgroundBrush">
          <brush brushstyle="SolidPattern">
@@ -320,13 +320,13 @@
          </brush>
         </property>
         <property name="renderHints">
-         <set>QPainter::TextAntialiasing</set>
+         <set>QPainter::RenderHint::TextAntialiasing</set>
         </property>
         <property name="dragMode">
-         <enum>QGraphicsView::ScrollHandDrag</enum>
+         <enum>QGraphicsView::DragMode::ScrollHandDrag</enum>
         </property>
         <property name="viewportUpdateMode">
-         <enum>QGraphicsView::FullViewportUpdate</enum>
+         <enum>QGraphicsView::ViewportUpdateMode::FullViewportUpdate</enum>
         </property>
        </widget>
       </item>
@@ -392,14 +392,14 @@
          </size>
         </property>
         <property name="focusPolicy">
-         <enum>Qt::StrongFocus</enum>
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
         </property>
        </widget>
       </item>
       <item>
        <layout class="QFormLayout" name="formLayout_12">
         <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+         <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
         </property>
         <property name="leftMargin">
          <number>9</number>
@@ -431,7 +431,7 @@
              <number>90</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -468,7 +468,7 @@
              <number>90</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -502,7 +502,7 @@
              <number>100</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -545,7 +545,7 @@
              <number>100</number>
             </property>
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -581,13 +581,13 @@
       <x>330</x>
       <y>210</y>
       <width>236</width>
-      <height>191</height>
+      <height>202</height>
      </rect>
     </property>
     <property name="minimumSize">
      <size>
-      <width>200</width>
-      <height>180</height>
+      <width>206</width>
+      <height>202</height>
      </size>
     </property>
     <property name="floating">
@@ -627,7 +627,7 @@
                 <number>0</number>
                </property>
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
               </widget>
              </item>
@@ -664,7 +664,7 @@
                 <number>100</number>
                </property>
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
               </widget>
              </item>
@@ -714,7 +714,7 @@
                 <number>100</number>
                </property>
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
               </widget>
              </item>
@@ -744,7 +744,7 @@
       <item>
        <spacer name="verticalSpacer_2">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -773,7 +773,7 @@
      </size>
     </property>
     <property name="focusPolicy">
-     <enum>Qt::StrongFocus</enum>
+     <enum>Qt::FocusPolicy::StrongFocus</enum>
     </property>
    </widget>
   </widget>
@@ -783,7 +783,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="fileMenu">
@@ -954,8 +954,8 @@
    <slot>updateIncomingPolarAngle(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>532</x>
-     <y>106</y>
+     <x>528</x>
+     <y>127</y>
     </hint>
     <hint type="destinationlabel">
      <x>604</x>
@@ -970,28 +970,12 @@
    <slot>updateWavelength(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>532</x>
-     <y>160</y>
+     <x>528</x>
+     <y>185</y>
     </hint>
     <hint type="destinationlabel">
      <x>601</x>
      <y>171</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>graphModeComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>MainWindowBase</receiver>
-   <slot>updateDisplayMode(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>540</x>
-     <y>68</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>619</x>
-     <y>71</y>
     </hint>
    </hints>
   </connection>
@@ -1034,8 +1018,8 @@
    <slot>updateIncomingAzimuthalAngle(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>532</x>
-     <y>133</y>
+     <x>528</x>
+     <y>156</y>
     </hint>
     <hint type="destinationlabel">
      <x>632</x>
@@ -1051,7 +1035,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>299</x>
-     <y>421</y>
+     <y>420</y>
     </hint>
     <hint type="destinationlabel">
      <x>362</x>
@@ -1082,8 +1066,8 @@
    <slot>updateLightPolarAngle(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>245</x>
-     <y>417</y>
+     <x>211</x>
+     <y>416</y>
     </hint>
     <hint type="destinationlabel">
      <x>389</x>
@@ -1098,8 +1082,8 @@
    <slot>updateLightAzimuthalAngle(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>245</x>
-     <y>444</y>
+     <x>211</x>
+     <y>447</y>
     </hint>
     <hint type="destinationlabel">
      <x>446</x>
@@ -1114,8 +1098,8 @@
    <slot>updateLightIntensity(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>233</x>
-     <y>471</y>
+     <x>223</x>
+     <y>478</y>
     </hint>
     <hint type="destinationlabel">
      <x>316</x>
@@ -1130,8 +1114,8 @@
    <slot>updateEnvironmentIntensity(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>233</x>
-     <y>498</y>
+     <x>223</x>
+     <y>509</y>
     </hint>
     <hint type="destinationlabel">
      <x>354</x>
@@ -1163,7 +1147,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>579</x>
-     <y>137</y>
+     <y>159</y>
     </hint>
     <hint type="destinationlabel">
      <x>788</x>
@@ -1178,8 +1162,8 @@
    <slot>updateGlossyIntensity(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>430</x>
-     <y>296</y>
+     <x>454</x>
+     <y>322</y>
     </hint>
     <hint type="destinationlabel">
      <x>678</x>
@@ -1194,8 +1178,8 @@
    <slot>updateGlossyIntensity(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>512</x>
-     <y>293</y>
+     <x>544</x>
+     <y>326</y>
     </hint>
     <hint type="destinationlabel">
      <x>725</x>
@@ -1210,8 +1194,8 @@
    <slot>updateGlossyShininess(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>473</x>
-     <y>321</y>
+     <x>454</x>
+     <y>353</y>
     </hint>
     <hint type="destinationlabel">
      <x>614</x>
@@ -1226,8 +1210,8 @@
    <slot>updateGlossyShininess(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>513</x>
-     <y>326</y>
+     <x>544</x>
+     <y>357</y>
     </hint>
     <hint type="destinationlabel">
      <x>671</x>
@@ -1242,8 +1226,8 @@
    <slot>updateDiffuseIntensity(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>450</x>
-     <y>387</y>
+     <x>454</x>
+     <y>422</y>
     </hint>
     <hint type="destinationlabel">
      <x>432</x>
@@ -1258,12 +1242,28 @@
    <slot>updateDiffuseIntensity(double)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>518</x>
-     <y>387</y>
+     <x>544</x>
+     <y>426</y>
     </hint>
     <hint type="destinationlabel">
      <x>540</x>
      <y>439</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>graphModeComboBox</sender>
+   <signal>currentTextChanged(QString)</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>updateDisplayMode(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>526</x>
+     <y>85</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>675</x>
+     <y>34</y>
     </hint>
    </hints>
   </connection>
