@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2023 Kimura Ryo                                  //
+// Copyright (C) 2016-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -19,6 +19,7 @@
 #include <libbsdf/ReflectanceModel/AnisotropicWard.h>
 #include <libbsdf/ReflectanceModel/AshikhminShirley.h>
 #include <libbsdf/ReflectanceModel/BlinnPhong.h>
+#include <libbsdf/ReflectanceModel/Brady.h>
 #include <libbsdf/ReflectanceModel/CookTorrance.h>
 #include <libbsdf/ReflectanceModel/Disney.h>
 #include <libbsdf/ReflectanceModel/Ggx.h>
@@ -103,6 +104,7 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
 
     models.push_back(new lb::AshikhminShirley(white, black, 100.0, 20.0));
     models.push_back(new lb::BlinnPhong(white, 40.0));
+    models.push_back(new lb::Brady(white, black, gray90, 1.5, 0.3));
     models.push_back(new lb::CookTorrance(white, 0.3));
     models.push_back(new lb::Disney(white, black, 0.2, 0.4));
     models.push_back(new lb::Ggx(white, 0.3, 1.5, 0.0));
