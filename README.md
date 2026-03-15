@@ -65,17 +65,17 @@ BSDF Processor uses the following open source libraries:
 * [libbsdf][1]
 * [Eigen 3][2]
 * [OpenSceneGraph][3] (v3.6.4 is recommended instead of v3.6.5 to avoid the [issue][10] of osgText::FadeText)
-* [Qt 5][4]
+* [Qt 6][4]
 
 CMake is used as the build system.
-Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_DIR`, `Eigen3_DIR`, and `Qt5_DIR`.
+Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_DIR`, `Eigen3_DIR`, and `Qt6_DIR`.
 
 ## Sponsor
 
 [<img src="resource/IntegraLogo.png" width="200"/>][5]
 
 [1]: https://github.com/KimuraRyo/libbsdf "libbsdf"
-[2]: http://eigen.tuxfamily.org/index.php?title=Main_Page "Eigen"
+[2]: https://gitlab.com/libeigen/eigen "Eigen"
 [3]: http://www.openscenegraph.org "OpenSceneGraph"
 [4]: http://www.qt.io "Qt"
 [5]: http://www.integra.jp/en "Integra"
