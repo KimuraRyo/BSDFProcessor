@@ -253,3 +253,21 @@ void TableView::showEvent(QShowEvent* event)
     }
     fittingNeeded_ = false;
 }
+
+void TableView::mousePressEvent(QMouseEvent* event)
+{
+    QGraphicsView::mousePressEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
+}
+
+void TableView::mouseMoveEvent(QMouseEvent* event)
+{
+    QGraphicsView::mouseMoveEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
+}
+
+void TableView::mouseReleaseEvent(QMouseEvent* event)
+{
+    QGraphicsView::mouseReleaseEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
+}
