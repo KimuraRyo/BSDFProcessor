@@ -56,6 +56,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     lb::Log::setNotificationLevel(lb::Log::Level::INFO_MSG);
     osg::setNotifyLevel(osg::NOTICE);
 
+    setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
+    setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+
     ui_->setupUi(this);
 
     characteristicDockWidget_       = new CharacteristicDockWidget(ui_->centralWidget);
