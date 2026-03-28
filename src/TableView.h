@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -27,7 +27,7 @@ public:
 
     void createTable(int wavelengthIndex, float gamma = 1.0f, bool photometric = false);
 
-    void setMaterialData(MaterialData* materialData) { data_ = materialData; }
+    void setMaterialData(MaterialData* materialData);
     void setLogPlotAction(QAction* action) { actionLogPlot_ = action; }
 
     bool isBackSideShown() const { return backSideShown_; }
@@ -49,22 +49,12 @@ private:
     Q_DISABLE_COPY(TableView)
 
     void createBrdfTable(int wavelengthIndex);
-    void createBrdfDataItems(int wavelengthIndex);
     void createBrdfDataPixmapItem(int wavelengthIndex);
     void createBrdfAngleItems(const lb::SampleSet& ss);
 
     void createReflectanceTable(int wavelengthIndex);
     void createReflectanceDataItems(const lb::SampleSet2D& ss2, int wavelengthIndex);
     void createReflectanceAngleItems(const lb::SampleSet2D& ss2);
-
-    /*! Gets the value of a sample point for a item. */
-    float getSampleValue(const lb::Spectrum&    sp,
-                         lb::ColorModel         colorModel,
-                         const lb::Arrayf&      wavelengths,
-                         int                    wavelengthIndex);
-
-    /*! Gets angle indices of lb::SampleSet at \a pos. */
-    bool getIndex(const QPointF& pos, int* i0, int* i1, int* i2, int* i3);
 
     bool getInOutDir(const QPointF& pos, lb::Vec3* inDir, lb::Vec3* outDir);
 

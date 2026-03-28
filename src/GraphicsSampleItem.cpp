@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -17,9 +17,6 @@ GraphicsSampleItem::GraphicsSampleItem(const QColor&    color,
                                          width_(1),
                                          height_(1)
 {
-    //setFlags(ItemIsSelectable);
-    //setAcceptsHoverEvents(true);
-
     if (color.valueF() < 0.5) {
         textColor_ = QColor(Qt::white).darker(120);
         gridColor_ = QColor(Qt::gray).darker(120);
@@ -69,8 +66,8 @@ void GraphicsSampleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem
             text = QString::number(value_, 'f', precision);
         }
 
-        QFont font("Helvetica");
-        font.setStyleStrategy(QFont::ForceOutline);
+        QFont font = painter->font();
+        font.setPixelSize(11);
         painter->setFont(font);
 
         qreal scaleCoeff = 1.0 / lod;

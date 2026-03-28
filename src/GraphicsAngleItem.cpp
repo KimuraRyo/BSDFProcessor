@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2015 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -17,10 +17,8 @@ GraphicsAngleItem::GraphicsAngleItem(const QColor&  color,
                                        width_(1),
                                        height_(1),
                                        lodThreshold_(25.0),
-                                       textLodThreshold_(25.0)
+                                       textLodThreshold_(40.0)
 {
-    //setFlags(ItemIsSelectable);
-    //setAcceptsHoverEvents(true);
 }
 
 QRectF GraphicsAngleItem::boundingRect() const
@@ -55,8 +53,8 @@ void GraphicsAngleItem::paint(QPainter* painter, const QStyleOptionGraphicsItem*
             int precision = std::min(static_cast<int>(lod / 8.0), 5);
             QString text = QString::number(value_, 'g', precision);
 
-            QFont font("Helvetica");
-            font.setStyleStrategy(QFont::ForceOutline);
+            QFont font = painter->font();
+            font.setPixelSize(11);
             painter->setFont(font);
 
             qreal scaleCoeff = 1.0 / lod;

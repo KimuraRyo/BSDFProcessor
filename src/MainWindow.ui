@@ -310,15 +310,6 @@
         <property name="horizontalScrollBarPolicy">
          <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
         </property>
-        <property name="backgroundBrush">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>107</red>
-           <green>107</green>
-           <blue>133</blue>
-          </color>
-         </brush>
-        </property>
         <property name="renderHints">
          <set>QPainter::RenderHint::TextAntialiasing</set>
         </property>
