@@ -9,6 +9,8 @@
 #ifndef TABLE_SCENE_H
 #define TABLE_SCENE_H
 
+#include <memory>
+
 #include <QtWidgets>
 
 #include "MaterialData.h"
@@ -26,29 +28,20 @@ public:
 
     void setMaterialData(MaterialData* materialData) { data_ = materialData; }
 
-    void setWavelengthIndex(int wavelengthIndex) { wavelengthIndex_ = wavelengthIndex; }
-    void setGamma(float gamma) { gamma_ = gamma; }
-    void setPhotometric(bool photometric) { photometric_ = photometric; }
     void setBackSideShown(bool backSideShown) { backSideShown_ = backSideShown; }
 
     /*! Gets the value of a sample point for a item. */
     float getSampleValue(const lb::Spectrum& sp,
                          lb::ColorModel      colorModel,
-                         const lb::Arrayf&   wavelengths,
-                         int                 wavelengthIndex);
+                         const lb::Arrayf&   wavelengths);
 
     /*! Gets angle indices of lb::SampleSet at \a pos. */
     bool getIndex(const QPointF& pos, int* i0, int* i1, int* i2, int* i3);
 
+    void initTable(int wavelengthIndex, float gamma, bool photometric);
+    void updateTable();
 
-
-    void setImage(const QImage& img)
-    {
-        image_ = img;
-        setSceneRect(QRectF(QPointF(0, 0), QSizeF(image_.size())));
-        update();
-    }
-
+    bool getInOutDir(const QPointF& pos, lb::Vec3* inDir, lb::Vec3* outDir);
 
 signals:
     void mouseMoved(QPointF pos);
@@ -62,7 +55,23 @@ private:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void drawBackground(QPainter* painter, const QRectF& rect) override;
 
-    QImage        image_;
+    void createBrdfTable();
+    void createBrdfImage();
+    void createBrdfAngleItems(const lb::SampleSet& ss);
+
+    void createReflectanceTable();
+    void createReflectanceDataItems(const lb::SampleSet2D& ss2);
+    void createReflectanceAngleItems(const lb::SampleSet2D& ss2);
+
+    void addAngleItem(const QColor& color,
+                      float         angle,
+                      qreal         posX,
+                      qreal         posY,
+                      qreal         lodThreshold = 25.0,
+                      qreal         textLodThreshold = 25.0);
+
+    std::unique_ptr<QImage> brdfImage_;
+
     MaterialData* data_;
 
     QColor backgroundColor_;

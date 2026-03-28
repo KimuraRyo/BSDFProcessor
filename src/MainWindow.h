@@ -116,7 +116,7 @@ private slots:
     void raiseSmoothDockWidget();
     void raiseInsertAngleDockWidget();
 
-    void createTable();
+    void updateTableView();
 
     void clearFileType();
 

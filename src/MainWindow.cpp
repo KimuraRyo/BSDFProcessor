@@ -509,7 +509,7 @@ void MainWindow::updateDisplayMode(QString modeName)
     ui_->graphOpenGLWidget->updateView();
 
     pickDockWidget_->displayReflectance();
-    createTable();
+    updateTableView();
 }
 
 void MainWindow::updateIncomingPolarAngle(int index)
@@ -598,7 +598,7 @@ void MainWindow::updateWavelength(int index)
 
     pickDockWidget_->updatePickedValue();
     pickDockWidget_->displayReflectance();
-    createTable();
+    updateTableView();
 }
 
 void MainWindow::updateInOutDir(const lb::Vec3& inDir, const lb::Vec3& outDir, bool graphUpdateRequested)
@@ -1080,8 +1080,9 @@ void MainWindow::createActions()
 
     connect(data_.get(), SIGNAL(computed()), this, SLOT(updateViews()));
 
-    connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), ui_->graphOpenGLWidget, SLOT(update()));
-    connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this,                   SLOT(createTable()));
+    connect(displayDockWidget_, SIGNAL(redrawGraphRequested()), ui_->graphOpenGLWidget,
+            SLOT(update()));
+    connect(displayDockWidget_, SIGNAL(redrawTableRequested()), this, SLOT(updateTableView()));
 
     connect(pickDockWidget_, SIGNAL(redrawGraphRequested()), ui_->graphOpenGLWidget, SLOT(update()));
 }
@@ -1245,7 +1246,7 @@ void MainWindow::initializeUi()
 
     pickDockWidget_->clearPickedValue();
     pickDockWidget_->displayReflectance();
-    createTable();
+    updateTableView();
 }
 
 void MainWindow::updateUi()
@@ -1892,11 +1893,11 @@ void MainWindow::updateCameraPosition()
     ui_->graphOpenGLWidget->update();
 }
 
-void MainWindow::createTable()
+void MainWindow::updateTableView()
 {
     float gamma = displayDockWidget_->getGamma();
-    bool photometric = (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY);
-    ui_->tableGraphicsView->createTable(ui_->wavelengthSlider->value(), gamma, photometric);
+    bool  photometric = (graphScene_->getDisplayMode() == GraphScene::PHOTOMETRY_DISPLAY);
+    ui_->tableGraphicsView->updateTable(ui_->wavelengthSlider->value(), gamma, photometric);
 }
 
 void MainWindow::editBrdf(lb::Spectrum::Scalar glossyIntensity,
@@ -1932,5 +1933,5 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar glossyIntensity,
     pickDockWidget_->displayReflectance();
     propertyDockWidget_->updateData(*data_);
     characteristicDockWidget_->updateData(*data_);
-    createTable();
+    updateTableView();
 }

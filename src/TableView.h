@@ -9,7 +9,7 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
-#include <QtWidgets/QGraphicsView>
+#include <QtWidgets>
 
 #include "MaterialData.h"
 #include "TableScene.h"
@@ -25,13 +25,13 @@ class TableView : public QGraphicsView
 public:
     explicit TableView(QWidget* parent = nullptr);
 
-    void createTable(int wavelengthIndex, float gamma = 1.0f, bool photometric = false);
+    void updateTable(int wavelengthIndex, float gamma, bool photometric);
 
     void setMaterialData(MaterialData* materialData);
     void setLogPlotAction(QAction* action) { actionLogPlot_ = action; }
 
     bool isBackSideShown() const { return backSideShown_; }
-    void showBackSide(bool on) { backSideShown_ = on; }
+    void showBackSide(bool on);
 
 signals:
     void inOutDirPicked(const lb::Vec3& inDir, const lb::Vec3& outDir);
@@ -48,20 +48,6 @@ private slots:
 private:
     Q_DISABLE_COPY(TableView)
 
-    void createBrdfTable(int wavelengthIndex);
-    void createBrdfDataPixmapItem(int wavelengthIndex);
-    void createBrdfAngleItems(const lb::SampleSet& ss);
-
-    void createReflectanceTable(int wavelengthIndex);
-    void createReflectanceDataItems(const lb::SampleSet2D& ss2, int wavelengthIndex);
-    void createReflectanceAngleItems(const lb::SampleSet2D& ss2);
-
-    bool getInOutDir(const QPointF& pos, lb::Vec3* inDir, lb::Vec3* outDir);
-
-    void addAngleItem(const QColor& color, float angle,
-                      qreal posX, qreal posY,
-                      qreal lodThreshold = 25.0, qreal textLodThreshold = 25.0);
-
     void paintEvent(QPaintEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
@@ -75,11 +61,7 @@ private:
 
     MaterialData* data_;
 
-    int     wavelengthIndex_;
-    float   gamma_;
-    bool    photometric_;
-    bool    backSideShown_;
-
+    bool backSideShown_;
     bool fittingNeeded_;
 };
 
