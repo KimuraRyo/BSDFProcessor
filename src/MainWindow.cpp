@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2022 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -26,6 +26,7 @@
 #include <libbsdf/Reader/DdrReader.h>
 #include <libbsdf/Reader/LightToolsBsdfReader.h>
 #include <libbsdf/Reader/MerlBinaryReader.h>
+#include <libbsdf/Reader/RglEpflBsdfReader.h>
 #include <libbsdf/Reader/SdrReader.h>
 #include <libbsdf/Reader/SsddReader.h>
 #include <libbsdf/Reader/ZemaxBsdfReader.h>
@@ -211,6 +212,9 @@ void MainWindow::openFile(const QString& fileName)
         case lb::MERL_BINARY_FILE:
             loaded = openMerlBinary(fileName);
             break;
+        case lb::RGL_EPFL_BSDF_FILE:
+            loaded = opeRglEpflBsdf(fileName);
+            break;
         case lb::SSDD_FILE:
             loaded = openSsdd(fileName);
             break;
@@ -350,7 +354,7 @@ void MainWindow::openBxdfUsingDialog()
                                                     "Integra DDT (*.ddt);;"
                                                     "Integra SDR (*.sdr);;"
                                                     "Integra SDT (*.sdt);;"
-                                                    "LightTools/Zemax (*.bsdf);;"
+                                                    "LightTools/Zemax/RGL-EPFL (*.bsdf);;"
                                                     "ASTM E1392-96(2002) (*.astm);;"
                                                     "MERL binary (*.binary)");
 
@@ -1715,6 +1719,14 @@ bool MainWindow::openAstm(const QString& fileName)
 bool MainWindow::openMerlBinary(const QString& fileName)
 {
     lb::HalfDifferenceCoordinatesBrdf* brdf = lb::MerlBinaryReader::read(fileName.toLocal8Bit().data());
+    if (!brdf) return false;
+
+    return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), lb::BRDF_DATA);
+}
+
+bool MainWindow::opeRglEpflBsdf(const QString& fileName)
+{
+    lb::SpecularCoordinatesBrdf* brdf = lb::RglEpflBsdfReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
 
     return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), lb::BRDF_DATA);

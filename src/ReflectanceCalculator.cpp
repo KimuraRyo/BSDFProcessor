@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2020 Kimura Ryo                                  //
+// Copyright (C) 2016-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -85,9 +85,10 @@ void ReflectanceCalculator::computeReflectances()
             spheBrdf->getNumOutPhi() >= 2) {
             sp = lb::computeReflectance(*spheBrdf, inThIndex, inPhIndex);
         }
+        // If SpecularCoordinatesBrdf has sufficient resolution
         else if (specBrdf &&
-                 specBrdf->getNumSpecTheta() >= 64 &&
-                 specBrdf->getNumSpecPhi() >= 64) {
+                 specBrdf->getNumSpecTheta() >= 20 &&
+                 specBrdf->getNumSpecPhi() >= 20) {
             sp = lb::computeReflectance(*specBrdf, inThIndex, inPhIndex);
         }
         else {

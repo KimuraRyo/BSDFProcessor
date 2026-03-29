@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2023 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -152,6 +152,7 @@ private:
     bool openZemaxBsdf(const QString& fileName);
     bool openAstm(const QString& fileName);
     bool openMerlBinary(const QString& fileName);
+    bool opeRglEpflBsdf(const QString& fileName);
 
     void exportFile(const QString& fileName);
     bool exportSsdd(const QString& fileName);
