@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2023 Kimura Ryo                                  //
+// Copyright (C) 2018-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -107,6 +107,17 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
 
                 break;
             }
+            case lb::ReflectanceModel::Parameter::BOOL_PARAMETER:
+            {
+                QCheckBox* checkBox = new QCheckBox(ui_->parameterWidget);
+                checkBox->setChecked(*it->getBool());
+
+                connect(checkBox, SIGNAL(checkStateChanged(Qt::CheckState)), this, SLOT(updateParameter()));
+
+                paramWidget = checkBox;
+
+                break;
+            }
             default:
                 break;
         }
@@ -175,6 +186,9 @@ void AnalyticBsdfDockWidget::updateParameter()
         }
         else if (QSpinBox* spinBox = dynamic_cast<QSpinBox*>(it->first)) {
             *it->second->getInt() = spinBox->value();
+        }
+        else if (QCheckBox* checkBox = dynamic_cast<QCheckBox*>(it->first)) {
+            *it->second->getBool() = (checkBox->checkState() == Qt::Checked);
         }
     }
 }

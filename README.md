@@ -65,7 +65,7 @@ BSDF Processor uses the following open source libraries:
 * [libbsdf][1]
 * [Eigen 3][2]
 * [OpenSceneGraph][3] (v3.6.4 is recommended instead of v3.6.5 to avoid the [issue][10] of osgText::FadeText)
-* [Qt 6][4]
+* [Qt 6][4] (Qt 6.7 or later is required)
 
 CMake is used as the build system.
 Search paths for libraries are set through CMake variables: `LIBBSDF_DIR`, `OSG_DIR`, `Eigen3_DIR`, and `Qt6_DIR`.
