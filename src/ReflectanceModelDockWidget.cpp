@@ -31,6 +31,7 @@
 #include <libbsdf/ReflectanceModel/OrenNayar.h>
 #include <libbsdf/ReflectanceModel/Phong.h>
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
+#include <libbsdf/ReflectanceModel/Sheen.h>
 #include <libbsdf/ReflectanceModel/SimpleAnisotropicGgx.h>
 #include <libbsdf/ReflectanceModel/SimpleGgx.h>
 #include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
@@ -122,6 +123,7 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::OrenNayar(white, 0.3));
     models.push_back(new lb::Phong(white, 10.0));
     models.push_back(new lb::SimplifiedOrenNayar(white, 0.3));
+    models.push_back(new lb::Sheen(white, 0.5, false));
     models.push_back(new lb::UnrealEngine4(white, 0.0, 0.5, 0.3));
     models.push_back(new lb::AnisotropicWard(white, 0.05, 0.2));
     models.push_back(new lb::IsotropicWard(white, 0.2));
