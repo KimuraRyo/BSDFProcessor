@@ -56,14 +56,14 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
 
                 spinBox->setMinimum(*it->getMinReal());
                 spinBox->setMaximum(*it->getMaxReal());
-                spinBox->setMaximumWidth(75);
+                spinBox->setMaximumWidth(110);
 
                 if (spinBox->maximum() >= 9999.9) {
-                    spinBox->setDecimals(4);
+                    spinBox->setDecimals(2);
                     spinBox->setSingleStep(1.0);
                 }
                 else {
-                    spinBox->setDecimals(5);
+                    spinBox->setDecimals(3);
                     spinBox->setSingleStep(0.1);
                 }
 
@@ -81,7 +81,7 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
                 ColorButton* colorButton = new ColorButton(ui_->parameterWidget);
                 colorButton->setAutoFillBackground(true);
                 colorButton->setFlat(false);
-                colorButton->setMaximumWidth(40);
+                colorButton->setMaximumWidth(110);
                 colorButton->setColor(util::lbToQt(*it->getVec3()));
 
                 connect(colorButton, SIGNAL(colorChanged(QColor)),
@@ -97,7 +97,7 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
                 spinBox->setMinimum(*it->getMinInt());
                 spinBox->setMaximum(*it->getMaxInt());
                 spinBox->setSingleStep(1);
-                spinBox->setMaximumWidth(75);
+                spinBox->setMaximumWidth(110);
                 spinBox->setValue(*it->getInt());
 
                 connect(spinBox, SIGNAL(editingFinished()),

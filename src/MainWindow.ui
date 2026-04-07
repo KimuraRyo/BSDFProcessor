@@ -116,7 +116,7 @@
            <widget class="QLineEdit" name="incomingPolarAngleLineEdit">
             <property name="maximumSize">
              <size>
-              <width>50</width>
+              <width>55</width>
               <height>16777215</height>
              </size>
             </property>
@@ -163,7 +163,7 @@
            <widget class="QLineEdit" name="wavelengthLineEdit">
             <property name="maximumSize">
              <size>
-              <width>50</width>
+              <width>75</width>
               <height>16777215</height>
              </size>
             </property>
@@ -199,7 +199,7 @@
            <widget class="QLineEdit" name="incomingAzimuthalAngleLineEdit">
             <property name="maximumSize">
              <size>
-              <width>50</width>
+              <width>55</width>
               <height>16777215</height>
              </size>
             </property>
@@ -341,7 +341,7 @@
     </property>
     <property name="minimumSize">
      <size>
-      <width>250</width>
+      <width>263</width>
       <height>180</height>
      </size>
     </property>
@@ -428,6 +428,15 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="lightPolarAngleSpinBox">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+            </property>
             <property name="decimals">
              <number>1</number>
             </property>
@@ -465,6 +474,15 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="lightAzimuthalAngleSpinBox">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+            </property>
             <property name="decimals">
              <number>1</number>
             </property>
@@ -501,9 +519,12 @@
            <widget class="QDoubleSpinBox" name="lightIntensitySpinBox">
             <property name="maximumSize">
              <size>
-              <width>70</width>
+              <width>100</width>
               <height>16777215</height>
              </size>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
             </property>
             <property name="decimals">
              <number>3</number>
@@ -544,9 +565,12 @@
            <widget class="QDoubleSpinBox" name="environmentIntensitySpinBox">
             <property name="maximumSize">
              <size>
-              <width>70</width>
+              <width>100</width>
               <height>16777215</height>
              </size>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
             </property>
             <property name="decimals">
              <number>3</number>
@@ -624,6 +648,15 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="glossyIntensitySpinBox">
+               <property name="maximumSize">
+                <size>
+                 <width>60</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="buttonSymbols">
+                <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+               </property>
                <property name="decimals">
                 <number>2</number>
                </property>
@@ -661,6 +694,15 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="glossyShininessSpinBox">
+               <property name="maximumSize">
+                <size>
+                 <width>60</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="buttonSymbols">
+                <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+               </property>
                <property name="decimals">
                 <number>3</number>
                </property>
@@ -711,6 +753,15 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="diffuseIntensitySpinBox">
+               <property name="maximumSize">
+                <size>
+                 <width>60</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="buttonSymbols">
+                <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+               </property>
                <property name="decimals">
                 <number>2</number>
                </property>
