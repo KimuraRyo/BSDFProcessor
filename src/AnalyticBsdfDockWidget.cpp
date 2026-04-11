@@ -197,6 +197,9 @@ void AnalyticBsdfDockWidget::initializeReflectanceModels()
 {
     for (auto it = reflectanceModels_.begin(); it != reflectanceModels_.end(); ++it) {
         ui_->reflectanceModelComboBox->addItem(it->first.c_str());
+        int index = ui_->reflectanceModelComboBox->count() - 1;
+        ui_->reflectanceModelComboBox->setItemData(index, it->second->getDescription().c_str(),
+                                                   Qt::ToolTipRole);
     }
 
     connect(ui_->reflectanceModelComboBox, SIGNAL(activated(int)),
