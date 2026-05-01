@@ -1,5 +1,5 @@
 ﻿// =================================================================== //
-// Copyright (C) 2020-2023 Kimura Ryo                                  //
+// Copyright (C) 2020-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -44,6 +44,23 @@ void CharacteristicDockWidget::updateData(const MaterialData& materialData)
         addBihemisphericalReflectanceItems(*brdf);
         addReciprocityItems(*brdf);
     }
+
+    ui_->characteristicTreeWidget->expandAll();
+
+    updateColumnDisplayMode();
+}
+
+void CharacteristicDockWidget::updateComputedReflectances(const MaterialData& materialData)
+{
+    if (!&materialData)
+        return;
+
+    data_ = &materialData;
+
+    ui_->characteristicTreeWidget->clear();
+
+    addReflectanceItems();
+    add8DegreeReflectanceItems();
 
     ui_->characteristicTreeWidget->expandAll();
 
