@@ -563,7 +563,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     for (int phIndex = 0; phIndex < numPhi;   ++phIndex) {
     for (int thIndex = 0; thIndex < numTheta; ++thIndex) {
         lb::Vec3 inDir, outDir;
-        CoordSysT::toXyz(offsetInTheta, inPhi, thetaAngles[thIndex], phiAngles[phIndex], &inDir, &outDir);
+        brdf.toXyz(offsetInTheta, inPhi, thetaAngles[thIndex], phiAngles[phIndex], &inDir, &outDir);
 
         if (outDir[2] < 0.0) {
             outDir[2] = 0.0;
