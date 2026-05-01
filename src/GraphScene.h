@@ -93,7 +93,7 @@ public:
 
 private:
     GraphScene(const GraphScene&);
-    GraphScene& operator=(const GraphScene&);
+    GraphScene& operator=(const GraphScene&) = delete;
 
     /*! Creates and adds graph geometries to the scene. */
     void setupBrdfGeode();

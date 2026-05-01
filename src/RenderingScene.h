@@ -68,7 +68,7 @@ public:
 
 private:
     RenderingScene(const RenderingScene&);
-    RenderingScene& operator=(const RenderingScene&);
+    RenderingScene& operator=(const RenderingScene&) = delete;
 
     /*! Attaches a shader of BRDF rendering to a node. */
     void attachRenderingShader(osg::Node* node);
