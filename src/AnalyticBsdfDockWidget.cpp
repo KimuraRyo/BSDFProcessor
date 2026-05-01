@@ -8,6 +8,7 @@
 
 #include "AnalyticBsdfDockWidget.h"
 
+#include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
@@ -16,8 +17,7 @@
 #include "Utility.h"
 
 AnalyticBsdfDockWidget::AnalyticBsdfDockWidget(QWidget* parent)
-                                               : QDockWidget(parent),
-                                                 ui_(new Ui::ReflectanceModelDockWidgetBase)
+    : QDockWidget(parent), ui_(new Ui::ReflectanceModelDockWidgetBase)
 {
     ui_->setupUi(this);
 }
@@ -136,15 +136,22 @@ void AnalyticBsdfDockWidget::updateCoordSysWidget(int index)
     QString name = ui_->reflectanceModelComboBox->itemText(index);
     lb::ReflectanceModel* model = reflectanceModels_[name.toLocal8Bit().data()];
 
+    QLabel* distLabel = ui_->distortedCsNumAngle1Label;
     QLabel* halfLabel = ui_->halfDiffCsNumAngle1Label;
     QLabel* specLabel = ui_->specularCsNumAngle1Label;
     QLabel* spheLabel = ui_->sphericalCsNumAngle1Label;
+    QSpinBox* distSpinBox = ui_->distortedCsNumAngle1SpinBox;
     QSpinBox* halfSpinBox = ui_->halfDiffCsNumAngle1SpinBox;
     QSpinBox* specSpinBox = ui_->specularCsNumAngle1SpinBox;
     QSpinBox* spheSpinBox = ui_->sphericalCsNumAngle1SpinBox;
 
     // Hide labels and fields for an anisotropic BRDF if an isotropic BSDF model is selected.
     if (model->isIsotropic()) {
+        distLabel->hide();
+        distSpinBox->hide();
+        ui_->distortedCoordSysFormLayout->removeWidget(distLabel);
+        ui_->distortedCoordSysFormLayout->removeWidget(distSpinBox);
+
         halfLabel->hide();
         halfSpinBox->hide();
         ui_->halfDiffCoordSysFormLayout->removeWidget(halfLabel);
@@ -161,6 +168,10 @@ void AnalyticBsdfDockWidget::updateCoordSysWidget(int index)
         ui_->sphericalCoordSysFormLayout->removeWidget(spheSpinBox);
     }
     else {
+        ui_->distortedCoordSysFormLayout->insertRow(2, distLabel, distSpinBox);
+        distLabel->show();
+        distSpinBox->show();
+
         ui_->halfDiffCoordSysFormLayout->insertRow(2, halfLabel, halfSpinBox);
         halfLabel->show();
         halfSpinBox->show();
@@ -213,7 +224,21 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
 {
     lb::Brdf* brdf;
     std::string coordinateSystemName(ui_->coordSysComboBox->currentText().toLocal8Bit());
-    if (coordinateSystemName == "Half-difference coordinate system") {
+    if (coordinateSystemName == "Distorted spherical coordinate system") {
+        int numInPhi;
+        if (isotropic || ui_->distortedCsNumAngle1SpinBox->value() <= 1) {
+            numInPhi = 1;
+        }
+        else {
+            numInPhi = ui_->distortedCsNumAngle1SpinBox->value() + 1;
+        }
+
+        brdf = new lb::DistortedSphericalCoordinatesBrdf(
+            ui_->distortedCsNumAngle0SpinBox->value() + 1, numInPhi,
+            ui_->distortedCsNumAngle2SpinBox->value() + 1,
+            ui_->distortedCsNumAngle3SpinBox->value() + 1, 2.0, lb::RGB_MODEL, 3);
+    }
+    else if (coordinateSystemName == "Half-difference coordinate system") {
         // Create narrow intervals near specular directions.
         lb::Arrayd halfThetaAngles = lb::array_util::createExponential<lb::Arrayd>(
             ui_->halfDiffCsNumAngle0SpinBox->value() + 1,

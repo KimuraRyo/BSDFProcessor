@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2018-2023 Kimura Ryo                                  //
+// Copyright (C) 2018-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -10,10 +10,9 @@
 
 #include <osg/Timer>
 
-#include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
+#include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Optimizer.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
-#include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
 #include <libbsdf/ReflectanceModel/AnisotropicGgx.h>
 #include <libbsdf/ReflectanceModel/Ggx.h>
@@ -22,7 +21,7 @@
 #include <libbsdf/ReflectanceModel/ReflectanceModelUtility.h>
 
 TransmittanceModelDockWidget::TransmittanceModelDockWidget(QWidget* parent)
-                                                           : AnalyticBsdfDockWidget(parent)
+    : AnalyticBsdfDockWidget(parent)
 {
     initializeReflectanceModels();
     updateParameterWidget(0);
@@ -32,10 +31,11 @@ TransmittanceModelDockWidget::TransmittanceModelDockWidget(QWidget* parent)
     ui_->reflectanceModelComboBox->activated(lambertIndex);
 
     // Select a specular coordinate system.
-    ui_->coordSysComboBox->setCurrentIndex(1);
-    ui_->coordSysComboBox->activated(1);
+    ui_->coordSysComboBox->setCurrentIndex(2);
+    ui_->coordSysComboBox->activated(2);
 
     // Increase the number of angles for refraction.
+    ui_->distortedCsNumAngle2SpinBox->setValue(ui_->distortedCsNumAngle2SpinBox->value() * 2);
     ui_->halfDiffCsNumAngle2SpinBox->setValue(ui_->halfDiffCsNumAngle2SpinBox->value() * 2);
     ui_->halfDiffCsNumAngle3SpinBox->setValue(ui_->halfDiffCsNumAngle3SpinBox->value() * 2);
     ui_->specularCsNumAngle2SpinBox->setValue(ui_->specularCsNumAngle2SpinBox->value() * 2);
@@ -58,12 +58,13 @@ void TransmittanceModelDockWidget::generateBrdf()
                     dynamic_cast<lb::AnisotropicGgx*>(model) ||
                     dynamic_cast<lb::MultipleScatteringSmith*>(model));
 
+    auto distBrdf = dynamic_cast<lb::DistortedSphericalCoordinatesBrdf*>(brdf.get());
     auto specBrdf = dynamic_cast<lb::SpecularCoordinatesBrdf*>(brdf.get());
 
     double ior = 1;
 
     // Offset specular directions for refraction.
-    if (iorUsed && specBrdf) {
+    if (iorUsed && (distBrdf || specBrdf)) {
         bool found = false;
 
         const std::string iorParamName("Refractive index");
@@ -74,7 +75,12 @@ void TransmittanceModelDockWidget::generateBrdf()
                 ior = *it->getReal();
                 if (ior == 1) break;
 
-                specBrdf->setupSpecularOffsets(ior);
+                if (distBrdf) {
+                    distBrdf->setupSpecularOffsets(ior);
+                }
+                else {
+                    specBrdf->setupSpecularOffsets(ior);
+                }
 
                 found = true;
                 break;

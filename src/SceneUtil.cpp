@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2023 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -29,11 +29,10 @@
 #include <osgText/Font>
 #include <osgUtil/SmoothingVisitor>
 
+#include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
-
-#include "SpecularCenteredCoordinateSystem.h"
 
 void scene_util::fitCameraPosition(osg::Camera*     camera,
                                    const osg::Vec3& cameraDirection,
@@ -540,8 +539,9 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     geom->setName("meshGeom");
 
     lb::Arrayf thetaAngles;
-    if (dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf) ||
-        dynamic_cast<const lb::HalfDifferenceCoordinatesBrdf*>(&brdf)) {
+    if (dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(&brdf) ||
+        dynamic_cast<const lb::HalfDifferenceCoordinatesBrdf*>(&brdf) ||
+        dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf)) {
         // Create narrow intervals near specular directions.
         thetaAngles = lb::array_util::createExponential<lb::Arrayf>(numTheta, CoordSysT::MAX_ANGLE2, 2.0f);
     }
@@ -550,6 +550,22 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
     }
 
     lb::Arrayf phiAngles = lb::Arrayf::LinSpaced(numPhi, 0.0, CoordSysT::MAX_ANGLE3);
+    if (dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(&brdf) &&
+        brdf.getSampleSet()->isIsotropic()) {
+        // Adjust so that the density increases around an azimuth of 180 degrees.
+        lb::Arrayd halfDistPhiAngles = lb::array_util::createExponential<lb::Arrayd>(
+            static_cast<int>(phiAngles.size() / 2 + 1), lb::PI_D, 2.0);
+
+        for (int i = 0; i < phiAngles.size() / 2; ++i) {
+            phiAngles[i] = lb::PI_D - halfDistPhiAngles[halfDistPhiAngles.size() - 1 - i];
+            if (phiAngles.size() % 2 == 0) {
+                phiAngles[phiAngles.size() / 2 + i] = lb::PI_D + halfDistPhiAngles[i + 1];
+            }
+            else {
+                phiAngles[phiAngles.size() / 2 + i] = lb::PI_D + halfDistPhiAngles[i];
+            }
+        }
+    }
 
     std::vector<lb::Vec3, Eigen::aligned_allocator<lb::Vec3>> positions;
     positions.reserve(numTheta * numPhi);
@@ -694,7 +710,7 @@ template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::SpecularCoordinat
     bool logPlotUsed, float baseOfLogarithm, lb::DataType dataType, bool photometric,
     int numTheta, int numPhi);
 
-template osg::Geometry* scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
+template osg::Geometry* scene_util::createBrdfMeshGeometry<lb::DistortedSphericalCoordinateSystem>(
     const lb::Brdf& brdf, float inTheta, float inPhi, int wavelengthIndex,
     bool logPlotUsed, float baseOfLogarithm, lb::DataType dataType, bool photometric,
     int numTheta, int numPhi);

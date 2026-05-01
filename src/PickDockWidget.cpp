@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020-2023 Kimura Ryo                                  //
+// Copyright (C) 2020-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -47,6 +47,17 @@ void PickDockWidget::updatePickedAngle(const lb::Vec3& inDir, const lb::Vec3& ou
         }
         return QString::number(lb::toDegree(value));
     };
+
+    // Set angles of lb::DistortedSphericalCoordinateSystem.
+    {
+        double inTheta, inPhi, distTheta, distPhi;
+        data_->getDistortedCoordAngles(inDir, outDir, &inTheta, &inPhi, &distTheta, &distPhi);
+
+        ui_->distortedCsAngle0LineEdit->setText(toNumber(inTheta));
+        ui_->distortedCsAngle1LineEdit->setText(toNumber(inPhi));
+        ui_->distortedCsAngle2LineEdit->setText(toNumber(distTheta));
+        ui_->distortedCsAngle3LineEdit->setText(toNumber(distPhi));
+    }
 
     // Set angles of lb::HalfDifferenceCoordinateSystem.
     {
@@ -204,6 +215,11 @@ void PickDockWidget::updateOutDir(const osg::Vec3& dir)
 
 void PickDockWidget::clearPickedValue()
 {
+    ui_->distortedCsAngle0LineEdit->clear();
+    ui_->distortedCsAngle1LineEdit->clear();
+    ui_->distortedCsAngle2LineEdit->clear();
+    ui_->distortedCsAngle3LineEdit->clear();
+
     ui_->halfDiffCsAngle0LineEdit->clear();
     ui_->halfDiffCsAngle1LineEdit->clear();
     ui_->halfDiffCsAngle2LineEdit->clear();
@@ -242,6 +258,11 @@ void PickDockWidget::useArcsInGraph(bool on)
     if (!graphScene_) return;
 
     if (on) {
+        ui_->distortedCsNumAngle0Label->setStyleSheet(redStyleSheet);
+        ui_->distortedCsNumAngle1Label->setStyleSheet(yellowStyleSheet);
+        ui_->distortedCsNumAngle2Label->setStyleSheet(greenStyleSheet);
+        ui_->distortedCsNumAngle3Label->setStyleSheet(blueStyleSheet);
+
         ui_->halfDiffCsNumAngle0Label->setStyleSheet(redStyleSheet);
         ui_->halfDiffCsNumAngle1Label->setStyleSheet(yellowStyleSheet);
         ui_->halfDiffCsNumAngle2Label->setStyleSheet(greenStyleSheet);
@@ -258,6 +279,11 @@ void PickDockWidget::useArcsInGraph(bool on)
         ui_->specularCsNumAngle3Label->setStyleSheet(blueStyleSheet);
     }
     else {
+        ui_->distortedCsNumAngle0Label->setStyleSheet("");
+        ui_->distortedCsNumAngle1Label->setStyleSheet("");
+        ui_->distortedCsNumAngle2Label->setStyleSheet("");
+        ui_->distortedCsNumAngle3Label->setStyleSheet("");
+
         ui_->halfDiffCsNumAngle0Label->setStyleSheet("");
         ui_->halfDiffCsNumAngle1Label->setStyleSheet("");
         ui_->halfDiffCsNumAngle2Label->setStyleSheet("");
@@ -290,6 +316,9 @@ void PickDockWidget::copyInfo()
     QString specularCsAngle2 = "SPECULAR_POLAR_ANGLE "      + ui_->specularCsAngle2LineEdit->text();
     QString specularCsAngle3 = "SPECULAR_AZIMUTHAL_ANGLE "  + ui_->specularCsAngle3LineEdit->text();
 
+    QString distortedCsAngle2 = "DISTORTED_POLAR_ANGLE "      + ui_->distortedCsAngle2LineEdit->text();
+    QString distortedCsAngle3 = "DISTORTED_AZIMUTHAL_ANGLE "  + ui_->distortedCsAngle3LineEdit->text();
+
     QString halfDiffCsAngle0 = "HALF_POLAR_ANGLE "              + ui_->halfDiffCsAngle0LineEdit->text();
     QString halfDiffCsAngle1 = "HALF_AZIMUTHAL_ANGLE "          + ui_->halfDiffCsAngle1LineEdit->text();
     QString halfDiffCsAngle2 = "DIFFERENCE_POLAR_ANGLE "        + ui_->halfDiffCsAngle2LineEdit->text();
@@ -312,6 +341,8 @@ void PickDockWidget::copyInfo()
                                sphericalCsAngle3 + "\n" +
                                specularCsAngle2 + "\n" +
                                specularCsAngle3 + "\n" +
+                               distortedCsAngle2 + "\n" +
+                               distortedCsAngle3 + "\n" +
                                halfDiffCsAngle0 + "\n" +
                                halfDiffCsAngle1 + "\n" +
                                halfDiffCsAngle2 + "\n" +

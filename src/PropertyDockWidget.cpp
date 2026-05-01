@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2020-2023 Kimura Ryo                                  //
+// Copyright (C) 2020-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -10,6 +10,7 @@
 
 #include <QtWidgets>
 
+#include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SampleSet2D.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
@@ -152,7 +153,10 @@ void PropertyDockWidget::addParamTypeItems(const lb::Brdf& brdf)
 
     QString valueStr;
 
-    if (dynamic_cast<const lb::HalfDifferenceCoordinatesBrdf*>(&brdf)) {
+    if (dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(&brdf)) {
+        valueStr = QString("distorted spherical coordinate system");
+    }
+    else if (dynamic_cast<const lb::HalfDifferenceCoordinatesBrdf*>(&brdf)) {
         valueStr = QString("half-difference coordinate system");
     }
     else if (dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf)) {
@@ -196,7 +200,18 @@ void PropertyDockWidget::addParamTypeItems(const lb::Brdf& brdf)
     countItem2->setText(1, QString::number(ss->getAngles2().size()));
     countItem3->setText(1, QString::number(ss->getAngles3().size()));
 
-    if (auto specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf)) {
+    if (auto distBrdf = dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(&brdf)) {
+        if (distBrdf->getNumSpecularOffsets() > 0) {
+            QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
+            item->setText(0, "Specular offset angles");
+            item->setText(1, util::arrayToString(lb::toDegrees(distBrdf->getSpecularOffsets())).c_str());
+
+            QTreeWidgetItem* countItem = new QTreeWidgetItem(item);
+            countItem->setText(0, "Count");
+            countItem->setText(1, QString::number(distBrdf->getSpecularOffsets().size()));
+        }
+    }
+    else if (auto specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(&brdf)) {
         if (specBrdf->getNumSpecularOffsets() > 0) {
             QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
             item->setText(0, "Specular offset angles");

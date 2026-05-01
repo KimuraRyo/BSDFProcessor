@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016-2020 Kimura Ryo                                  //
+// Copyright (C) 2016-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -179,6 +179,41 @@ double MaterialData::getIncomingAzimuthalAngle(int index) const
     }
     else {
         return 0;
+    }
+}
+
+void MaterialData::getDistortedCoordAngles(const lb::Vec3& inDir,
+                                           const lb::Vec3& outDir,
+                                           double*         inTheta,
+                                           double*         inPhi,
+                                           double*         distTheta,
+                                           double*         distPhi)
+{
+    lb::Vec3 brdfOutDir = outDir;
+    if (btdf_ || specularTransmittances_) {
+        brdfOutDir.z() = -outDir.z();
+    }
+
+    const lb::DistortedSphericalCoordinatesBrdf* distBrdf = nullptr;
+    if (btdf_) {
+        distBrdf =
+            dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(btdf_->getBrdf().get());
+    }
+
+    if (distBrdf) {
+        // Get the outgoing direction considering refraction.
+        distBrdf->fromXyz(inDir, brdfOutDir, inTheta, inPhi, distTheta, distPhi);
+    }
+    else {
+        if (isIsotropic()) {
+            *inPhi = 0;
+            lb::DistortedSphericalCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, distTheta,
+                                                            distPhi);
+        }
+        else {
+            lb::DistortedSphericalCoordinateSystem::fromXyz(inDir, brdfOutDir, inTheta, inPhi,
+                                                            distTheta, distPhi);
+        }
     }
 }
 

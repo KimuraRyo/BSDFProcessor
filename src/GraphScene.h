@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2023 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -37,10 +37,12 @@ public:
         SAMPLE_POINT_LABELS_DISPLAY
     };
 
-    enum class ArcDisplayMode {
-        HALF_DIFF   = 0,
-        SPECULAR    = 1,
-        SPHERICAL   = 2
+    enum class ArcDisplayMode
+    {
+        DISTORTED = 0,
+        HALF_DIFF = 1,
+        SPECULAR = 2,
+        SPHERICAL = 3
     };
 
     osg::Group* getRoot() { return root_; }

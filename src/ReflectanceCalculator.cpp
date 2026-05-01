@@ -78,9 +78,16 @@ void ReflectanceCalculator::computeReflectances()
 #if defined(USE_LIBBSDF_INTEGRATOR)
         sp = integrator.computeReflectance(*brdf, inDir);
 #else
+        auto distBrdf = dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(brdf);
         auto spheBrdf = dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf);
         auto specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(brdf);
-        if (spheBrdf &&
+        // If SpecularCoordinatesBrdf has sufficient resolution
+        if (distBrdf &&
+            distBrdf->getNumDistTheta() >= 20 &&
+            distBrdf->getNumDistPhi() >= 20) {
+            sp = lb::computeReflectance(*distBrdf, inThIndex, inPhIndex);
+        }
+        else if (spheBrdf &&
             spheBrdf->getNumOutTheta() >= 2 &&
             spheBrdf->getNumOutPhi() >= 2) {
             sp = lb::computeReflectance(*spheBrdf, inThIndex, inPhIndex);

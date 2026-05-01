@@ -10,10 +10,7 @@
 
 #include <osg/Timer>
 
-#include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/Optimizer.h>
-#include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
-#include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
 #include <libbsdf/ReflectanceModel/AnisotropicGgx.h>
 #include <libbsdf/ReflectanceModel/AnisotropicWard.h>
@@ -48,8 +45,8 @@ ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
     ui_->reflectanceModelComboBox->activated(lambertIndex);
 
     // Select a specular coordinate system.
-    ui_->coordSysComboBox->setCurrentIndex(1);
-    ui_->coordSysComboBox->activated(1);
+    ui_->coordSysComboBox->setCurrentIndex(2);
+    ui_->coordSysComboBox->activated(2);
 
     connect(ui_->generateBrdfPushButton, SIGNAL(clicked()), this, SLOT(generateBrdf()));
 }

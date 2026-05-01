@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2020 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -17,13 +17,13 @@
 #include <osg/PolygonOffset>
 #include <osg/PolygonMode>
 
+#include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 
 #include "SceneUtil.h"
-#include "SpecularCenteredCoordinateSystem.h"
 
 const osg::Vec4 RED(1.0, 0.2, 0.2, 1.0);
 const osg::Vec4 GREEN(0.2, 1.0, 0.2, 1.0);
@@ -719,11 +719,12 @@ void GraphScene::updateInOutDirLine()
 
     if (arcDisplayUsed_) {
         switch (arcDisplayMode_) {
-            case ArcDisplayMode::HALF_DIFF:
-                setupHalfDiffCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
-                break;
+            case ArcDisplayMode::DISTORTED:
             case ArcDisplayMode::SPECULAR:
                 setupSpecularCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
+                break;
+            case ArcDisplayMode::HALF_DIFF:
+                setupHalfDiffCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
                 break;
             case ArcDisplayMode::SPHERICAL:
                 setupSphericalCoordAngles(pickedInDir_, pickedOutDir_, arcRadius);
@@ -1077,8 +1078,8 @@ void GraphScene::updateBrdfGeometry(int inThetaIndex, int inPhiIndex, int wavele
         }
         case SAMPLE_POINTS_DISPLAY: {
             setupBrdfMeshGeometry(*brdf, inTheta, inPhi, wavelengthIndex, dataType);
-            meshGeode->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1.0f, 1.0f),
-                                                                        osg::StateAttribute::ON);
+            meshGeode->getOrCreateStateSet()->setAttributeAndModes(
+                new osg::PolygonOffset(1.0f, 1.0f), osg::StateAttribute::ON);
             if (!data_->isInDirDependentCoordinateSystem()) break;
 
             // Update point geometry.
@@ -1125,8 +1126,8 @@ void GraphScene::setupBrdfMeshGeometry(const lb::Brdf& brdf, float inTheta, floa
         numPhi = 91;
     }
     else {
-        numTheta = 361;
-        numPhi = 361;
+        numTheta = 181;
+        numPhi = 721;
     }
 
     osg::Geometry* meshGeom;
@@ -1143,7 +1144,7 @@ void GraphScene::setupBrdfMeshGeometry(const lb::Brdf& brdf, float inTheta, floa
             numTheta, numPhi);
     }
     else {
-        meshGeom = scene_util::createBrdfMeshGeometry<SpecularCenteredCoordinateSystem>(
+        meshGeom = scene_util::createBrdfMeshGeometry<lb::DistortedSphericalCoordinateSystem>(
             brdf, inTheta, inPhi, wavelengthIndex,
             logPlotUsed_, baseOfLogarithm_, dataType, photometric,
             numTheta, numPhi);
