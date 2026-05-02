@@ -52,6 +52,13 @@ private:
                    bool                 labUsed = true,
                    bool                 munsellUsed = true);
 
+    // Async task counter to manage UI disabling when background computations run.
+    void setMainWindowUiDisabled(bool disabled);
+    void incrementAsyncTaskCount();
+    void decrementAsyncTaskCount();
+
+    int asyncTasksRunning_ = 0;
+
     void addSrgb(QTreeWidgetItem* parentItem, const lb::Vec3& xyz);
     void addAdobeRgb(QTreeWidgetItem* parentItem, const lb::Vec3& xyz);
     void addLab(QTreeWidgetItem* parentItem, const lb::Vec3& xyz);

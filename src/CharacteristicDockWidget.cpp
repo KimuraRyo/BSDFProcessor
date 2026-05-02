@@ -239,6 +239,9 @@ void CharacteristicDockWidget::addAsyncSpectrumItem(const QString&              
 
     watcher->setFuture(future);
 
+    // Increment async task counter (this will disable the main UI when count becomes 1)
+    incrementAsyncTaskCount();
+
     connect(watcher, &QFutureWatcher<lb::Spectrum>::finished, this,
             [this, watcher, item, computingItem]() {
                 lb::Spectrum sp = watcher->future().result();
@@ -253,7 +256,59 @@ void CharacteristicDockWidget::addAsyncSpectrumItem(const QString&              
                 ui_->characteristicTreeWidget->expandItem(item);
 
                 watcher->deleteLater();
+                // Decrement async task counter (this will re-enable the main UI when count reaches 0)
+                decrementAsyncTaskCount();
             });
+}
+
+void CharacteristicDockWidget::setMainWindowUiDisabled(bool disabled)
+{
+    QWidget* top = this->window();
+    if (!top)
+        return;
+
+    if (QAction* a = top->findChild<QAction*>("actionOpenBrdf"))
+        a->setDisabled(disabled);
+
+    if (QAction* a2 = top->findChild<QAction*>("actionOpenCcbrdf"))
+        a2->setDisabled(disabled);
+
+    if (QMenu* m = top->findChild<QMenu*>("menuRecentFiles"))
+        m->setDisabled(disabled);
+
+    if (QWidget* ed = top->findChild<QWidget*>("editorDockWidgetContents"))
+        ed->setDisabled(disabled);
+
+    const auto genBtns = top->findChildren<QPushButton*>("generateBrdfPushButton");
+    for (QPushButton* b : genBtns) {
+        if (b)
+            b->setDisabled(disabled);
+    }
+
+    const auto procBtns = top->findChildren<QPushButton*>("processPushButton");
+    for (QPushButton* b : procBtns) {
+        if (b)
+            b->setDisabled(disabled);
+    }
+}
+
+void CharacteristicDockWidget::incrementAsyncTaskCount()
+{
+    ++asyncTasksRunning_;
+    if (asyncTasksRunning_ == 1) {
+        setMainWindowUiDisabled(true);
+    }
+}
+
+void CharacteristicDockWidget::decrementAsyncTaskCount()
+{
+    if (asyncTasksRunning_ <= 0)
+        return;
+
+    --asyncTasksRunning_;
+    if (asyncTasksRunning_ == 0) {
+        setMainWindowUiDisabled(false);
+    }
 }
 
 void CharacteristicDockWidget::addColors(QTreeWidgetItem*       parentItem,

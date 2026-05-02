@@ -611,7 +611,7 @@
     <property name="windowTitle">
      <string>Editor</string>
     </property>
-    <widget class="QWidget" name="dockWidgetContents_6">
+    <widget class="QWidget" name="editorDockWidgetContents">
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <property name="bottomMargin">
        <number>0</number>
