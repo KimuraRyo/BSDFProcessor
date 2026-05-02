@@ -8,6 +8,7 @@
 
 #include "CharacteristicDockWidget.h"
 
+#include <QtConcurrent>
 #include <QtWidgets>
 
 #include <libbsdf/Brdf/Analyzer.h>
@@ -194,32 +195,65 @@ void CharacteristicDockWidget::add8DegreeReflectanceItems()
 
 void CharacteristicDockWidget::addBihemisphericalReflectanceItems(const lb::Brdf& brdf)
 {
-    QTreeWidgetItem* reflectanceItem = new QTreeWidgetItem(ui_->characteristicTreeWidget);
-
+    QString title;
     switch (data_->getDataType()) {
-        case lb::BRDF_DATA:
-            reflectanceItem->setText(0, "Bihemispherical reflectance");
-            break;
-        case lb::BTDF_DATA:
-            reflectanceItem->setText(0, "Bihemispherical transmittance");
-            break;
-        default:
-            return;
+    case lb::BRDF_DATA:
+        title = "Bihemispherical reflectance";
+        break;
+    case lb::BTDF_DATA:
+        title = "Bihemispherical transmittance";
+        break;
+    default:
+        return;
     }
 
-    lb::Spectrum sp = lb::computeBihemisphericalReflectance(brdf);
-    addColors(reflectanceItem, sp);
+    addAsyncSpectrumItem(title, QString(), [&brdf]() -> lb::Spectrum {
+        return lb::computeBihemisphericalReflectance(brdf);
+    });
 }
 
 void CharacteristicDockWidget::addReciprocityItems(const lb::Brdf& brdf)
 {
-    QTreeWidgetItem* reciprocityItem = new QTreeWidgetItem(ui_->characteristicTreeWidget);
+    addAsyncSpectrumItem("Reciprocity error",
+                         "Bihemispherical reflectance of the absolute difference between the original and reversed BRDF",
+                         [&brdf]() -> lb::Spectrum { return lb::computeReciprocityError(brdf); });
+}
 
-    reciprocityItem->setText(0, "Reciprocity error");
-    reciprocityItem->setToolTip(0, "Bihemispherical reflectance of the absolute difference between the original and reversed BRDF");
+void CharacteristicDockWidget::addAsyncSpectrumItem(const QString&                title,
+                                                    const QString&                tooltip,
+                                                    std::function<lb::Spectrum()> task)
+{
+    QTreeWidgetItem* item = new QTreeWidgetItem(ui_->characteristicTreeWidget);
+    item->setText(0, title);
+    if (!tooltip.isEmpty()) {
+        item->setToolTip(0, tooltip);
+    }
 
-    lb::Spectrum sp = lb::computeReciprocityError(brdf);
-    addColors(reciprocityItem, sp, false, false);
+    // Placeholder to indicate computation in progress
+    QTreeWidgetItem* computingItem = new QTreeWidgetItem(item);
+    computingItem->setText(0, "Computing...");
+    ui_->characteristicTreeWidget->expandItem(item);
+
+    QFutureWatcher<lb::Spectrum>* watcher = new QFutureWatcher<lb::Spectrum>(this);
+    QFuture<lb::Spectrum>         future = QtConcurrent::run(std::move(task));
+
+    watcher->setFuture(future);
+
+    connect(watcher, &QFutureWatcher<lb::Spectrum>::finished, this,
+            [this, watcher, item, computingItem]() {
+                lb::Spectrum sp = watcher->future().result();
+
+                if (item && computingItem) {
+                    item->removeChild(computingItem);
+                    delete computingItem;
+                }
+
+                addColors(item, sp);
+                item->setDisabled(false);
+                ui_->characteristicTreeWidget->expandItem(item);
+
+                watcher->deleteLater();
+            });
 }
 
 void CharacteristicDockWidget::addColors(QTreeWidgetItem*       parentItem,

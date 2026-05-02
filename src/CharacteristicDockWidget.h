@@ -11,6 +11,8 @@
 
 #include "ui_CharacteristicDockWidget.h"
 
+#include <functional>
+
 #include "MaterialData.h"
 
 /*!
@@ -39,6 +41,11 @@ private:
     void add8DegreeReflectanceItems();
     void addBihemisphericalReflectanceItems(const lb::Brdf& brdf);
     void addReciprocityItems(const lb::Brdf& brdf);
+
+    /*! Adds an item and calculate it in a separate thread. */
+    void addAsyncSpectrumItem(const QString&                title,
+                              const QString&                tooltip,
+                              std::function<lb::Spectrum()> task);
 
     void addColors(QTreeWidgetItem*     parentItem,
                    const lb::Spectrum&  sp,

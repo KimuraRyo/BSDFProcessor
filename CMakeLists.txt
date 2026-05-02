@@ -1,5 +1,5 @@
 ## =================================================================== ##
-## Copyright (C) 2014-2025 Kimura Ryo                                  ##
+## Copyright (C) 2014-2026 Kimura Ryo                                  ##
 ##                                                                     ##
 ## This Source Code Form is subject to the terms of the Mozilla Public ##
 ## License, v. 2.0. If a copy of the MPL was not distributed with this ##
@@ -48,7 +48,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt6 COMPONENTS Core Gui Widgets OpenGLWidgets)
+find_package(Qt6 COMPONENTS Concurrent Core Gui OpenGLWidgets Widgets)
 
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
@@ -94,10 +94,11 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCES} ${RESOURCES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${OPENSCENEGRAPH_LIBRARIES}
+    Qt6::Concurrent
     Qt6::Core
     Qt6::Gui
-    Qt6::Widgets
     Qt6::OpenGLWidgets
+    Qt6::Widgets
     ${OPENGL_LIBRARIES}
     Eigen3::Eigen
     libbsdf)
