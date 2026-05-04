@@ -26,8 +26,8 @@ PickDockWidget::PickDockWidget(QWidget* parent)
     ui_->setupUi(this);
 
     // Use a spherical coordinate system as default.
-    ui_->coordSysComboBox->setCurrentIndex(2);
-    ui_->coordSysComboBox->activated(2);
+    ui_->coordSysComboBox->setCurrentIndex(3);
+    ui_->coordSysComboBox->activated(3);
 
     actionCopyInfo_ = new QAction(this);
     actionCopyInfo_->setText("Copy values");
