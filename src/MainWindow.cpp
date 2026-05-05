@@ -1410,7 +1410,9 @@ void MainWindow::initializeWavelengthUi(int index)
             case 0:  ui_->wavelengthLineEdit->setText("R"); break;
             case 1:  ui_->wavelengthLineEdit->setText("G"); break;
             case 2:  ui_->wavelengthLineEdit->setText("B"); break;
-            default: assert(false);
+            default:
+                lbWarn << "[MainWindow::initializeWavelengthUi] Invalid index: " << index;
+                break;
         }
     }
     else if (data_->getColorModel() == lb::XYZ_MODEL) {
@@ -1419,7 +1421,9 @@ void MainWindow::initializeWavelengthUi(int index)
             case 0:  ui_->wavelengthLineEdit->setText("X"); break;
             case 1:  ui_->wavelengthLineEdit->setText("Y"); break;
             case 2:  ui_->wavelengthLineEdit->setText("Z"); break;
-            default: assert(false);
+            default:
+                lbWarn << "[MainWindow::initializeWavelengthUi] Invalid index: " << index;
+                break;
         }
     }
     else if (data_->getColorModel() == lb::SPECTRAL_MODEL) {

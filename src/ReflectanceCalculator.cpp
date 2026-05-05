@@ -15,10 +15,6 @@
 
 #include <libbsdf/Brdf/Analyzer.h>
 
-#if defined(USE_LIBBSDF_INTEGRATOR)
-#include <libbsdf/Brdf/Integrator.h>
-#endif
-
 ReflectanceCalculator::ReflectanceCalculator(std::shared_ptr<lb::SampleSet2D>   reflectances,
                                              std::shared_ptr<const lb::Brdf>    brdf)
                                              : reflectances_(reflectances),
@@ -59,10 +55,6 @@ void ReflectanceCalculator::computeReflectances()
 
     osg::Timer_t startTick = osg::Timer::instance()->tick();
 
-#if defined(USE_LIBBSDF_INTEGRATOR)
-    lb::Integrator integrator = lb::Integrator(10000000);
-#endif
-
     // Compute reflectances or transmittances.
     lb::Spectrum sp;
     lb::Vec3 inDir;
@@ -75,9 +67,6 @@ void ReflectanceCalculator::computeReflectances()
             continue;
         }
 
-#if defined(USE_LIBBSDF_INTEGRATOR)
-        sp = integrator.computeReflectance(*brdf, inDir);
-#else
         auto distBrdf = dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(brdf);
         auto spheBrdf = dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf);
         auto specBrdf = dynamic_cast<const lb::SpecularCoordinatesBrdf*>(brdf);
@@ -108,7 +97,6 @@ void ReflectanceCalculator::computeReflectances()
 
             lb::Log::setNotificationLevel(origLogLevel);
         }
-#endif
 
         processedReflectances_->setSpectrum(inThIndex, inPhIndex, sp);
 

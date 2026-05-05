@@ -21,8 +21,6 @@ class RenderingWidget : public OsgQWidget
     Q_OBJECT
 
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     explicit RenderingWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     void setRenderingScene(RenderingScene* scene);
