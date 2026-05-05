@@ -257,18 +257,29 @@ void TableView::showEvent(QShowEvent* event)
 
 void TableView::mousePressEvent(QMouseEvent* event)
 {
+    // Prevent temporary cursor changes by the base implementation
+    QApplication::setOverrideCursor(Qt::ArrowCursor);
     QGraphicsView::mousePressEvent(event);
+    QApplication::restoreOverrideCursor();
+
+    // Ensure the viewport cursor remains an arrow
     viewport()->setCursor(Qt::ArrowCursor);
 }
 
 void TableView::mouseMoveEvent(QMouseEvent* event)
 {
+    QApplication::setOverrideCursor(Qt::ArrowCursor);
     QGraphicsView::mouseMoveEvent(event);
+    QApplication::restoreOverrideCursor();
+
     viewport()->setCursor(Qt::ArrowCursor);
 }
 
 void TableView::mouseReleaseEvent(QMouseEvent* event)
 {
+    QApplication::setOverrideCursor(Qt::ArrowCursor);
     QGraphicsView::mouseReleaseEvent(event);
+    QApplication::restoreOverrideCursor();
+
     viewport()->setCursor(Qt::ArrowCursor);
 }
