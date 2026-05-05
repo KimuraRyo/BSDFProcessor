@@ -16,6 +16,7 @@
 #include <osg/Point>
 #include <osg/PolygonOffset>
 #include <osg/PolygonMode>
+#include <osg/Version>
 
 #include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/HalfDifferenceCoordinatesBrdf.h>
@@ -204,21 +205,24 @@ void GraphScene::createAxisAndScale()
 
     axisTextLabelGroup_->removeChildren(0, axisTextLabelGroup_->getNumChildren());
 
-    // Add text labels.
-    if (data_->isEmpty()) {
-        osg::Geode* geode = new osg::Geode;
-        geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-        axisTextLabelGroup_->addChild(geode);
+    // Workaround for the osgText::FadeText issue in OpenSceneGraph-3.6.5
+    if (std::string(osgGetVersion()) != "3.6.5") {
+        // Add text labels.
+        if (data_->isEmpty()) {
+            osg::Geode* geode = new osg::Geode;
+            geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+            axisTextLabelGroup_->addChild(geode);
 
-        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(radius1, 0.0, 0.0)));
-        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(-radius1, 0.0, 0.0)));
-        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, radius1, 0.0)));
-        geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, -radius1, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(radius1, 0.0, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(-radius1, 0.0, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, radius1, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("0.5", osg::Vec3(0.0, -radius1, 0.0)));
 
-        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(radius2, 0.0, 0.0)));
-        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(-radius2, 0.0, 0.0)));
-        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, radius2, 0.0)));
-        geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, -radius2, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(radius2, 0.0, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(-radius2, 0.0, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, radius2, 0.0)));
+            geode->addDrawable(scene_util::createTextLabel("1.0", osg::Vec3(0.0, -radius2, 0.0)));
+        }
     }
 }
 

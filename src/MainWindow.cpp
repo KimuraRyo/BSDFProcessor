@@ -1105,7 +1105,11 @@ void MainWindow::initializeUi()
     comboBox->addItem(getDisplayModeName(GraphScene::ALL_INCOMING_AZIMUTHAL_ANGLES_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::ALL_WAVELENGTHS_DISPLAY));
     comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINTS_DISPLAY));
-    comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
+
+    // Workaround for the osgText::FadeText issue in OpenSceneGraph-3.6.5
+    if (std::string(osgGetVersion()) != "3.6.5") {
+        comboBox->addItem(getDisplayModeName(GraphScene::SAMPLE_POINT_LABELS_DISPLAY));
+    }
 
     bool photometryDisabled = (data_->getColorModel() != lb::RGB_MODEL &&
                                data_->getColorModel() != lb::SPECTRAL_MODEL) ||
