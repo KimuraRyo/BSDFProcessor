@@ -34,6 +34,9 @@
 #include <libbsdf/Brdf/SpecularCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 
+#include "ColorPalette.h"
+#include "Utility.h"
+
 void scene_util::fitCameraPosition(osg::Camera*     camera,
                                    const osg::Vec3& cameraDirection,
                                    const osg::Vec3& upDirection,
@@ -770,7 +773,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, vertices->size()));
 
     osg::Vec4Array* colors = new osg::Vec4Array;
-    colors->push_back(osg::Vec4(0.0f, 0.5f, 1.0f, 1.0f));
+    colors->push_back(util::qtToOsg(ColorPalette::Default::Purple, 1 / 2.2f));
     geom->setColorArray(colors, osg::Array::BIND_OVERALL);
 
     //osg::PolygonMode *pm = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::POINT);

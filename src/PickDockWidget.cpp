@@ -12,10 +12,10 @@
 
 #include <libbsdf/Common/SpectrumUtility.h>
 
-const QString redStyleSheet     = "QLabel { background-color: rgb(255, 190, 190); }";
-const QString yellowStyleSheet  = "QLabel { background-color: rgb(245, 245, 180); }";
-const QString greenStyleSheet   = "QLabel { background-color: rgb(190, 255, 190); }";
-const QString blueStyleSheet    = "QLabel { background-color: rgb(190, 190, 255); }";
+const QString redStyleSheet     = "QLabel { background-color: rgb(255, 138, 196); }";
+const QString yellowStyleSheet  = "QLabel { background-color: rgb(254, 223, 67); }";
+const QString greenStyleSheet   = "QLabel { background-color: rgb(74, 217, 104); }";
+const QString blueStyleSheet    = "QLabel { background-color: rgb(92, 184, 255); }";
 
 PickDockWidget::PickDockWidget(QWidget* parent)
                                : QDockWidget(parent),

@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2014-2025 Kimura Ryo                                  //
+// Copyright (C) 2014-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -35,10 +35,12 @@ inline QColor osgToQt(const osg::Vec4& vec)
     return QColor(vec.x() * 255.0 + 0.5, vec.y() * 255.0 + 0.5, vec.z() * 255.0 + 0.5, vec.w() * 255.0 + 0.5);
 }
 
-/*! Converts from QColor to osg::Vec3. */
-inline osg::Vec3 qtToOsg(const QColor& color)
+/*! Converts from QColor to osg::Vec4. */
+inline osg::Vec4 qtToOsg(const QColor& color, float gamma = 1.0f)
 {
-    return osg::Vec3(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+    using std::pow;
+    return osg::Vec4(pow(color.redF(), 1 / gamma), pow(color.greenF(), 1 / gamma),
+                     pow(color.blueF(), 1 / gamma), color.alphaF());
 }
 
 /*! Converts from QColor to lb::Vec3. */

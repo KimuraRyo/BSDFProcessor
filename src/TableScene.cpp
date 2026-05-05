@@ -10,6 +10,7 @@
 
 #include <libbsdf/Common/SpectrumUtility.h>
 
+#include "ColorPalette.h"
 #include "GraphicsAngleItem.h"
 #include "GraphicsSampleItem.h"
 
@@ -352,18 +353,19 @@ void TableScene::createBrdfAngleItems(const lb::SampleSet& ss)
 
     // x-axis angles
     qreal underPosY = num1 * num3 * ITEM_SIZE;
-    linePen.setColor(QColor(Qt::red).lighter(140));
+    linePen.setColor(ColorPalette::Light::Pink);
     for (int i0 = 0; i0 < num0; ++i0) {
         for (int i2 = 0; i2 < num2; ++i2) {
             qreal posX = i2 + num2 * i0;
 
-            QColor color0 = (i0 % 2) ? QColor(Qt::red).lighter(170) : QColor(Qt::red).lighter(190);
+            QColor color0 =
+                (i0 % 2) ? ColorPalette::Light::Pink.lighter(130) : ColorPalette::Light::Pink;
             float  angle0 = lb::toDegree(ss.getAngle0(i0));
             addAngleItem(color0, angle0, posX, -ITEM_SIZE * 2, ALWAYS_VISIBLE_LOD); // upper side
             addAngleItem(color0, angle0, posX, underPosY + ITEM_SIZE);              // under side
 
             QColor color2 =
-                (i2 % 2) ? QColor(Qt::green).lighter(170) : QColor(Qt::green).lighter(190);
+                (i2 % 2) ? ColorPalette::Light::Green.lighter(130) : ColorPalette::Light::Green;
             float angle2 = lb::toDegree(ss.getAngle2(i2));
             addAngleItem(color2, angle2, posX, -ITEM_SIZE, ALWAYS_VISIBLE_LOD); // upper side
             addAngleItem(color2, angle2, posX, underPosY);                      // under side
@@ -376,21 +378,21 @@ void TableScene::createBrdfAngleItems(const lb::SampleSet& ss)
 
     // y-axis angles
     qreal rightPosX = num0 * num2 * ITEM_SIZE;
-    linePen.setColor(QColor(Qt::yellow).lighter(140));
+    linePen.setColor(ColorPalette::Light::Yellow);
     for (int i1 = 0; i1 < num1; ++i1) {
         for (int i3 = 0; i3 < num3; ++i3) {
             qreal posY = i3 + num3 * i1;
 
             if (num1 > 1) {
-                QColor color1 =
-                    (i1 % 2) ? QColor(Qt::yellow).lighter(170) : QColor(Qt::yellow).lighter(190);
+                QColor color1 = (i1 % 2) ? ColorPalette::Light::Yellow.lighter(130)
+                                         : ColorPalette::Light::Yellow;
                 float angle1 = lb::toDegree(ss.getAngle1(i1));
                 addAngleItem(color1, angle1, -ITEM_SIZE * 2, posY, ALWAYS_VISIBLE_LOD); // left side
                 addAngleItem(color1, angle1, rightPosX + ITEM_SIZE, posY); // right side
             }
 
             QColor color3 =
-                (i3 % 2) ? QColor(Qt::blue).lighter(170) : QColor(Qt::blue).lighter(190);
+                (i3 % 2) ? ColorPalette::Light::Blue.lighter(130) : ColorPalette::Light::Blue;
             float angle3 = lb::toDegree(ss.getAngle3(i3));
             addAngleItem(color3, angle3, -ITEM_SIZE, posY, ALWAYS_VISIBLE_LOD); // left side
             addAngleItem(color3, angle3, rightPosX, posY);                      // right side
@@ -459,7 +461,8 @@ void TableScene::createReflectanceAngleItems(const lb::SampleSet2D& ss2)
 
     // x-axis angles
     for (int i0 = 0; i0 < num0; ++i0) {
-        QColor color0 = (i0 % 2) ? QColor(Qt::red).lighter(170) : QColor(Qt::red).lighter(190);
+        QColor color0 =
+            (i0 % 2) ? ColorPalette::Light::Pink.lighter(130) : ColorPalette::Light::Pink;
         float  angle0 = lb::toDegree(ss2.getTheta(i0));
         addAngleItem(color0, angle0, i0, -itemSize, ALWAYS_VISIBLE_LOD);
 
@@ -472,7 +475,7 @@ void TableScene::createReflectanceAngleItems(const lb::SampleSet2D& ss2)
     if (num1 > 1) {
         for (int i1 = 0; i1 < num1; ++i1) {
             QColor color1 =
-                (i1 % 2) ? QColor(Qt::yellow).lighter(170) : QColor(Qt::yellow).lighter(190);
+                (i1 % 2) ? ColorPalette::Light::Yellow.lighter(130) : ColorPalette::Light::Yellow;
             float angle1 = lb::toDegree(ss2.getPhi(i1));
             addAngleItem(color1, angle1, -itemSize, i1, ALWAYS_VISIBLE_LOD); // left side
             addAngleItem(color1, angle1, num0 * itemSize, i1);               // right side

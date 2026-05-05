@@ -23,12 +23,14 @@
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 #include <libbsdf/Common/SpectrumUtility.h>
 
+#include "ColorPalette.h"
 #include "SceneUtil.h"
+#include "Utility.h"
 
-const osg::Vec4 RED(1.0, 0.2, 0.2, 1.0);
-const osg::Vec4 GREEN(0.2, 1.0, 0.2, 1.0);
-const osg::Vec4 BLUE(0.3, 0.3, 1.0, 1.0);
-const osg::Vec4 YELLOW(0.8, 0.8, 0.2, 1.0);
+const osg::Vec4 RED(util::qtToOsg(ColorPalette::Light::Pink, 1 / 2.2f));
+const osg::Vec4 GREEN(util::qtToOsg(ColorPalette::Light::Green, 1 / 2.2f));
+const osg::Vec4 BLUE(util::qtToOsg(ColorPalette::Light::Blue, 1 / 2.2f));
+const osg::Vec4 YELLOW(util::qtToOsg(ColorPalette::Light::Yellow, 1 / 2.2f));
 
 constexpr int NUM_ARC_SEGMENTS = 512;
 
@@ -427,7 +429,7 @@ void GraphScene::setupHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
 
     // Create the line of the halfway vector.
     {
-        osg::Vec4 color(0.7, 0.1, 1.0, 1.0);
+        osg::Vec4          color(util::qtToOsg(ColorPalette::Default::Indigo, 1 / 2.2f));
         constexpr GLushort stipplePattern = 0xf8ff;
 
         osg::Geometry* lineGeom = scene_util::createStippledLine(osg::Vec3(), hDir, color,
@@ -438,7 +440,7 @@ void GraphScene::setupHalfDiffCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
     }
 
     if (transparent) {
-        osg::Vec4 color(1.0, 0.5, 0.0, 1.0);
+        osg::Vec4          color(util::qtToOsg(ColorPalette::Default::Orange, 1 / 2.2f));
         constexpr GLushort stipplePattern = 0xff8f;
 
         osg::Vec3 iDir = modifyLineLength(brdfInDir);
@@ -538,8 +540,8 @@ void GraphScene::setupSpecularCoordAngles(const lb::Vec3& inDir, const lb::Vec3&
 
     // Create the line of the specular direction.
     {
-        osg::Vec4 color(0.0, 0.7, 0.8, 1.0);
-        constexpr GLint stippleFactor = 1;
+        osg::Vec4          color(util::qtToOsg(ColorPalette::Default::Teal, 1 / 2.2f));
+        constexpr GLint    stippleFactor = 1;
         constexpr GLushort stipplePattern = 0xf8ff;
 
         osg::Geometry* lineGeom = scene_util::createStippledLine(osg::Vec3(), sDir, color,
@@ -693,11 +695,11 @@ void GraphScene::updateInOutDirLine()
 
     // Update the line of an incoming direction.
     {
-        osg::Vec3 dir = modifyLineLength(pickedInDir_);
-        osg::Vec4 color(1.0, 0.0, 0.0, 1.0);
+        osg::Vec3          dir = modifyLineLength(pickedInDir_);
+        osg::Vec4          color = util::qtToOsg(ColorPalette::Default::Red, 1 / 2.2f);
         constexpr GLushort stipplePattern = 0x8fff;
-        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
-                                                             lineWidth, stippleFactor, stipplePattern);
+        osg::Geometry*     geom = scene_util::createStippledLine(osg::Vec3(), dir, color, lineWidth,
+                                                                 stippleFactor, stipplePattern);
         geode->addDrawable(geom);
 
         setupAngleArcOnGround(geode, dir, arcRadius, color);
@@ -707,11 +709,11 @@ void GraphScene::updateInOutDirLine()
 
     // Update the line of an outgoing direction.
     {
-        osg::Vec3 dir = modifyLineLength(pickedOutDir_);
-        osg::Vec4 color(0.0, 0.2, 1.0, 1.0);
+        osg::Vec3          dir = modifyLineLength(pickedOutDir_);
+        osg::Vec4          color = util::qtToOsg(ColorPalette::Default::Blue, 1 / 2.2f);
         constexpr GLushort stipplePattern = 0xff8f;
-        osg::Geometry* geom = scene_util::createStippledLine(osg::Vec3(), dir, color,
-                                                             lineWidth, stippleFactor, stipplePattern);
+        osg::Geometry*     geom = scene_util::createStippledLine(osg::Vec3(), dir, color, lineWidth,
+                                                                 stippleFactor, stipplePattern);
         geode->addDrawable(geom);
 
         setupAngleArcOnGround(geode, dir, arcRadius, color, 0x3333);

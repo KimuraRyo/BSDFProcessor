@@ -10,6 +10,7 @@
 
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
+#include "ColorPalette.h"
 #include "Utility.h"
 
 TableView::TableView(QWidget* parent)
@@ -159,13 +160,13 @@ void TableView::paintEvent(QPaintEvent* event)
             painter.translate(angleNameRect.height() * 2 + 1, 1);
         }
 
-        painter.fillRect(angleNameRect, QColor(Qt::red).lighter(180));
+        painter.fillRect(angleNameRect, ColorPalette::Light::Pink);
         painter.drawRect(angleNameRect);
         painter.drawText(angleNameRect, Qt::AlignCenter,
                          util::toSentenceCase(brdf->getAngle0Name().c_str()));
 
         painter.translate(0, angleNameRect.height());
-        painter.fillRect(angleNameRect, QColor(Qt::green).lighter(180));
+        painter.fillRect(angleNameRect, ColorPalette::Light::Green);
         painter.drawRect(angleNameRect);
         painter.drawText(angleNameRect, Qt::AlignCenter,
                          util::toSentenceCase(brdf->getAngle2Name().c_str()));
@@ -179,14 +180,14 @@ void TableView::paintEvent(QPaintEvent* event)
         }
         else {
             painter.translate(-angleNameRect.width() - angleNameRect.height() * 2 - 1, 1);
-            painter.fillRect(angleNameRect, QColor(Qt::yellow).lighter(180));
+            painter.fillRect(angleNameRect, ColorPalette::Light::Yellow);
             painter.drawRect(angleNameRect);
             painter.drawText(angleNameRect, Qt::AlignCenter,
                              util::toSentenceCase(brdf->getAngle1Name().c_str()));
         }
 
         painter.translate(0, angleNameRect.height());
-        painter.fillRect(angleNameRect, QColor(Qt::blue).lighter(180));
+        painter.fillRect(angleNameRect, ColorPalette::Light::Blue);
         painter.drawRect(angleNameRect);
         painter.drawText(angleNameRect, Qt::AlignCenter,
                          util::toSentenceCase(brdf->getAngle3Name().c_str()));
@@ -201,7 +202,7 @@ void TableView::paintEvent(QPaintEvent* event)
             painter.translate(angleNameRect.height() + 1, 1);
         }
 
-        painter.fillRect(angleNameRect, QColor(Qt::red).lighter(180));
+        painter.fillRect(angleNameRect, ColorPalette::Light::Pink);
         painter.drawRect(angleNameRect);
         painter.drawText(angleNameRect, Qt::AlignCenter, "Incoming polar angle");
 
@@ -210,7 +211,7 @@ void TableView::paintEvent(QPaintEvent* event)
             painter.rotate(-90.0);
 
             painter.translate(-angleNameRect.width() - angleNameRect.height() - 1, 1);
-            painter.fillRect(angleNameRect, QColor(Qt::yellow).lighter(180));
+            painter.fillRect(angleNameRect, ColorPalette::Light::Yellow);
             painter.drawRect(angleNameRect);
             painter.drawText(angleNameRect, Qt::AlignCenter, "Incoming azimuthal angle");
         }
