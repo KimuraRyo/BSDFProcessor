@@ -57,6 +57,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
     lb::Log::setNotificationLevel(lb::Log::Level::INFO_MSG);
     osg::setNotifyLevel(osg::NOTICE);
 
+    setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
+
     setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
