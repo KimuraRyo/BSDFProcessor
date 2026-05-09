@@ -1008,7 +1008,7 @@ void MainWindow::createActions()
     ui_->processorsMenu->addAction(smoothDockWidget_->toggleViewAction());
     ui_->processorsMenu->addAction(insertAngleDockWidget_->toggleViewAction());
 
-    ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL + Qt::Key_T);
+    ui_->tableDockWidget->toggleViewAction()->setShortcut(Qt::CTRL | Qt::Key_T);
 
     connect(ui_->controlDockWidget->toggleViewAction(), SIGNAL(triggered()), this,
             SLOT(raiseControlDockWidget()));
