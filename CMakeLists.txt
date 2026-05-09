@@ -59,13 +59,15 @@ if(MSVC)
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
+    if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64|ARM64")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
+    endif()
 endif()
 
 find_package(OpenMP QUIET)
 if(OPENMP_FOUND)
-    message("OpenMP found")
+    message("Found OpenMP")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
@@ -101,4 +103,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     ${OPENGL_LIBRARIES}
     Eigen3::Eigen
+    $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
     libbsdf)
