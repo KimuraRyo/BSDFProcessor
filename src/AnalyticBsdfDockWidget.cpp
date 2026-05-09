@@ -82,6 +82,7 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
                 colorButton->setAutoFillBackground(true);
                 colorButton->setFlat(false);
                 colorButton->setMaximumWidth(110);
+                colorButton->setFixedHeight(22);
                 colorButton->setColor(util::lbToQt(*it->getVec3()));
 
                 connect(colorButton, SIGNAL(colorChanged(QColor)),

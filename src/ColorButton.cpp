@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -8,20 +8,13 @@
 
 #include "ColorButton.h"
 
-#include <QtGui/QPainter>
-#include <QtWidgets/QColorDialog>
+#include <QColorDialog>
+#include <QPainter>
 
 ColorButton::ColorButton(QWidget* parent)
                          : QPushButton(parent),
                            picked_(false)
 {
-#if defined(_WIN32)
-    setFixedSize(70, 24);
-#elif defined(__APPLE__)
-    setFixedSize(70, 26);
-#else
-    setFixedSize(70, 26);
-#endif
 }
 
 ColorButton::~ColorButton()
@@ -51,66 +44,24 @@ void ColorButton::mousePressEvent(QMouseEvent* event)
 
 void ColorButton::paintEvent(QPaintEvent* event)
 {
-    QPushButton::paintEvent(event);
-
+    Q_UNUSED(event);
+    
     QPainter painter(this);
-
-#if defined(_WIN32)
-    const int leftMargin = 2;
-#elif defined(__APPLE__)
-    const int leftMargin = 5;
-#else
-    const int leftMargin = 0;
-#endif
-
-#if defined(_WIN32)
-    const int topMargin = 2;
-#elif defined(__APPLE__)
-    const int topMargin = 1;
-#else
-    const int topMargin = 0;
-#endif
-
-    int sizeDecrease = 0;
-
-    // Draw a frame.
-#if defined(_WIN32)
-    painter.setPen(Qt::NoPen);
-    sizeDecrease++;
-#else
-    painter.setPen(QColor(180, 180, 180));
-#endif
+    
     if (picked_) {
         painter.setBrush(QColor(190, 190, 190));
     }
     else {
         painter.setBrush(QColor(240, 240, 240));
     }
-    painter.drawRect(leftMargin,
-                     topMargin,
-                     width() - 2 - leftMargin,
-                     height() - 2 - topMargin);
+    painter.drawRect(rect());
 
-    // Draw a colored rectangle.
-    if (picked_) {
-        painter.setPen(QColor(90, 90, 90));
-    }
-    else {
-        painter.setPen(QColor(140, 140, 140));
-    }
-    painter.setBrush(color_);
+    constexpr int margin = 5;
+    QRect colorRect = rect().adjusted(margin, margin, -margin, -margin);
 
-#if defined(_WIN32)
-    const int frameWidth = 4;
-#elif defined(__APPLE__)
-    const int frameWidth = 6;
-#else
-    const int frameWidth = 6;
-#endif
-    painter.drawRect(frameWidth + leftMargin,
-                     frameWidth + topMargin,
-                     width() - frameWidth * 2 - 1 - leftMargin - sizeDecrease,
-                     height() - frameWidth * 2 - 1 - topMargin - sizeDecrease);
+    painter.setPen(QColor(140, 140, 140, 40));
+    painter.drawRect(colorRect.adjusted(-1, -1, 1, 1));
+    painter.fillRect(colorRect, color_);
 }
 
 void ColorButton::nextCheckState()

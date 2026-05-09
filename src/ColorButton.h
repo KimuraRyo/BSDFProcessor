@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2016 Kimura Ryo                                       //
+// Copyright (C) 2016-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -9,7 +9,7 @@
 #ifndef COLOR_BUTTON_H
 #define COLOR_BUTTON_H
 
-#include <QtWidgets/QPushButton>
+#include <QPushButton>
 
 /*!
  * \class   ColorButton
@@ -32,9 +32,9 @@ public slots:
     void setColor(const QColor& color);
 
 protected:
-    void mousePressEvent(QMouseEvent* event);
-    void paintEvent(QPaintEvent* event);
-    void nextCheckState();
+    void mousePressEvent(QMouseEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
+    void nextCheckState() override;
 
     QColor  color_;
     bool    picked_;
