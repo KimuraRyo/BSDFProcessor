@@ -20,7 +20,7 @@ class ColorButton : public QPushButton
     Q_OBJECT
 
 public:
-    explicit ColorButton(QWidget* parent);
+    explicit ColorButton(QWidget* parent = nullptr);
     virtual ~ColorButton();
 
     QColor getColor() const;
@@ -36,8 +36,8 @@ protected:
     void paintEvent(QPaintEvent* event) override;
     void nextCheckState() override;
 
-    QColor  color_;
-    bool    picked_;
+    QColor color_;
+    bool   picked_;
 
 private:
     Q_DISABLE_COPY(ColorButton)

@@ -11,15 +11,9 @@
 #include <QColorDialog>
 #include <QPainter>
 
-ColorButton::ColorButton(QWidget* parent)
-                         : QPushButton(parent),
-                           picked_(false)
-{
-}
+ColorButton::ColorButton(QWidget* parent) : QPushButton(parent), picked_(false) {}
 
-ColorButton::~ColorButton()
-{
-}
+ColorButton::~ColorButton() {}
 
 QColor ColorButton::getColor() const
 {
@@ -29,7 +23,6 @@ QColor ColorButton::getColor() const
 void ColorButton::setColor(const QColor& color)
 {
     color_ = color;
-
     update();
 }
 
@@ -38,26 +31,28 @@ void ColorButton::mousePressEvent(QMouseEvent* event)
     QPushButton::mousePressEvent(event);
 
     picked_ = true;
-
     update();
 }
 
 void ColorButton::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
-    
+
     QPainter painter(this);
-    
+    painter.setRenderHint(QPainter::Antialiasing);
+
     if (picked_) {
         painter.setBrush(QColor(190, 190, 190));
     }
     else {
         painter.setBrush(QColor(240, 240, 240));
     }
-    painter.drawRect(rect());
+
+    painter.fillRect(rect(), QColor(190, 190, 190));
+    painter.fillRect(rect().adjusted(1, 1, -1, -1), painter.brush());
 
     constexpr int margin = 5;
-    QRect colorRect = rect().adjusted(margin, margin, -margin, -margin);
+    QRect         colorRect = rect().adjusted(margin, margin, -margin, -margin);
 
     painter.setPen(QColor(140, 140, 140, 40));
     painter.drawRect(colorRect.adjusted(-1, -1, 1, 1));
