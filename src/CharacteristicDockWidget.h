@@ -27,14 +27,15 @@ public:
     explicit CharacteristicDockWidget(QWidget* parent);
     ~CharacteristicDockWidget();
 
-    void updateData(const MaterialData& materialData);
-    void updateComputedReflectances(const MaterialData& materialData);
+    /*! Clears the tree view and display a push button. */
+    void initializeUi(const MaterialData& materialData);
 
 private:
     Q_DISABLE_COPY(CharacteristicDockWidget)
 
     void resizeEvent(QResizeEvent* event) override;
 
+    void updateData();
     void updateColumnDisplayMode();
 
     void addReflectanceItems();

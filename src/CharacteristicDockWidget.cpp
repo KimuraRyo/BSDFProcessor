@@ -17,9 +17,7 @@
 #include "Utility.h"
 
 CharacteristicDockWidget::CharacteristicDockWidget(QWidget* parent)
-                                                   : QDockWidget(parent),
-                                                     data_(nullptr),
-                                                     ui_(new Ui::CharacteristicDockWidgetBase)
+    : QDockWidget(parent), data_(nullptr), ui_(new Ui::CharacteristicDockWidgetBase)
 {
     ui_->setupUi(this);
 }
@@ -29,14 +27,36 @@ CharacteristicDockWidget::~CharacteristicDockWidget()
     delete ui_;
 }
 
-void CharacteristicDockWidget::updateData(const MaterialData& materialData)
+void CharacteristicDockWidget::initializeUi(const MaterialData& materialData)
 {
     if (!&materialData)
         return;
 
     data_ = &materialData;
 
-    ui_->characteristicTreeWidget->clear();
+    QTreeWidget* treeWidget = ui_->characteristicTreeWidget;
+    treeWidget->clear();
+    treeWidget->setHeaderHidden(true);
+
+    QTreeWidgetItem* item = new QTreeWidgetItem(treeWidget);
+    QPushButton*     button = new QPushButton("Show characteristic");
+    treeWidget->setItemWidget(item, 1, button);
+
+    connect(button, &QPushButton::clicked, [=]() { updateData(); });
+}
+
+void CharacteristicDockWidget::resizeEvent(QResizeEvent* event)
+{
+    QDockWidget::resizeEvent(event);
+
+    updateColumnDisplayMode();
+}
+
+void CharacteristicDockWidget::updateData()
+{
+    QTreeWidget* treeWidget = ui_->characteristicTreeWidget;
+    treeWidget->clear();
+    treeWidget->setHeaderHidden(false);
 
     addReflectanceItems();
     add8DegreeReflectanceItems();
@@ -46,32 +66,7 @@ void CharacteristicDockWidget::updateData(const MaterialData& materialData)
         addReciprocityItems(*brdf);
     }
 
-    ui_->characteristicTreeWidget->expandAll();
-
-    updateColumnDisplayMode();
-}
-
-void CharacteristicDockWidget::updateComputedReflectances(const MaterialData& materialData)
-{
-    if (!&materialData)
-        return;
-
-    data_ = &materialData;
-
-    ui_->characteristicTreeWidget->clear();
-
-    addReflectanceItems();
-    add8DegreeReflectanceItems();
-
-    ui_->characteristicTreeWidget->expandAll();
-
-    updateColumnDisplayMode();
-}
-
-void CharacteristicDockWidget::resizeEvent(QResizeEvent* event)
-{
-    QDockWidget::resizeEvent(event);
-
+    treeWidget->expandAll();
     updateColumnDisplayMode();
 }
 
@@ -167,13 +162,13 @@ void CharacteristicDockWidget::add8DegreeReflectanceItems()
     switch (data_->getDataType()) {
         case lb::BRDF_DATA:
         case lb::SPECULAR_REFLECTANCE_DATA:
-            reflectanceItem->setText(0, u8"Reflectance at 8°");
-            reflectanceItem->setToolTip(0, u8"8°:di (CIE 15, JIS Z 8722)");
+            reflectanceItem->setText(0, u8"8°:di (CIE 15, JIS Z 8722)");
+            reflectanceItem->setToolTip(0, u8"Reflectance at 8°");
             break;
         case lb::BTDF_DATA:
         case lb::SPECULAR_TRANSMITTANCE_DATA:
-            reflectanceItem->setText(0, u8"Transmittance at 0°");
-            reflectanceItem->setToolTip(0, u8"0°:di (CIE 15, JIS Z 8722)");
+            reflectanceItem->setText(0, u8"0°:di (CIE 15, JIS Z 8722)");
+            reflectanceItem->setToolTip(0, u8"Transmittance at 0°");
             break;
         default:
             return;

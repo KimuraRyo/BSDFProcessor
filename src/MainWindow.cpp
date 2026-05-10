@@ -485,7 +485,7 @@ void MainWindow::updateViews()
     ui_->renderingOpenGLWidget->updateView();
 
     pickDockWidget_->displayReflectance();
-    characteristicDockWidget_->updateData(*data_);
+    characteristicDockWidget_->initializeUi(*data_);
 }
 
 void MainWindow::updateDisplayMode(QString modeName)
@@ -1265,7 +1265,6 @@ void MainWindow::updateUi()
     displayDockWidget_->updateUi();
     pickDockWidget_->displayReflectance();
     propertyDockWidget_->updateData(*data_);
-    characteristicDockWidget_->updateComputedReflectances(*data_);
     ui_->tableGraphicsView->fitView(0.9);
 }
 
@@ -1955,6 +1954,5 @@ void MainWindow::editBrdf(lb::Spectrum::Scalar glossyIntensity,
     pickDockWidget_->updatePickedValue();
     pickDockWidget_->displayReflectance();
     propertyDockWidget_->updateData(*data_);
-    characteristicDockWidget_->updateData(*data_);
     updateTableView();
 }
