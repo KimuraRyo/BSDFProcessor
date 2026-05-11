@@ -41,7 +41,7 @@
       <x>320</x>
       <y>10</y>
       <width>271</width>
-      <height>161</height>
+      <height>185</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -53,7 +53,7 @@
     <property name="minimumSize">
      <size>
       <width>250</width>
-      <height>154</height>
+      <height>185</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -329,7 +329,7 @@
      <rect>
       <x>39</x>
       <y>280</y>
-      <width>271</width>
+      <width>275</width>
       <height>211</height>
      </rect>
     </property>
@@ -341,8 +341,8 @@
     </property>
     <property name="minimumSize">
      <size>
-      <width>263</width>
-      <height>180</height>
+      <width>275</width>
+      <height>183</height>
      </size>
     </property>
     <property name="windowTitle">
@@ -428,9 +428,15 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="lightPolarAngleSpinBox">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
-              <width>100</width>
+              <width>16777215</width>
               <height>16777215</height>
              </size>
             </property>
@@ -474,9 +480,15 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="lightAzimuthalAngleSpinBox">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
-              <width>100</width>
+              <width>16777215</width>
               <height>16777215</height>
              </size>
             </property>
@@ -517,9 +529,15 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="lightIntensitySpinBox">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
-              <width>100</width>
+              <width>16777215</width>
               <height>16777215</height>
              </size>
             </property>
@@ -563,9 +581,15 @@
           </item>
           <item>
            <widget class="QDoubleSpinBox" name="environmentIntensitySpinBox">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
-              <width>100</width>
+              <width>16777215</width>
               <height>16777215</height>
              </size>
             </property>
@@ -596,13 +620,13 @@
       <x>330</x>
       <y>210</y>
       <width>236</width>
-      <height>202</height>
+      <height>261</height>
      </rect>
     </property>
     <property name="minimumSize">
      <size>
       <width>206</width>
-      <height>202</height>
+      <height>261</height>
      </size>
     </property>
     <property name="floating">
@@ -825,7 +849,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>33</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="fileMenu">
