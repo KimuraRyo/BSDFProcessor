@@ -1,5 +1,5 @@
 // =================================================================== //
-// Copyright (C) 2015-2016 Kimura Ryo                                  //
+// Copyright (C) 2015-2026 Kimura Ryo                                  //
 //                                                                     //
 // This Source Code Form is subject to the terms of the Mozilla Public //
 // License, v. 2.0. If a copy of the MPL was not distributed with this //
@@ -10,17 +10,13 @@
 
 #include <stdio.h>
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4996)
-#endif
-
 const char* getVersion()
 {
     static bool initialized = false;
     static char version[256];
 
     if (!initialized) {
-        sprintf(version, "%d.%d.%d", BSDFPROCESSOR_MAJOR_VERSION, BSDFPROCESSOR_MINOR_VERSION, BSDFPROCESSOR_PATCH_VERSION);
+        snprintf(version, sizeof(version), "%d.%d.%d", BSDFPROCESSOR_MAJOR_VERSION, BSDFPROCESSOR_MINOR_VERSION, BSDFPROCESSOR_PATCH_VERSION);
         initialized = true;
     }
 

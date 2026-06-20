@@ -383,7 +383,7 @@ void setupAngleArcOnGround(osg::Geode*      geode,
         osg::Vec3Array* vertices = new osg::Vec3Array;
         vertices->push_back(pos);
         geom->setVertexArray(vertices);
-        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, vertices->size()));
+        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, static_cast<int>(vertices->size())));
 
         osg::Vec4Array* colors = new osg::Vec4Array;
         colors->push_back(color);

@@ -694,7 +694,7 @@ osg::Geometry* scene_util::createBrdfMeshGeometry(const lb::Brdf&   brdf,
 
     geom->setVertexArray(vertices);
     geom->setNormalArray(normals, osg::Array::BIND_PER_VERTEX);
-    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, vertices->size()));
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, static_cast<int>(vertices->size())));
 
     if (hueUsed) {
         geom->setColorArray(colors, osg::Array::BIND_PER_VERTEX);
@@ -777,7 +777,7 @@ osg::Geometry* scene_util::createBrdfPointGeometry(const lb::Brdf&  brdf,
     osg::StateSet* stateSet = geom->getOrCreateStateSet();
 
     geom->setVertexArray(vertices);
-    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, vertices->size()));
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, static_cast<int>(vertices->size())));
 
     osg::Vec4Array* colors = new osg::Vec4Array;
     colors->push_back(util::qtToOsg(ColorPalette::Default::Purple, 1 / 2.2f));
@@ -875,7 +875,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*     geode,
         //pointGeom->setName("pointGeom");
 
         pointGeom->setVertexArray(pointVertices);
-        pointGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, pointVertices->size()));
+        pointGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, static_cast<int>(pointVertices->size())));
 
         osg::Vec4Array* pointColors = new osg::Vec4Array;
         pointColors->push_back(osg::Vec4(0.0f, 0.4f, 0.8f, 1.0f));
@@ -944,7 +944,7 @@ void scene_util::attachBrdfTextLabels(osg::Geode*     geode,
         //lineGeom->setName("lineGeom");
 
         lineGeom->setVertexArray(lineVertices);
-        lineGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP, 0, lineVertices->size()));
+        lineGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP, 0, static_cast<int>(lineVertices->size())));
 
         osg::Vec4Array* lineColors = new osg::Vec4Array;
         lineColors->push_back(osg::Vec4(0.2, 0.2, 0.0, 1.0));

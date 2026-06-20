@@ -197,7 +197,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
     OsgQWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
-        osg::Vec2f pos = osg::Vec2(event->x(), height() - event->y()) * getPixelRatio();
+        osg::Vec2f pos = osg::Vec2(event->position().x(), height() - event->position().y()) * getPixelRatio();
         osg::Vec3 intersectPosition;
         osg::Node::NodeMask mask = BRDF_MASK | SPECULAR_REFLECTANCE_MASK;
         osg::Node* pickedNode = scene_util::pickNode(viewer_, pos, intersectPosition, mask, false);
@@ -211,7 +211,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent* event)
     }
 #ifdef __APPLE__
     else if (event->button() == Qt::RightButton && !mouseMoved_) {
-        showContextMenu(event->globalPos());
+        showContextMenu(event->globalPosition().toPoint());
     }
 #endif
 }
@@ -264,7 +264,7 @@ void GraphWidget::showContextMenu(const QPoint& pos)
 
 bool GraphWidget::getParameters(const QStringList& paramList, const QString& name, osg::Vec3d* params)
 {
-    int index = paramList.indexOf(name);
+    int index = static_cast<int>(paramList.indexOf(name));
     if (index == -1) {
         lbError << "[GraphWidget::getParameters] Parameter not found: " << name.toStdString();
         return false;

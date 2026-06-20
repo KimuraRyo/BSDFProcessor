@@ -297,7 +297,7 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
     }
 #ifdef __APPLE__
     else if (event->button() == Qt::RightButton && !mouseMoved_) {
-        showContextMenu(event->globalPos());
+        showContextMenu(event->globalPosition().toPoint());
     }
 #endif
 }

@@ -261,10 +261,10 @@ std::shared_ptr<lb::Brdf> AnalyticBsdfDockWidget::initializeBrdf(bool isotropic)
             lb::Arrayd::LinSpaced(ui_->halfDiffCsNumAngle3SpinBox->value() + 1, 0.0,
                                   lb::HalfDifferenceCoordinateSystem::MAX_ANGLE3);
 
-        brdf = new lb::HalfDifferenceCoordinatesBrdf(halfThetaAngles.size(),
-                                                     halfPhiAngles.size(),
-                                                     diffThetaAngles.size(),
-                                                     diffPhiAngles.size(),
+        brdf = new lb::HalfDifferenceCoordinatesBrdf(static_cast<int>(halfThetaAngles.size()),
+                                                     static_cast<int>(halfPhiAngles.size()),
+                                                     static_cast<int>(diffThetaAngles.size()),
+                                                     static_cast<int>(diffPhiAngles.size()),
                                                      lb::RGB_MODEL, 3, false);
 
         lb::SampleSet* ss = brdf->getSampleSet();
