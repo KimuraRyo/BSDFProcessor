@@ -42,7 +42,6 @@ private slots:
 private:
     Q_DISABLE_COPY(RenderingWidget)
 
-    void paintGL() override;
     void resizeGL(int w, int h) override;
 
     void resizeEvent(QResizeEvent *event) override;
@@ -58,8 +57,6 @@ private:
     void openModel(const QString& fileName);
 
     RenderingScene* renderingScene_;
-
-    bool skipRequested_;
 
     QAction* actionResetCamera_;
     QAction* actionTonemapping_;

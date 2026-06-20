@@ -20,7 +20,7 @@
 #include "SceneUtil.h"
 
 RenderingWidget::RenderingWidget(QWidget* parent, Qt::WindowFlags f)
-    : OsgQWidget(parent, f), renderingScene_(nullptr), skipRequested_(false)
+    : OsgQWidget(parent, f), renderingScene_(nullptr)
 {
     osg::Camera* camera = new osg::Camera;
     QSize viewSize = size() * getPixelRatio();
@@ -146,24 +146,6 @@ void RenderingWidget::showLoadedModel()
     resetCameraPosition();
 }
 
-void RenderingWidget::paintGL()
-{
-    if (skipRequested_) {
-        skipRequested_ = false;
-        return;
-    }
-
-    if (!osgFboIdInitialized_) {
-        // Configure the FBO ID of OSG for QOpenGLWidget.
-        GLuint qtFboId = defaultFramebufferObject();
-        viewer_->getCamera()->getGraphicsContext()->setDefaultFboId(qtFboId);
-
-        osgFboIdInitialized_ = true;
-    }
- 
-    viewer_->frame();
-}
-
 void RenderingWidget::resizeGL(int w, int h)
 {
     OsgQWidget::resizeGL(w, h);
@@ -257,8 +239,6 @@ void RenderingWidget::keyPressEvent(QKeyEvent* event)
 void RenderingWidget::mousePressEvent(QMouseEvent* event)
 {
     OsgQWidget::mousePressEvent(event);
-
-    skipRequested_ = true;
 }
 
 void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
@@ -266,8 +246,6 @@ void RenderingWidget::mouseReleaseEvent(QMouseEvent* event)
     OsgQWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton && !mouseMoved_) {
-        skipRequested_ = true;
-
         if (!renderingScene_) return;
 
         QPoint pixelPos = event->pos() * getPixelRatio();

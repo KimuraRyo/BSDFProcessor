@@ -59,15 +59,6 @@ void OsgQWidget::resizeGL(int w, int h)
     viewer_->getCamera()->setViewport(0, 0, viewSize.width(), viewSize.height());
 }
 
-void OsgQWidget::paintEvent(QPaintEvent* event)
-{
-    Q_UNUSED(event);
-
-    makeCurrent();
-    paintGL();
-    doneCurrent();
-}
-
 void OsgQWidget::keyPressEvent(QKeyEvent* event)
 {
     const char* keyData = event->text().toLocal8Bit().data();

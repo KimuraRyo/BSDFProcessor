@@ -38,8 +38,6 @@ protected:
     void paintGL() override;
     void resizeGL(int w, int h) override;
 
-    void paintEvent(QPaintEvent* event) override;
-
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
