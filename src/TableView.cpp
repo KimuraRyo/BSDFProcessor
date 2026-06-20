@@ -8,6 +8,7 @@
 
 #include "TableView.h"
 
+#include <libbsdf/Brdf/DistortedSphericalCoordinatesBrdf.h>
 #include <libbsdf/Brdf/SphericalCoordinatesBrdf.h>
 
 #include "ColorPalette.h"
@@ -70,14 +71,6 @@ void TableView::changeBackSideVisibility()
     tableScene_->setBackSideShown(backSideShown_);
     actionShowBackSide_->setChecked(backSideShown_);
     tableScene_->updateTable();
-
-    const lb::Brdf* brdf = data_->getBrdfData();
-    if (!brdf || (brdf && dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf))) {
-        actionShowBackSide_->setDisabled(true);
-    }
-    else {
-        actionShowBackSide_->setEnabled(true);
-    }
 }
 
 void TableView::showToolTip(const QPointF& pos)
@@ -234,6 +227,16 @@ void TableView::wheelEvent(QWheelEvent* event)
 void TableView::contextMenuEvent(QContextMenuEvent* event)
 {
     actionShowBackSide_->setChecked(backSideShown_);
+    
+    const lb::Brdf* brdf = data_->getBrdfData();
+    if (brdf &&
+        (dynamic_cast<const lb::DistortedSphericalCoordinatesBrdf*>(brdf) ||
+         dynamic_cast<const lb::SphericalCoordinatesBrdf*>(brdf))) {
+        actionShowBackSide_->setDisabled(true);
+    }
+    else {
+        actionShowBackSide_->setEnabled(true);
+    }
 
     QMenu menu(this);
     menu.addAction(actionFitView_);
