@@ -138,7 +138,7 @@ void OsgQWidget::wheelEvent(QWheelEvent* event)
 
 osg::Vec2f OsgQWidget::getPosition(const QMouseEvent& event) const
 {
-    return osg::Vec2f(event.x(), event.y()) * getPixelRatio();
+    return osg::Vec2f(event.position().x(), event.position().y()) * getPixelRatio();
 }
 
 int OsgQWidget::getOsgMouseButton(const QMouseEvent& event)
