@@ -305,14 +305,17 @@ void TableScene::createBrdfImage()
 
     brdfImage_ = std::make_unique<QImage>(num0 * num2, num1 * num3, QImage::Format_RGB888);
 
+    float maxValue = getSampleValue(data_->getMaxValuesPerWavelength(), ss->getColorModel(),
+                                    ss->getWavelengths());
+
     // data table
     for (int i0 = 0; i0 < num0; ++i0) {
     for (int i1 = 0; i1 < num1; ++i1) {
     for (int i2 = 0; i2 < num2; ++i2) {
         lb::Vec3 inDir, outDir;
-        float sampleValue, maxValue, ratio;
+        float sampleValue, ratio;
         int color;
-        #pragma omp parallel for private(sampleValue, maxValue, ratio, color, inDir, outDir)
+        #pragma omp parallel for private(sampleValue, ratio, color, inDir, outDir)
         for (int i3 = 0; i3 < num3; ++i3) {
             if (!backSideShown_) {
                 brdf->getInOutDirection(i0, i1, i2, i3, &inDir, &outDir);
@@ -328,7 +331,6 @@ void TableScene::createBrdfImage()
                 color = 0;
             }
             else {
-                maxValue = data_->getMaxValuesPerWavelength()[wavelengthIndex_];
                 ratio = sampleValue / maxValue;
                 color = static_cast<int>(std::pow(ratio, 1 / gamma_) * 255);
                 color = std::min(color, 255);
