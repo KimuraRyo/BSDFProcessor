@@ -11,16 +11,24 @@ cmake_minimum_required(VERSION 3.22)
 # Let AUTOMOC and AUTOUIC process GENERATED files.
 cmake_policy(SET CMP0071 NEW)
 
-if(NOT LIBBSDF_DIR)
+project(BSDFProcessor)
+
+# libbsdf can be resolved either by building it as a subdirectory of this
+# project or by locating an already built/installed package via find_package.
+# find_package is used by default.
+option(BSDFPROCESSOR_USE_LIBBSDF_SUBDIRECTORY "Build libbsdf via add_subdirectory instead of find_package" OFF)
+
+if(BSDFPROCESSOR_USE_LIBBSDF_SUBDIRECTORY)
     set(LIBBSDF_CORE_FOLDER_NAME "libbsdf Core")
     set(LIBBSDF_APPLICATION_FOLDER_NAME "libbsdf Applications")
 
-    set(LIBBSDF_DIR ../libbsdf)
+    if(NOT LIBBSDF_DIR)
+        set(LIBBSDF_DIR ../libbsdf)
+    endif()
     add_subdirectory(${LIBBSDF_DIR} LibbsdfBin)
+else()
+    find_package(libbsdf REQUIRED)
 endif()
-include_directories(${LIBBSDF_DIR}/include)
-
-project(BSDFProcessor)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -104,4 +112,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${OPENGL_LIBRARIES}
     Eigen3::Eigen
     $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-    libbsdf)
+    libbsdf::libbsdf)
