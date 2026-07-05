@@ -33,6 +33,7 @@
 #include <libbsdf/ReflectanceModel/SimpleGgx.h>
 #include <libbsdf/ReflectanceModel/SimplifiedOrenNayar.h>
 #include <libbsdf/ReflectanceModel/UnrealEngine4.h>
+#include <libbsdf/ReflectanceModel/VaryingIridescenceMicrofacet.h>
 
 ReflectanceModelDockWidget::ReflectanceModelDockWidget(QWidget* parent)
                                                        : AnalyticBsdfDockWidget(parent)
@@ -124,6 +125,7 @@ void ReflectanceModelDockWidget::initializeReflectanceModels()
     models.push_back(new lb::UnrealEngine4(white, 0.0, 0.5, 0.3));
     models.push_back(new lb::AnisotropicWard(white, 0.05, 0.2));
     models.push_back(new lb::IsotropicWard(white, 0.2));
+    models.push_back(new lb::VaryingIridescenceMicrofacet(0.3, 550.0, 1.33, 1.0, 0.0));
 
     for (auto it = models.begin(); it != models.end(); ++it) {
         reflectanceModels_[(*it)->getName()] = *it;
