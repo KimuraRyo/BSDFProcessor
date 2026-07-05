@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>327</width>
+    <width>389</width>
     <height>437</height>
    </rect>
   </property>
@@ -109,9 +109,6 @@
             </property>
             <widget class="QWidget" name="distortedSphericalCoordSysPage">
              <layout class="QFormLayout" name="distortedCoordSysFormLayout">
-              <property name="fieldGrowthPolicy">
-               <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
-              </property>
               <item row="0" column="0">
                <widget class="QLabel" name="label">
                 <property name="text">
@@ -121,12 +118,6 @@
               </item>
               <item row="0" column="1">
                <widget class="QSpinBox" name="distortedCsNumAngle0SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -140,12 +131,6 @@
               </item>
               <item row="1" column="1">
                <widget class="QSpinBox" name="distortedCsNumAngle1SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -173,12 +158,6 @@
               </item>
               <item row="2" column="1">
                <widget class="QSpinBox" name="distortedCsNumAngle2SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -199,12 +178,6 @@
               </item>
               <item row="3" column="1">
                <widget class="QSpinBox" name="distortedCsNumAngle3SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -220,9 +193,6 @@
             </widget>
             <widget class="QWidget" name="halfDiffCoordSysPage">
              <layout class="QFormLayout" name="halfDiffCoordSysFormLayout">
-              <property name="fieldGrowthPolicy">
-               <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
-              </property>
               <item row="0" column="0">
                <widget class="QLabel" name="label_3">
                 <property name="text">
@@ -232,12 +202,6 @@
               </item>
               <item row="0" column="1">
                <widget class="QSpinBox" name="halfDiffCsNumAngle0SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -258,12 +222,6 @@
               </item>
               <item row="1" column="1">
                <widget class="QSpinBox" name="halfDiffCsNumAngle1SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -284,12 +242,6 @@
               </item>
               <item row="2" column="1">
                <widget class="QSpinBox" name="halfDiffCsNumAngle2SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -310,12 +262,6 @@
               </item>
               <item row="3" column="1">
                <widget class="QSpinBox" name="halfDiffCsNumAngle3SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -331,9 +277,6 @@
             </widget>
             <widget class="QWidget" name="specularCoordSysPage">
              <layout class="QFormLayout" name="specularCoordSysFormLayout">
-              <property name="fieldGrowthPolicy">
-               <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
-              </property>
               <item row="0" column="0">
                <widget class="QLabel" name="label_7">
                 <property name="text">
@@ -343,12 +286,6 @@
               </item>
               <item row="0" column="1">
                <widget class="QSpinBox" name="specularCsNumAngle0SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -369,12 +306,6 @@
               </item>
               <item row="2" column="1">
                <widget class="QSpinBox" name="specularCsNumAngle2SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -395,12 +326,6 @@
               </item>
               <item row="3" column="1">
                <widget class="QSpinBox" name="specularCsNumAngle3SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -421,12 +346,6 @@
               </item>
               <item row="1" column="1">
                <widget class="QSpinBox" name="specularCsNumAngle1SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -442,9 +361,6 @@
             </widget>
             <widget class="QWidget" name="sphericalCoordSysPage">
              <layout class="QFormLayout" name="sphericalCoordSysFormLayout">
-              <property name="fieldGrowthPolicy">
-               <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
-              </property>
               <item row="0" column="0">
                <widget class="QLabel" name="label_11">
                 <property name="text">
@@ -454,12 +370,6 @@
               </item>
               <item row="0" column="1">
                <widget class="QSpinBox" name="sphericalCsNumAngle0SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -480,12 +390,6 @@
               </item>
               <item row="2" column="1">
                <widget class="QSpinBox" name="sphericalCsNumAngle2SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -506,12 +410,6 @@
               </item>
               <item row="3" column="1">
                <widget class="QSpinBox" name="sphericalCsNumAngle3SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
@@ -532,12 +430,6 @@
               </item>
               <item row="1" column="1">
                <widget class="QSpinBox" name="sphericalCsNumAngle1SpinBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="minimum">
                  <number>0</number>
                 </property>
