@@ -152,7 +152,7 @@ private:
     bool openZemaxBsdf(const QString& fileName);
     bool openAstm(const QString& fileName);
     bool openMerlBinary(const QString& fileName);
-    bool opeRglEpflBsdf(const QString& fileName);
+    bool openRglEpflBsdf(const QString& fileName);
 
     void exportFile(const QString& fileName);
     bool exportSsdd(const QString& fileName);

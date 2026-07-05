@@ -213,7 +213,7 @@ void MainWindow::openFile(const QString& fileName)
             loaded = openMerlBinary(fileName);
             break;
         case lb::RGL_EPFL_BSDF_FILE:
-            loaded = opeRglEpflBsdf(fileName);
+            loaded = openRglEpflBsdf(fileName);
             break;
         case lb::SSDD_FILE:
             loaded = openSsdd(fileName);
@@ -1732,7 +1732,7 @@ bool MainWindow::openMerlBinary(const QString& fileName)
     return setupBrdf(std::shared_ptr<lb::Brdf>(brdf), lb::BRDF_DATA);
 }
 
-bool MainWindow::opeRglEpflBsdf(const QString& fileName)
+bool MainWindow::openRglEpflBsdf(const QString& fileName)
 {
     lb::SpecularCoordinatesBrdf* brdf = lb::RglEpflBsdfReader::read(fileName.toLocal8Bit().data());
     if (!brdf) return false;
