@@ -21,7 +21,6 @@ class ColorButton : public QPushButton
 
 public:
     explicit ColorButton(QWidget* parent = nullptr);
-    virtual ~ColorButton();
 
     QColor getColor() const;
 
@@ -32,15 +31,15 @@ public slots:
     void setColor(const QColor& color);
 
 protected:
-    void mousePressEvent(QMouseEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
-    void nextCheckState() override;
 
-    QColor color_;
-    bool   picked_;
+private slots:
+    void openColorDialog();
 
 private:
     Q_DISABLE_COPY(ColorButton)
+
+    QColor color_;
 };
 
 #endif // COLOR_BUTTON_H

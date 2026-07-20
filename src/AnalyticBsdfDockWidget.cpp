@@ -83,8 +83,8 @@ void AnalyticBsdfDockWidget::updateParameterWidget(int index)
                 colorButton->setFixedHeight(22);
                 colorButton->setColor(util::lbToQt(*it->getVec3()));
 
-                connect(colorButton, SIGNAL(colorChanged(QColor)),
-                        this, SLOT(updateParameter()));
+                connect(colorButton, &ColorButton::colorChanged,
+                        this, &AnalyticBsdfDockWidget::updateParameter);
 
                 paramWidget = colorButton;
 

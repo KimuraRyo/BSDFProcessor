@@ -11,9 +11,10 @@
 #include <QColorDialog>
 #include <QPainter>
 
-ColorButton::ColorButton(QWidget* parent) : QPushButton(parent), picked_(false) {}
-
-ColorButton::~ColorButton() {}
+ColorButton::ColorButton(QWidget* parent) : QPushButton(parent), color_(Qt::black)
+{
+    connect(this, &QPushButton::clicked, this, &ColorButton::openColorDialog);
+}
 
 QColor ColorButton::getColor() const
 {
@@ -26,56 +27,49 @@ void ColorButton::setColor(const QColor& color)
     update();
 }
 
-void ColorButton::mousePressEvent(QMouseEvent* event)
-{
-    QPushButton::mousePressEvent(event);
-
-    picked_ = true;
-    update();
-}
-
 void ColorButton::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
 
     QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
 
-    if (picked_) {
-        painter.setBrush(QColor(190, 190, 190));
-    }
-    else {
-        painter.setBrush(QColor(240, 240, 240));
+    QColor buttonColor = palette().button().color();
+    if (isDown()) {
+        buttonColor = buttonColor.darker(120);
     }
 
-    painter.fillRect(rect(), QColor(190, 190, 190));
-    painter.fillRect(rect().adjusted(1, 1, -1, -1), painter.brush());
+    painter.fillRect(rect(), palette().mid().color());
+    painter.fillRect(rect().adjusted(1, 1, -1, -1), buttonColor);
 
     constexpr int margin = 5;
     QRect         colorRect = rect().adjusted(margin, margin, -margin, -margin);
 
+    if (!isEnabled()) {
+        painter.setOpacity(0.4);
+    }
+
     painter.setPen(QColor(140, 140, 140, 40));
+    painter.setBrush(Qt::NoBrush);
     painter.drawRect(colorRect.adjusted(-1, -1, 1, 1));
     painter.fillRect(colorRect, color_);
 }
 
-void ColorButton::nextCheckState()
+void ColorButton::openColorDialog()
 {
-    QPushButton::nextCheckState();
-
-    picked_ = true;
+    // Keep the pressed appearance while the modal dialog is open.
+    setDown(true);
 
     QColor origColor = color_;
 
     QColorDialog dialog(color_, this);
-    connect(&dialog, SIGNAL(currentColorChanged(QColor)), SLOT(setColor(const QColor&)));
+    connect(&dialog, &QColorDialog::currentColorChanged, this, &ColorButton::setColor);
 
     if (dialog.exec() == QDialog::Accepted) {
         emit colorChanged(color_);
     }
-    else{
+    else {
         setColor(origColor);
     }
 
-    picked_ = false;
+    setDown(false);
 }
